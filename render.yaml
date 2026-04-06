@@ -1,0 +1,73 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+#
+# 1) Create a PostgreSQL instance on Render (or use an external DB), then set DATABASE_URL on the API service.
+# 2) Deploy the API; note its public URL (https://<name>.onrender.com).
+# 3) Static site: commit public/data/homepage-summary.json (npm run weekly:homepage before build).
+#    VITE_API_BASE_URL on the static service is optional unless you add other /api calls from the frontend.
+# 4) Cron jobs below must use the SAME DATABASE_URL value as the web service (Internal Database URL from Postgres).
+#    If your Render plan does not include Blueprint cron, create the same jobs manually: New → Cron Job.
+#
+# Smoke checks after deploy:
+#   curl https://<api>/health
+#   curl https://<api>/api/status
+#   curl https://<api>/api/homepage-summary
+
+services:
+  - type: web
+    name: littlebuggy-api
+    runtime: python
+    plan: free
+    region: oregon
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+
+  - type: web
+    name: littlebuggy-web
+    runtime: static
+    rootDir: .
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
+
+  # MVP schedule: daily AQHI+weather (bootstraps with a full run if the DB is empty), weekly respiratory refresh.
+  # Schedules are UTC. Adjust times for your ops window.
+  - type: cron
+    name: littlebuggy-cron-daily-environment
+    region: oregon
+    rootDir: backend
+    schedule: "30 16 * * *"
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 -m app.jobs.run_daily_environment
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+      - key: DATABASE_URL
+        sync: false
+
+  - type: cron
+    name: littlebuggy-cron-weekly-respiratory
+    region: oregon
+    rootDir: backend
+    schedule: "0 17 * * 1"
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 -m app.jobs.run_weekly_respiratory
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+      - key: DATABASE_URL
+        sync: false

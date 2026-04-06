@@ -1,0 +1,422 @@
+{
+  "snapshot": {
+    "fetching": "Fetching local trend snapshot…",
+    "revalidating": "Checking for a fresher snapshot…",
+    "staleWhileShowing": "Last good snapshot shown — refresh failed (tap Refresh to retry) ✦",
+    "offline": "Snapshot offline — page may show friendly defaults until we reconnect ✦",
+    "noTime": "Metro Vancouver snapshot — check the bar up top for when it was saved ✦",
+    "latestLine": "Latest update: {when} · {region} · local trend snapshot",
+    "regionOnly": "{region} · local trend snapshot",
+    "savedTooltip": "Snapshot saved: {date}",
+    "phraseToday": "Today {time}",
+    "phraseYesterday": "Yesterday {time}",
+    "updatedPrefix": "Updated {phrase}",
+    "refresh": "Refresh",
+    "refreshAria": "Refresh homepage health snapshot",
+    "noSnapshotYet": "We couldn’t load this week’s snapshot yet — you’re seeing friendly placeholders for now.",
+    "serverError": "Something went wrong on our side — try again in a moment.",
+    "genericFetchError": "Couldn’t load the health snapshot."
+  },
+  "levels": {
+    "veryHigh": "Very High",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "lowRisk": "Low Risk",
+    "veryPoor": "Very Poor",
+    "rising": "Rising",
+    "watch": "Watch"
+  },
+  "modal": {
+    "close": "Close",
+    "commonSigns": "Common signs",
+    "prevention": "Prevention & gentle habits",
+    "payAttention": "When families may want to pay closer attention",
+    "disclaimer": "Friendly info only — not a substitute for your nurse line, doctor, or 911."
+  },
+  "trends": {
+    "rsv": {
+      "headline": "RSV (respiratory syncytial virus)",
+      "whatItIs": "A very common virus that loves little airways. Most kids meet it more than once — it usually looks like a cold, but babies and young toddlers can work harder to breathe.",
+      "commonSigns": [
+        "Stuffy or runny nose, cough, sometimes a fever",
+        "Faster breathing, belly pulling in under the ribs, or noisy breathing in small babies",
+        "More tired than usual or tricky feeds / fewer wet diapers"
+      ],
+      "prevention": [
+        "Wash hands like a playground ritual — especially before snacks",
+        "Keep sick family members cuddled a little apart when you can",
+        "Clean high-touch toys and surfaces on the extra-gunky days",
+        "Rest, fluids, and patience — most kiddos bounce back with time"
+      ],
+      "payAttention": [
+        "Breathing looks hard, lips or face look blue-ish, or they’re pulling in at the neck or ribs",
+        "So sleepy it’s tough to wake, or not drinking / very few wet diapers",
+        "Under 3 months with a fever, or your gut says “this isn’t our usual cold”",
+        "When in doubt, your nurse line or clinic is the right call — that’s what they’re for"
+      ]
+    },
+    "flu": {
+      "headline": "Influenza (flu)",
+      "whatItIs": "A seasonal virus that can wallop the whole house at once. It often hits harder and faster than a gentle cold — but plenty of families ride it out with rest and fluids.",
+      "commonSigns": [
+        "Sudden fever, chills, body aches, and “I just want the couch” energy",
+        "Sore throat, cough, headache, sometimes tummy upset in kids",
+        "Everyone in the house sick within a few days — classic flu timing"
+      ],
+      "prevention": [
+        "Annual flu vaccine for the family (ask your care team what’s right for you)",
+        "Hand washing, tissues, and elbow-coughs — boring but powerful",
+        "If someone’s sick, cozy movie days beat big gatherings",
+        "Sleep and snacks — simple care helps immune systems do their job"
+      ],
+      "payAttention": [
+        "Breathing trouble, chest pain, confusion, or not waking normally",
+        "Not keeping fluids down, or signs of dehydration",
+        "Fever that worries you in a young infant, or symptoms that snap back worse",
+        "Your local nurse line or doctor can help you decide “home vs. check-in”"
+      ]
+    },
+    "covid": {
+      "headline": "COVID-19",
+      "whatItIs": "A respiratory virus that’s still part of the seasonal mix. In kids it often looks like a cold or stomach bug — testing and public guidance change over time, so local health sites stay handy.",
+      "commonSigns": [
+        "Runny nose, cough, sore throat, fever — the usual “something’s going around” bundle",
+        "Sometimes headache, tiredness, or tummy trouble instead of classic cold signs",
+        "Loss of smell/taste can happen but isn’t the headline in every child"
+      ],
+      "prevention": [
+        "Stay home when sick when you can — kindness to daycare buddies included",
+        "Hand hygiene, fresh air, and up-to-date vaccines per your care team’s advice",
+        "Masks in crowded indoor spaces when community levels are up — family choice + local guidance",
+        "Open windows on nice days — airflow is underrated"
+      ],
+      "payAttention": [
+        "Breathing that doesn’t look comfortable, blue lips, or severe chest pain",
+        "Confusion, dehydration, or fever in a baby that worries you",
+        "Follow current BC / Canada guidance for testing and return-to-school rules",
+        "Call 911 for emergencies; otherwise your clinic or nurse line is your compass"
+      ]
+    },
+    "air_quality": {
+      "headline": "Air quality",
+      "whatItIs": "A snapshot of how comfy outside air is for sensitive lungs — smoke, dust, and pollution can all nudge the dial. LittleBuggy turns that into plain language, not scary numbers.",
+      "commonSigns": [
+        "Kids may cough more, rub eyes, or get tired faster on “rough air” days",
+        "Children with asthma or sensitive airways might need their usual plan a bit sooner",
+        "Sometimes you just notice haze or a campfire smell — that’s a cue"
+      ],
+      "prevention": [
+        "Choose gentler outdoor windows when the air looks hazy or apps flag it",
+        "Indoor play, air purifiers if you have them, and closed windows on smoky days",
+        "Hydration and slower pace — low-key park hangs beat sprinting in smog"
+      ],
+      "payAttention": [
+        "Coughing that won’t settle, wheezing, or working hard to breathe",
+        "Follow local air-quality advisories for schools and sports",
+        "When in doubt, shorten outside time and check in with your care team"
+      ]
+    },
+    "outdoor": {
+      "headline": "Outdoor feel",
+      "whatItIs": "A plain-language blend of air quality and weather — one line about whether the backyard or the living-room fort is the cozier pick today.",
+      "commonSigns": [
+        "Not a diagnosis — just “how it might feel” for sniffly or sensitive kids",
+        "Rough days might mean shorter outside time; nice days might mean scooter time"
+      ],
+      "prevention": [
+        "Pack layers and water; check the air-quality card on smoky or hazy days",
+        "Save big park adventures for clearer-air windows when you can"
+      ],
+      "payAttention": [
+        "Trust your eyes on smoke, storms, or kids who seem wiped out fast",
+        "Medical questions still go to your nurse line or doctor — we’re the soft nudge, not the chart"
+      ]
+    },
+    "cough_patterns": {
+      "headline": "Coughs & fevers (general)",
+      "whatItIs": "Lots of bugs share the same soundtrack — cough plus fever is a combo families talk about a lot. Patterns and how your child acts between spikes matter more than any single number.",
+      "commonSigns": [
+        "Cough dry or wet, worse at night, sometimes with fever that comes and goes",
+        "Energy bouncing back between fevers often points toward “working through it”",
+        "Stuffy nose, sore throat, or tummy upset riding along"
+      ],
+      "prevention": [
+        "Fluids, rest, humidifier if it helps your crew sleep",
+        "Hand washing and not sharing cups — classic sibling diplomacy",
+        "Keep vaccinations and check-ups current so you’ve got a baseline"
+      ],
+      "payAttention": [
+        "Breathing that looks labored, blue lips, or not drinking",
+        "Lethargy that’s not like them, or fever in a young infant",
+        "Cough that keeps getting worse instead of slowly easing"
+      ]
+    },
+    "how_it_works": {
+      "headline": "Where our data comes from",
+      "whatItIs": "LittleBuggy gathers a few trusted public signals and wraps them in plain, parent-friendly language. Here’s how that comes together — and what it can (and can’t) do for your family.",
+      "s1Title": "Where our information comes from",
+      "s1Intro": "We combine automated feeds with gentle editorial framing. When something isn’t a live number from a feed, we try to say so on the page.",
+      "s1Items": [
+        "Public health signals — for Metro Vancouver we use population-level respiratory trend summaries from Canada’s public Health Infobase (BC wastewater-style signals). That’s a bird’s-eye view of what’s circulating, not a lab test or diagnosis for any one child. BCCDC still publishes separate clinical summaries for professionals.",
+        "Air quality — AQHI-style readings from Environment and Climate Change Canada’s open MSC GeoMet data for the region.",
+        "Weather and outdoor feel — current conditions from Open-Meteo (Vancouver area), then translated into simple “how today might feel outside” wording.",
+        "Editorial, parent-friendly summaries — copy on the site is written to help you scan quickly and feel oriented. It’s not a substitute for reading official guidance when you need detail."
+      ],
+      "s2Title": "How often it updates",
+      "s2Items": [
+        "Air quality — refreshed frequently; in normal operation, typically every day when our backend environment job runs.",
+        "Weather — refreshed frequently, on the same rhythm as the daily environment update.",
+        "Respiratory trend summaries — updated on a slower cadence (about weekly), because the underlying public data isn’t meant to change minute-by-minute.",
+        "Editorial content and comfort copy — revised when we ship updates; the timestamp on the live snapshot tells you when the last automated bundle was saved."
+      ],
+      "s3Title": "What’s live vs what’s illustrative",
+      "s3Items": [
+        "Some visuals (like the playful neighbourhood map) are simplified and decorative — they add warmth and context, not street-level outbreak mapping.",
+        "Not every card is a live epidemiology feed. Sections labeled as editorial or illustrative are there to reflect typical parent chatter and season patterns, not to report a real-time case count.",
+        "We’d rather be clear than flashy: if a fetch fails or data is old, we show friendly stand-ins and explain what you’re looking at."
+      ],
+      "s4Title": "Important note",
+      "s4Lead": "LittleBuggy is a helper for everyday context — quick, warm, and multilingual — but it is not medical care.",
+      "s4Items": [
+        "It isn’t a diagnosis tool and it doesn’t examine your child.",
+        "It doesn’t replace your doctor, nurse line, or emergency services. If something feels urgent, reach out to the people trained for that.",
+        "For medical decisions, testing, and outbreak details, rely on official BC and Canada health information."
+      ]
+    }
+  },
+  "app": {
+    "awareness": "LittleBuggy feels like a chat with a thoughtful neighbour — not a replacement for your nurse line or doctor, but a faster way to read local health chatter ✨",
+    "footer": "{brand} is built for multilingual families in Canada — friendly local health context in a language you can scan quickly. Not medical advice; your care team knows your child best.",
+    "brandName": "LittleBuggy",
+    "langSticker": "Your language",
+    "langSwitcher": "Language",
+    "langSwitcherHero": "Choose interface language",
+    "langPanelTitle": "Browse in your language",
+    "langPanelHint": "Seven languages below — Korean, Japanese, Hindi, Filipino, and Vietnamese use English copy until their locale files ship.",
+    "langRoadmap": "We’re filling in Korean, Japanese, Hindi, Filipino, and Vietnamese translations over time — the layout stays the same."
+  },
+  "brand": {
+    "tag": "Canada · multilingual families",
+    "tagShort": "Metro Vancouver"
+  },
+  "home": {
+    "provenance": {
+      "title": "Where this snapshot comes from",
+      "aboutHeading": "About this data",
+      "kinds": {
+        "respiratory": "Respiratory signals",
+        "aqhi": "Air quality (AQHI)",
+        "weather": "Weather"
+      },
+      "status": {
+        "ok": "OK",
+        "bad": "Unavailable / error",
+        "unknown": "Unknown"
+      },
+      "refreshedLine": "Source refresh: {label}",
+      "fullStory": "Plain-language guide: feeds, update rhythm & what’s illustrative"
+    },
+    "pulseSuffix": "family pulse",
+    "pulseDefault": "Metro Vancouver family pulse",
+    "snapshotSection": {
+      "title": "This week’s snapshot",
+      "deck": "Metro Vancouver respiratory signals, air quality, and weather — refreshed on a schedule from public sources, not live scraping.",
+      "cta": "This week’s snapshot",
+      "moreDetail": "More detail",
+      "nextTitle": "How to read this block",
+      "nextIntro": "Quick checks:",
+      "next1": "Read the takeaway line, then scan the cards for RSV, flu, COVID, air, and outdoor comfort.",
+      "next2": "The map above is partly playful; this section is the data snapshot (see the short note below).",
+      "next3": "Not medical advice — if something feels off, your nurse line or doctor is the right call."
+    },
+    "hero": {
+      "title": "Health updates for parents — in your language",
+      "subtitle": "For immigrant and multilingual families across Canada: coughs, flu season, allergies, air, and weather — explained in plain, friendly words. More like a trusted tip from another parent than an official government page.",
+      "valueLine": "What neighbours are noticing, what’s circulating this season, and whether today feels good for the park — in the language you choose.",
+      "btnMap": "Explore the map",
+      "btnParents": "What parents are noticing",
+      "errorBanner": "Hmm — we can’t reach this week’s snapshot right now. You’re still seeing friendly stand‑ins; give it another try in a bit.",
+      "staleDataBanner": "We couldn’t grab a fresh update just now — the friendly numbers below are from your last good load. Tap Refresh when you’re ready.",
+      "loadingSnapshot": "Loading this week’s snapshot",
+      "heroCardsLiveTitle": "This week’s health snapshot",
+      "heroCardsLiveBody": "RSV, flu, COVID, and air-quality numbers below come from public Canadian sources; we refresh and simplify them so busy parents can scan them quickly.",
+      "heroCardsFallbackTitle": "Illustration mode",
+      "heroCardsFallbackBody": "We couldn’t load this week’s snapshot yet — the cards show gentle examples until the latest numbers are available.",
+      "sortHint": "Cards are sorted by what looks most active right now.",
+      "dashboardRowViruses": "Respiratory activity",
+      "dashboardRowEnv": "Weather, air & outdoor comfort",
+      "dashboardFallbackHeadline": "Friendly example snapshot — run the weekly update to show live public data here.",
+      "sourcesFooterLabel": "Sources",
+      "howSources": "Where our data comes from",
+      "outsideAir": "Outside & air",
+      "envSortHint": "Sorted by what might affect sniffles & park plans first.",
+      "trustDefault": "We blend the season with what neighbours are noticing — a friendly starting point, never a verdict on your child.",
+      "trustSnapshot": "The snapshot is refreshed on a schedule — still a starting point, not medical advice.",
+      "trustAware": "Not a clinic or hotline — if something feels wrong, your nurse line or doctor is the right call.",
+      "mapAria": "LittleBuggy playful map of Greater Vancouver with example family chatter: Vancouver RSV busy, Burnaby air-quality watch, Coquitlam cough watch, Richmond sniffles, Surrey flu buzz.",
+      "mapNeighbourhood": "Neighbourhood peek",
+      "mapIllustrativePill": "Illustrative map",
+      "mapSub": "Playful layout · not official area data",
+      "mapFoot": "Stickers show the kinds of stories families swap — neighbourly chatter, not charts from a health agency.",
+      "mapLiveDataHint": "Vancouver’s RSV bubble moves with this week’s snapshot; other cities are playful decoration, not official area readings.",
+      "pipelineQuietBanner": "This snapshot is more than 10 days old — if the numbers feel stale, try again later or tap Refresh.",
+      "labels": {
+        "airQuality": "Air quality",
+        "weather": "Weather",
+        "outdoorFeel": "Outdoor feel"
+      },
+      "envBlurbs": {
+        "air": "How easy-breathing it feels to be outside today.",
+        "weather": "Right-now sky and conditions from our weather feed.",
+        "outdoor": "A plain-English read for park time vs couch time."
+      },
+      "blurbs": {
+        "rsv": {
+          "high": "Lots of playground chat about coughs and noisy breathing.",
+          "low": "A calmer stretch — still worth knowing the signs in little ones.",
+          "mid": "Somewhere in the middle — keep usual sniffle smarts."
+        },
+        "flu": {
+          "high": "Fevers and “hit-by-a-truck” tiredness showing up more.",
+          "low": "Flu chatter is pretty quiet right now.",
+          "mid": "Moderate buzz — hand washing & sleep still MVP."
+        },
+        "covid": {
+          "high": "Worth a little extra awareness in group settings.",
+          "low": "Less talk about it lately in local circles.",
+          "mid": "Steady background — same healthy habits help."
+        }
+      },
+      "fallbackHero": {
+        "active": { "label": "Showing up a lot", "value": "RSV", "blurb": "Tiny coughs and “is that a wheeze?” — lots of playground chat" },
+        "rising": { "label": "On the rise", "value": "Flu chatter", "blurb": "Fevers and wipeouts are trending up in local group texts" },
+        "watch": { "label": "Keep an eye out", "value": "Fever + long cough", "blurb": "A combo that keeps popping up in group texts" }
+      },
+      "weekSummary": {
+        "title": "This week, in plain language",
+        "lineOutdoor": "For most kids today, the outdoors feels like “{outdoor}”.",
+        "lineViruses": "In this snapshot, RSV looks {rsv}, flu looks {flu}, and COVID looks {covid} — population-level clues, not a lab result for your child.",
+        "lineEnv": "Air: {air}. Weather: {weather}."
+      }
+    },
+    "trustPanel": {
+      "asideLabel": "Data sources and trust",
+      "cadenceTitle": "How often this updates",
+      "cadenceLive": "We refresh and bundle this view on a schedule. The time stamp under “This week” is when this snapshot was saved for the site.",
+      "cadenceFallback": "You’re seeing gentle stand-ins until the latest snapshot loads.",
+      "mixedTitle": "What’s snapshot vs playful",
+      "mixedBody": "RSV, flu, COVID, air, and weather follow this snapshot when it loads. The map and some story cards stay decorative — friendly context, not official neighbourhood readings.",
+      "partialTitle": "Some feeds didn’t refresh cleanly",
+      "partialBody": "A source may be temporarily unavailable. Treat numbers as incomplete and use “Where our data comes from” for the full walkthrough.",
+      "mascotHint": "Want the friendly version of how we read signals? Tap the button above."
+    },
+    "map": {
+      "pillRsv": "RSV",
+      "pillAir": "Air",
+      "pillCough": "Cough"
+    },
+    "cities": {
+      "van": "Vancouver",
+      "burn": "Burnaby",
+      "coq": "Coquitlam",
+      "rich": "Richmond",
+      "surr": "Surrey",
+      "issueRsv": "RSV",
+      "issueAir": "Air quality",
+      "issueCough": "Cough",
+      "issueCold": "Cold",
+      "issueFlu": "Flu"
+    },
+    "topConcerns": {
+      "title": "Stories from the neighbourhood",
+      "editorialKicker": "Editorial — friendly seasonal stories, not a live epidemiology feed.",
+      "deck": "Three warm headlines from playgrounds, pickup lines, and “same here” group chats.",
+      "tc1": { "title": "RSV is still the big conversation", "text": "Tiny coughs, noisy breathing, and “should we worry?” — especially with the littlest kids." },
+      "tc2": { "title": "Air quality swings with the season", "text": "Smoke, dust, and weather shifts can change how comfy outside play feels — worth a glance at the AQHI card." },
+      "tc3": { "title": "Coughs that stick around", "text": "Many families say the cough outlasts the fever — totally worth a check-in if your gut says so." }
+    },
+    "active": {
+      "title": "This week’s gentle buzz",
+      "editorialKicker": "RSV, flu, and COVID cards track this week’s snapshot; cold and tummy cards stay gentle seasonal stories for chat.",
+      "deck": "Sticker-style cards for sniffles, tummy rumbles, and the usual seasonal virus mix.",
+      "activity": {
+        "lots": "Lots of buzz",
+        "some": "Some buzz",
+        "quiet": "Quieter lately"
+      },
+      "badges": {
+        "bigNow": "Big right now",
+        "onRadar": "On the radar",
+        "calmer": "Calmer stretch",
+        "heatingUp": "Heating up",
+        "trendingNearby": "Trending nearby"
+      },
+      "cards": {
+        "rsv": { "title": "RSV", "symptoms": "Wheezy breathing, coughs, and tricky feeds for babies." },
+        "flu": { "title": "Flu", "symptoms": "Bam — fever, achy body, zero energy." },
+        "covid": { "title": "COVID", "symptoms": "Cough, fever, sore throat — or sometimes just an off tummy day." },
+        "cold": { "title": "Common Cold", "symptoms": "Stuffy snoot, sneezes, and a mild cough." },
+        "stomach": { "title": "Stomach Bug", "symptoms": "Tummy rumbles, upset hugs, and urgent bathroom trips." }
+      }
+    },
+    "compare": {
+      "title": "Symptoms families ask about",
+      "deck": "Gentle patterns when a seasonal bug is going around — not a diagnosis.",
+      "rows": {
+        "runny": { "symptom": "Runny nose", "tip": "Thicker mucus plus feeling blah, sore throat, or fever often tags along with a virus that’s doing the rounds." },
+        "fever": { "symptom": "Fever", "tip": "Pretty common when a bug is circulating — watch how your child drinks, rests, and bounces back between spikes." },
+        "sneeze": { "symptom": "Sneezing", "tip": "Sneezes show up with lots of bugs; if they’re miserable in other ways too, think whole-picture care and fluids." },
+        "night": { "symptom": "Night cough", "tip": "Lying down can make mucus pool or tickle more — humidifier, fluids, and your nurse line if breathing looks hard." },
+        "energy": { "symptom": "Low energy", "tip": "Viruses often bring “couch magnet” days. If they’re hard to wake or not drinking, get help sooner." }
+      }
+    },
+    "noticing": {
+      "title": "What parents are noticing",
+      "deck": "Little echoes from this week — the things grown-ups mention at swing sets and soccer sidelines.",
+      "tag": "Parent whispers",
+      "n1": "Cough lasting longer than usual",
+      "n2": "Fever comes and goes",
+      "n3": "Night cough seems more common",
+      "n4": "More talk about scratchy throats after outside play"
+    },
+    "asking": {
+      "title": "Questions parents are asking",
+      "deck": "Tap for a warm, plain-language nudge — your doctor or nurse still knows your kid best.",
+      "q1": { "q": "How do I know if it’s “just a cold”?", "a": "Colds usually bring a bundle: tired kiddo, sore throat, runny nose, sometimes fever. How fast it came on and what else is going around in daycare or school matters too. When you’re unsure, your nurse line or doctor is the best shortcut." },
+      "q2": { "q": "Why is my child coughing more at night?", "a": "Gravity! Mucus can pool or tickle more when they lie down. Dry bedroom air or irritated airways can pile on. Humidifier + fluids help lots of homes sleep better — reach out if breathing ever looks scary or sleep is a mess night after night." },
+      "q3": { "q": "Why did the fever come back?", "a": "Sometimes a second bug hops in before the first story is over, or their body is still sorting things out. Sips, snuggles, and watching how they act between spikes is the parent playbook. If they seem really off or you’re uneasy, your team is happy to hear from you." },
+      "q4": { "q": "When is a cough too long?", "a": "A drifty cough can hang around even after energy bounces back — that’s pretty normal. Trust your gut if breathing is tough, lips look blue, they’re not drinking, or the cough keeps ramping up instead of slowly fading. A quick call always beats worrying alone." }
+    },
+    "symptom": {
+      "title": "What are you seeing at home?",
+      "deck": "Tap what fits — we’ll share what other local families have been mentioning in the same boat.",
+      "groupLabel": "Symptoms you might be seeing",
+      "panelKicker": "What neighbours often mention",
+      "hint": "Tap a bubble (or a few!) to explore — it’s just for curiosity and “same here” moments.",
+      "cough": { "label": "A cough that won’t quit", "tip": "Sound familiar? Many local families say coughs stick around a week or two while their kid perks up — ping someone if breathing sounds rough or sleep is a struggle." },
+      "fever": { "label": "Warm forehead moments", "tip": "Fevers that pop up, vanish, then say hi again are a hot playground topic. Fluids, rest, and how they’re acting between spikes are your best friends." },
+      "sneeze": { "label": "Lots of sneezing", "tip": "Sneezing shows up in many colds and flus — pair it with how they’re eating, sleeping, and acting overall." },
+      "stomach": { "label": "Tummy troubles", "tip": "Yucky tummies love to visit every sibling in the house. Tiny sips and plain foods usually step in once the worst wave passes." },
+      "nose": { "label": "Runny or stuffy nose", "tip": "Daycare season’s background soundtrack! Thicker mucus plus feeling crummy often tracks with whatever virus is visiting that week." }
+    },
+    "seek": {
+      "title": "When to loop in extra help",
+      "lead": "You know your little person best. If something feels scary or way off, your clinic, nurse line, or 911 is the right next step.",
+      "lines": [
+        "Breathing looks really hard, lips turn blue, or wheezing is super loud",
+        "Hardly any wet diapers, super dry mouth, or so sleepy it’s hard to wake them",
+        "Tiny baby under 3 months with a fever, or any fever that hangs on past three days",
+        "Throwing up won’t stop, there’s blood in poop, or tummy pain is intense",
+        "Seems confused, neck is stiff, or a rash that doesn’t fade when you gently press it"
+      ]
+    },
+    "common": {
+      "mostActive": "Most active now",
+      "tapForTips": "Tap for tips",
+      "learnMore": "Learn more about {topic}",
+      "neighbourChatter": "Neighbour chatter",
+      "parentBuzz": "Parent buzz: {level}"
+    }
+  }
+}

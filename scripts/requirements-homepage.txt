@@ -1,0 +1,3 @@
+# Minimal deps to run: python3 scripts/update_homepage_summary.py
+# (PYTHONPATH must include the backend/ directory — the script sets this.)
+httpx>=0.27.0
