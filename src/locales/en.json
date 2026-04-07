@@ -172,7 +172,7 @@
       ],
       "s3Title": "What’s live vs what’s illustrative",
       "s3Items": [
-        "Some visuals (like the playful neighbourhood map) are simplified and decorative — they add warmth and context, not street-level outbreak mapping.",
+        "Some editorial visuals and story cards are simplified — they add warmth and season context, not street-level or neighbourhood-precise health mapping.",
         "Not every card is a live epidemiology feed. Sections labeled as editorial or illustrative are there to reflect typical parent chatter and season patterns, not to report a real-time case count.",
         "We’d rather be clear than flashy: if a fetch fails or data is old, we show friendly stand-ins and explain what you’re looking at."
       ],
@@ -219,28 +219,88 @@
     },
     "pulseSuffix": "family pulse",
     "pulseDefault": "Metro Vancouver family pulse",
+    "valueStrip": {
+      "a11y": "Quick ways to explore",
+      "snapshot": "This week’s snapshot",
+      "howRead": "How to read the snapshot",
+      "languages": "Browse in a familiar language"
+    },
+    "readGuide": {
+      "title": "How to read this week’s snapshot",
+      "deck": "A quick orientation — what the cards mean, and what they are not.",
+      "step1": "Start with the headline, then scan the respiratory row (RSV / flu / COVID-style signals), then air and weather when they’re shown.",
+      "step2": "Treat this as a regional, population-level sketch from public sources — useful context, not a test result or diagnosis for your child.",
+      "step3": "Not medical advice. If something feels wrong, use your nurse line, doctor, or emergency services.",
+      "linkLanguages": "Browse in another language",
+      "linkHelp": "Ask LittleBuggy for help",
+      "linkData": "Where the data comes from"
+    },
+    "metroMap": {
+      "eyebrow": "Local",
+      "title": "Metro Vancouver at a glance",
+      "lede": "A soft illustrated map — your friendly bearings, not a data chart.",
+      "imgAlt": "Illustrated map of Metro Vancouver in soft pastels — land, water, and place names.",
+      "note": "Illustration for orientation — not a precise survey map.",
+      "hotspot": {
+        "hint": "Soft dots sit on a few cities — hover (or tap on a phone) for a tiny weekly chatter blurb. Map labels on the art stay in English.",
+        "layerAria": "City hotspots — each opens a short weekly chatter note for that area.",
+        "pinAria": "{city} — open weekly chatter",
+        "spots": {
+          "vancouver": {
+            "thisWeek": "This week: cough / school cold chatter ↑",
+            "chatter": "Community chatter: moderate"
+          },
+          "burnaby": {
+            "thisWeek": "This week: fever / cough mentions ↑",
+            "chatter": "Community chatter: moderate-high"
+          },
+          "richmond": {
+            "thisWeek": "This week: cough / runny nose chatter ↑",
+            "chatter": "Community chatter: moderate"
+          },
+          "surrey": {
+            "thisWeek": "This week: stomach bug / fever mentions ↑",
+            "chatter": "Community chatter: moderate"
+          }
+        }
+      }
+    },
     "snapshotSection": {
       "title": "This week’s snapshot",
+      "deckShort": "Respiratory signals, air, and weather — from public sources, refreshed on a schedule.",
+      "dataInfoSummary": "About this data & updates",
       "deck": "Metro Vancouver respiratory signals, air quality, and weather — refreshed on a schedule from public sources, not live scraping.",
       "cta": "This week’s snapshot",
       "moreDetail": "More detail",
       "nextTitle": "How to read this block",
       "nextIntro": "Quick checks:",
-      "next1": "Read the takeaway line, then scan the cards for RSV, flu, COVID, air, and outdoor comfort.",
-      "next2": "The map above is partly playful; this section is the data snapshot (see the short note below).",
+      "next1": "Read the takeaway line, then scan the cards for respiratory, air, and outdoor signals.",
+      "next2": "Editorial sections elsewhere on the page are for context and warmth — this block is the data snapshot (see the short note below).",
       "next3": "Not medical advice — if something feels off, your nurse line or doctor is the right call."
     },
+    "languageSection": {
+      "title": "Built for multilingual families",
+      "hint": "Prefer another language? Use the switcher below — we’re expanding locales over time.",
+      "deck": "For immigrant and multilingual families across Canada: coughs, flu season, allergies, air, and weather — explained in plain, friendly words. More like a trusted tip from another parent than an official government page.",
+      "valueNote": "What neighbours are noticing, what’s circulating this season, and whether today feels good for the park — in the language you choose."
+    },
     "hero": {
-      "title": "Health updates for parents — in your language",
-      "subtitle": "For immigrant and multilingual families across Canada: coughs, flu season, allergies, air, and weather — explained in plain, friendly words. More like a trusted tip from another parent than an official government page.",
-      "valueLine": "What neighbours are noticing, what’s circulating this season, and whether today feels good for the park — in the language you choose.",
-      "btnMap": "Explore the map",
+      "title": "This week’s kids’ health snapshot",
+      "subtitle": "Local health signals parents care about — at a glance",
+      "btnSeeWeek": "See this week’s snapshot",
+      "langHint": "Supports Chinese, English, and more languages families use at home.",
+      "btnHowRead": "How to read the snapshot",
+      "virusLabels": {
+        "rsv": "RSV",
+        "flu": "Flu",
+        "covid": "COVID"
+      },
       "btnParents": "What parents are noticing",
       "errorBanner": "Hmm — we can’t reach this week’s snapshot right now. You’re still seeing friendly stand‑ins; give it another try in a bit.",
       "staleDataBanner": "We couldn’t grab a fresh update just now — the friendly numbers below are from your last good load. Tap Refresh when you’re ready.",
       "loadingSnapshot": "Loading this week’s snapshot",
       "heroCardsLiveTitle": "This week’s health snapshot",
-      "heroCardsLiveBody": "RSV, flu, COVID, and air-quality numbers below come from public Canadian sources; we refresh and simplify them so busy parents can scan them quickly.",
+      "heroCardsLiveBody": "The figures in the cards below come from public Canadian sources, refreshed on a schedule and simplified so parents can scan them quickly.",
       "heroCardsFallbackTitle": "Illustration mode",
       "heroCardsFallbackBody": "We couldn’t load this week’s snapshot yet — the cards show gentle examples until the latest numbers are available.",
       "sortHint": "Cards are sorted by what looks most active right now.",
@@ -254,12 +314,6 @@
       "trustDefault": "We blend the season with what neighbours are noticing — a friendly starting point, never a verdict on your child.",
       "trustSnapshot": "The snapshot is refreshed on a schedule — still a starting point, not medical advice.",
       "trustAware": "Not a clinic or hotline — if something feels wrong, your nurse line or doctor is the right call.",
-      "mapAria": "LittleBuggy playful map of Greater Vancouver with example family chatter: Vancouver RSV busy, Burnaby air-quality watch, Coquitlam cough watch, Richmond sniffles, Surrey flu buzz.",
-      "mapNeighbourhood": "Neighbourhood peek",
-      "mapIllustrativePill": "Illustrative map",
-      "mapSub": "Playful layout · not official area data",
-      "mapFoot": "Stickers show the kinds of stories families swap — neighbourly chatter, not charts from a health agency.",
-      "mapLiveDataHint": "Vancouver’s RSV bubble moves with this week’s snapshot; other cities are playful decoration, not official area readings.",
       "pipelineQuietBanner": "This snapshot is more than 10 days old — if the numbers feel stale, try again later or tap Refresh.",
       "labels": {
         "airQuality": "Air quality",
@@ -296,7 +350,7 @@
       "weekSummary": {
         "title": "This week, in plain language",
         "lineOutdoor": "For most kids today, the outdoors feels like “{outdoor}”.",
-        "lineViruses": "In this snapshot, RSV looks {rsv}, flu looks {flu}, and COVID looks {covid} — population-level clues, not a lab result for your child.",
+        "lineViruses": "This week’s three respiratory card levels read as {rsv}, {flu}, and {covid} — population-level clues, not a lab result for your child.",
         "lineEnv": "Air: {air}. Weather: {weather}."
       }
     },
@@ -306,27 +360,10 @@
       "cadenceLive": "We refresh and bundle this view on a schedule. The time stamp under “This week” is when this snapshot was saved for the site.",
       "cadenceFallback": "You’re seeing gentle stand-ins until the latest snapshot loads.",
       "mixedTitle": "What’s snapshot vs playful",
-      "mixedBody": "RSV, flu, COVID, air, and weather follow this snapshot when it loads. The map and some story cards stay decorative — friendly context, not official neighbourhood readings.",
+      "mixedBody": "When loaded, the snapshot cards (respiratory, air, weather) match the saved data. Some editorial story cards stay decorative — friendly context, not official neighbourhood readings.",
       "partialTitle": "Some feeds didn’t refresh cleanly",
       "partialBody": "A source may be temporarily unavailable. Treat numbers as incomplete and use “Where our data comes from” for the full walkthrough.",
       "mascotHint": "Want the friendly version of how we read signals? Tap the button above."
-    },
-    "map": {
-      "pillRsv": "RSV",
-      "pillAir": "Air",
-      "pillCough": "Cough"
-    },
-    "cities": {
-      "van": "Vancouver",
-      "burn": "Burnaby",
-      "coq": "Coquitlam",
-      "rich": "Richmond",
-      "surr": "Surrey",
-      "issueRsv": "RSV",
-      "issueAir": "Air quality",
-      "issueCough": "Cough",
-      "issueCold": "Cold",
-      "issueFlu": "Flu"
     },
     "topConcerns": {
       "title": "Stories from the neighbourhood",
@@ -338,7 +375,7 @@
     },
     "active": {
       "title": "This week’s gentle buzz",
-      "editorialKicker": "RSV, flu, and COVID cards track this week’s snapshot; cold and tummy cards stay gentle seasonal stories for chat.",
+      "editorialKicker": "Respiratory cards track this week’s snapshot; cold and tummy cards stay gentle seasonal stories for chat.",
       "deck": "Sticker-style cards for sniffles, tummy rumbles, and the usual seasonal virus mix.",
       "activity": {
         "lots": "Lots of buzz",

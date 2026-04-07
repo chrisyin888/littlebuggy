@@ -115,7 +115,11 @@ body {
   min-height: 100vh;
 }
 
-#littlebug-map,
+#how-read-snapshot,
+#weekly-snapshot,
+#metro-vancouver-map,
+#language-intro,
+#littlebug-help,
 #parents-pulse {
   /* Sticky top stack (status bar + awareness) + breathing room */
   scroll-margin-top: 8.5rem;

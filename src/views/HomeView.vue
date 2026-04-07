@@ -6,6 +6,7 @@ import TrendDetailModal from '../components/TrendDetailModal.vue'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import LittleBuggyMascot from '../components/LittleBuggyMascot.vue'
 import SymptomMiniIcon from '../components/SymptomMiniIcon.vue'
+import MetroMapSection from '../components/MetroMapSection.vue'
 import { useHomepageSnapshot } from '../composables/useHomepageSnapshot.js'
 import {
   isTrendDetailKey,
@@ -88,18 +89,6 @@ const fallbackHeroSummary = computed(() => [
   },
 ])
 
-const cityBubblesBase = [
-  { id: 'van', issueTKey: 'issueRsv', level: 'High', x: 20, y: 38, delay: 0, hot: true, tone: 'rose' },
-  { id: 'burn', issueTKey: 'issueAir', level: 'Watch', x: 44, y: 44, delay: 0.35, hot: false, tone: 'lilac' },
-  { id: 'coq', issueTKey: 'issueCough', level: 'Watch', x: 78, y: 24, delay: 1.4, hot: false, tone: 'mint' },
-  { id: 'rich', issueTKey: 'issueCold', level: 'Moderate', x: 22, y: 74, delay: 0.7, hot: false, tone: 'sky' },
-  { id: 'surr', issueTKey: 'issueFlu', level: 'Moderate', x: 76, y: 72, delay: 1.05, hot: false, tone: 'amber' },
-]
-
-function levelLooksHigh(level) {
-  return /high|very/i.test(String(level || ''))
-}
-
 function levelToTone(level) {
   const L = String(level || '').toLowerCase()
   if (/very\s*high|^high|severe|rough/i.test(L)) return 'hot'
@@ -166,12 +155,18 @@ function sortRowsBySeverity(rows, scoreFn) {
   }))
 }
 
-function virusBlurb(name, level) {
+function virusBlurb(kind, level) {
   const L = String(level || '').toLowerCase()
   const branch = /high|very/i.test(L) ? 'high' : /low/i.test(L) ? 'low' : 'mid'
-  if (name === 'RSV') return t(`home.hero.blurbs.rsv.${branch}`)
-  if (name === 'Flu') return t(`home.hero.blurbs.flu.${branch}`)
+  if (kind === 'rsv') return t(`home.hero.blurbs.rsv.${branch}`)
+  if (kind === 'flu') return t(`home.hero.blurbs.flu.${branch}`)
   return t(`home.hero.blurbs.covid.${branch}`)
+}
+
+function virusCardLabel(s, kind) {
+  const raw = s[`${kind}_label`]
+  if (typeof raw === 'string' && raw.trim()) return raw.trim()
+  return t(`home.hero.virusLabels.${kind}`)
 }
 
 const liveHeroCards = computed(() => {
@@ -181,25 +176,25 @@ const liveHeroCards = computed(() => {
   return [
     {
       kind: 'rsv',
-      label: 'RSV',
+      label: virusCardLabel(s, 'rsv'),
       value: translateApiLevel(s.rsv, t),
-      blurb: virusBlurb('RSV', s.rsv),
+      blurb: virusBlurb('rsv', s.rsv),
       tone: levelToTone(s.rsv),
       sticker: '🐞',
     },
     {
       kind: 'flu',
-      label: 'Flu',
+      label: virusCardLabel(s, 'flu'),
       value: translateApiLevel(s.flu, t),
-      blurb: virusBlurb('Flu', s.flu),
+      blurb: virusBlurb('flu', s.flu),
       tone: levelToTone(s.flu),
       sticker: '🤒',
     },
     {
       kind: 'covid',
-      label: 'COVID',
+      label: virusCardLabel(s, 'covid'),
       value: translateApiLevel(s.covid, t),
-      blurb: virusBlurb('COVID', s.covid),
+      blurb: virusBlurb('covid', s.covid),
       tone: levelToTone(s.covid),
       sticker: '😷',
     },
@@ -259,12 +254,6 @@ const envSnapshotCards = computed(() => {
     if (row.kind === 'weather') return severityScoreFromLabel(row.sortValue, 'weather')
     return severityScoreFromLabel(row.sortValue, 'outdoor')
   })
-})
-
-const regionEyebrow = computed(() => {
-  void locale.value
-  const r = snapshot.value?.region?.trim()
-  return r ? `${r} · ${t('home.pulseSuffix')}` : t('home.pulseDefault')
 })
 
 const formattedUpdatedAt = computed(() => {
@@ -361,27 +350,6 @@ function virusActivityFromLevel(level) {
   }
   return { activityKey: 'quiet', activityDots: 1, badgeKey: 'calmer', badgeKind: 'rise' }
 }
-
-const cityBubbles = computed(() => {
-  void locale.value
-  const s = snapshot.value
-  return cityBubblesBase.map((b) => {
-    let row = {
-      ...b,
-      name: t(`home.cities.${b.id}`),
-      issue: t(`home.cities.${b.issueTKey}`),
-      level: translateApiLevel(b.level, t),
-    }
-    if (s && b.id === 'van') {
-      row = {
-        ...row,
-        level: translateApiLevel(s.rsv, t),
-        hot: levelLooksHigh(s.rsv),
-      }
-    }
-    return row
-  })
-})
 
 const topConcerns = computed(() => {
   void locale.value
@@ -610,544 +578,285 @@ function onActiveCardKeydown(e, item) {
 
 <template>
   <div class="home">
-    <div class="home__sparkles" aria-hidden="true">
-      <span v-for="n in 14" :key="n" class="home__sparkle" :class="`home__sparkle--${n}`" />
-    </div>
-    <div class="home__clouds" aria-hidden="true">
-      <span class="home__cloud home__cloud--1" />
-      <span class="home__cloud home__cloud--2" />
-    </div>
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="hero__blobs" aria-hidden="true">
-        <span class="hero__blob hero__blob--a" />
-        <span class="hero__blob hero__blob--b" />
-        <span class="hero__blob hero__blob--c" />
-        <span class="hero__blob hero__blob--d" />
-      </div>
-      <div class="hero__micro" aria-hidden="true">
-        <span v-for="n in 12" :key="'d' + n" class="hero__dot" :class="`hero__dot--${n}`" />
-      </div>
-      <div class="hero__wave" aria-hidden="true" />
-      <div class="hero__grid hero__grid--intro">
-        <div class="hero__copy hero__copy--intro">
-          <LanguageSwitcher variant="hero" />
-          <div class="hero__intro-shell">
-            <div class="hero__intro">
-              <div class="hero__intro-mascot">
-                <LittleBuggyMascot pose="wave" size="lg" />
-              </div>
-              <div class="hero__intro-text">
-                <p class="hero__eyebrow">{{ regionEyebrow }}</p>
-                <h1 id="hero-title" class="hero__title">{{ $t('home.hero.title') }}</h1>
-                <p class="hero__subtitle">
-                  {{ $t('home.hero.subtitle') }}
-                </p>
-                <p class="hero__value-line">{{ $t('home.hero.valueLine') }}</p>
-                <div class="hero__actions">
-                  <a href="#littlebug-map" class="hero__btn hero__btn--primary">{{ $t('home.hero.btnMap') }}</a>
-                  <a href="#weekly-snapshot" class="hero__btn hero__btn--secondary">{{
-                    $t('home.snapshotSection.cta')
-                  }}</a>
-                </div>
-              </div>
+    <section class="hero hero--product" aria-labelledby="hero-title">
+      <div class="hero__shell">
+        <div class="hero__grid-product">
+          <div class="hero__column hero__column--copy">
+            <h1 id="hero-title" class="hero__headline">{{ $t('home.hero.title') }}</h1>
+            <p class="hero__lede">{{ $t('home.hero.subtitle') }}</p>
+            <div class="hero__cta-row">
+              <a href="#weekly-snapshot" class="hero__cta hero__cta--primary">{{
+                $t('home.hero.btnSeeWeek')
+              }}</a>
+              <a href="#how-read-snapshot" class="hero__cta hero__cta--secondary">{{ $t('home.hero.btnHowRead') }}</a>
             </div>
-          </div>
+            <p class="hero__lang-hint">{{ $t('home.hero.langHint') }}</p>
 
-          <div
-            v-if="snapshotError && !snapshot && !snapshotLoading"
-            class="hero__live-banner"
-            role="status"
-          >
-            <LittleBuggyMascot class="hero__live-banner__mascot" pose="cozy" size="sm" />
-            <span class="hero__live-banner__text">
+            <p
+              v-if="snapshotError && !snapshot && !snapshotLoading"
+              class="hero__alert hero__alert--soft"
+              role="status"
+            >
               {{ $t('home.hero.errorBanner') }}
-            </span>
-          </div>
-
-          <div
-            v-if="snapshotError && snapshot && !snapshotLoading"
-            class="hero__stale-banner"
-            role="status"
-            aria-live="polite"
-          >
-            <LittleBuggyMascot class="hero__stale-banner__mascot" pose="cozy" size="sm" />
-            <div class="hero__stale-banner__body">
-              <p class="hero__stale-banner__main">{{ $t('home.hero.staleDataBanner') }}</p>
+            </p>
+            <div
+              v-else-if="snapshotError && snapshot && !snapshotLoading"
+              class="hero__alert hero__alert--soft hero__alert--stale"
+              role="status"
+              aria-live="polite"
+            >
+              <p class="hero__alert-main">{{ $t('home.hero.staleDataBanner') }}</p>
               <p
                 v-if="staleErrorShort"
-                class="hero__stale-banner__detail"
+                class="hero__alert-detail"
                 :title="snapshotError || undefined"
               >
                 {{ staleErrorShort }}
               </p>
             </div>
           </div>
-        </div>
-
-        <div id="littlebug-map" class="hero__visual hero__visual--intro">
-          <div
-            class="metro-radar metro-radar--playful"
-            role="img"
-            :aria-label="$t('home.hero.mapAria')"
-          >
-            <div class="metro-radar__head">
-              <div class="metro-radar__head-main">
-                <div class="metro-radar__live-row">
-                  <span class="metro-radar__live">{{ $t('home.hero.mapNeighbourhood') }}</span>
-                  <span class="metro-radar__illus-pill">{{ $t('home.hero.mapIllustrativePill') }}</span>
-                </div>
-                <span class="metro-radar__sub">{{ $t('home.hero.mapSub') }}</span>
+          <div class="hero__column hero__column--visual">
+            <div class="hero-preview" aria-hidden="true">
+              <div class="hero-preview__chrome">
+                <span class="hero-preview__dots" aria-hidden="true">
+                  <span /><span /><span />
+                </span>
+                <span class="hero-preview__brand">LittleBuggy</span>
               </div>
-              <div class="metro-radar__legend" aria-hidden="true">
-                <span class="metro-radar__pill metro-radar__pill--rsv">{{ $t('home.map.pillRsv') }}</span>
-                <span class="metro-radar__pill metro-radar__pill--air">{{ $t('home.map.pillAir') }}</span>
-                <span class="metro-radar__pill metro-radar__pill--cough">{{ $t('home.map.pillCough') }}</span>
-              </div>
-            </div>
-            <div class="metro-radar__plate">
-              <div class="metro-radar__float-tags" aria-hidden="true">
-                <span class="metro-float-tag metro-float-tag--1">✦ sticker map</span>
-                <span class="metro-float-tag metro-float-tag--2">soft signals</span>
-                <span class="metro-float-tag metro-float-tag--3">local vibe</span>
-              </div>
-              <div class="metro-radar__pulses" aria-hidden="true">
-                <span class="metro-radar__pulse" />
-                <span class="metro-radar__pulse metro-radar__pulse--2" />
-                <span class="metro-radar__pulse metro-radar__pulse--3" />
-              </div>
-              <svg
-                class="metro-radar__svg"
-                viewBox="0 0 320 280"
-                xmlns="http://www.w3.org/2000/svg"
-                preserveAspectRatio="xMidYMid meet"
-                aria-hidden="true"
-              >
-                <defs>
-                  <linearGradient id="mvOcean" x1="0%" y1="0%" x2="60%" y2="80%">
-                    <stop offset="0%" stop-color="#c8ecff" />
-                    <stop offset="50%" stop-color="#a5d8ff" />
-                    <stop offset="100%" stop-color="#e0f7fa" stop-opacity="0.95" />
-                  </linearGradient>
-                  <linearGradient id="mvRiver" x1="0%" y1="50%" x2="100%" y2="50%">
-                    <stop offset="0%" stop-color="#bfdbfe" stop-opacity="0.65" />
-                    <stop offset="50%" stop-color="#f0f9ff" stop-opacity="0.98" />
-                    <stop offset="100%" stop-color="#93c5fd" stop-opacity="0.5" />
-                  </linearGradient>
-                  <linearGradient id="mvSun" x1="50%" y1="0%" x2="50%" y2="100%">
-                    <stop offset="0%" stop-color="#fff59a" />
-                    <stop offset="100%" stop-color="#fcd34d" stop-opacity="0.55" />
-                  </linearGradient>
-                </defs>
-                <g opacity="0.55" aria-hidden="true">
-                  <path
-                    d="M 24 32 Q 38 22 52 28 Q 62 18 78 26 Q 88 20 98 30 Q 92 42 76 40 Q 58 44 42 38 Q 28 40 24 32 Z"
-                    fill="#fff"
-                  />
-                  <path
-                    d="M 248 48 Q 262 38 278 44 Q 288 36 298 48 Q 292 58 272 56 Q 252 60 248 48 Z"
-                    fill="#fff"
-                  />
-                </g>
-                <!-- Ocean / Strait (Georgia + Burrard feel) -->
-                <rect width="320" height="280" fill="url(#mvOcean)" />
-                <path
-                  d="M0 0 L320 0 L320 95 Q 240 88 180 100 Q 120 108 70 95 Q 30 85 0 100 Z"
-                  fill="#a5d8ff"
-                  opacity="0.28"
-                />
-                <circle cx="275" cy="38" r="22" fill="url(#mvSun)" opacity="0.75" />
-                <!-- North Shore (across inlet) -->
-                <path
-                  d="M 48 38 Q 95 28 138 36 Q 158 48 148 72 Q 125 82 88 78 Q 52 68 42 52 Q 38 44 48 38 Z"
-                  fill="#a7f3d0"
-                  stroke="#fff"
-                  stroke-width="2.5"
-                  stroke-linejoin="round"
-                  opacity="0.95"
-                />
-                <!-- Coquitlam / northeast upland -->
-                <path
-                  d="M 152 58 L 248 48 Q 268 58 275 88 Q 278 118 258 138 L 188 145 Q 158 128 148 98 Q 145 72 152 58 Z"
-                  fill="#86efac"
-                  stroke="#fff"
-                  stroke-width="2"
-                  stroke-linejoin="round"
-                  opacity="0.9"
-                />
-                <!-- Burnaby (plateau between Van & Coq) -->
-                <path
-                  d="M 108 95 L 158 88 Q 172 98 178 125 Q 180 152 165 168 L 118 172 Q 95 158 92 128 Q 94 105 108 95 Z"
-                  fill="#bbf7d0"
-                  stroke="#fff"
-                  stroke-width="2"
-                  stroke-linejoin="round"
-                  opacity="0.92"
-                />
-                <!-- Vancouver peninsula + core (coast on west) -->
-                <path
-                  d="M 38 118 Q 28 95 48 82 Q 72 72 92 88 Q 108 102 104 128 Q 100 158 78 172 Q 52 178 38 158 Q 28 138 38 118 Z"
-                  fill="#d1fae5"
-                  stroke="#fff"
-                  stroke-width="2.2"
-                  stroke-linejoin="round"
-                  opacity="0.95"
-                />
-                <!-- Coastline shimmer -->
-                <path
-                  d="M 38 118 Q 32 100 42 88 Q 55 78 72 82"
-                  fill="none"
-                  stroke="#fff"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                  opacity="0.65"
-                />
-                <!-- Surrey (south of river, east) -->
-                <path
-                  d="M 132 178 L 278 168 Q 302 185 308 218 Q 312 252 288 268 L 148 274 Q 118 255 112 218 Q 115 190 132 178 Z"
-                  fill="#a7f3d0"
-                  stroke="#fff"
-                  stroke-width="2"
-                  stroke-linejoin="round"
-                  opacity="0.88"
-                />
-                <!-- Richmond / Lulu island (delta, west of Surrey) -->
-                <path
-                  d="M 22 188 L 118 178 Q 132 192 128 228 Q 124 258 98 268 L 32 272 Q 12 248 14 212 Q 16 198 22 188 Z"
-                  fill="#fef08a"
-                  stroke="#fff"
-                  stroke-width="2"
-                  stroke-linejoin="round"
-                  opacity="0.88"
-                />
-                <!-- Fraser River / delta water (separates Richmond from Surrey) -->
-                <path
-                  d="M 108 182 Q 118 205 112 232 Q 108 252 125 265 Q 132 248 138 220 Q 142 198 128 185 Q 120 178 108 182 Z"
-                  fill="url(#mvRiver)"
-                  stroke="#7dd3fc"
-                  stroke-width="1.2"
-                  stroke-linejoin="round"
-                  opacity="0.88"
-                />
-                <path
-                  d="M 115 195 Q 125 215 118 238"
-                  fill="none"
-                  stroke="#fff"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  opacity="0.5"
-                />
-                <text
-                  x="114"
-                  y="232"
-                  fill="#0369a1"
-                  opacity="0.42"
-                  font-size="6.5"
-                  font-weight="800"
-                  font-family="system-ui, sans-serif"
-                  transform="rotate(-12 114 232)"
-                >
-                  Fraser
-                </text>
-                <text
-                  x="78"
-                  y="56"
-                  fill="#0f766e"
-                  opacity="0.38"
-                  font-size="7"
-                  font-weight="800"
-                  font-family="system-ui, sans-serif"
-                >
-                  N. Van
-                </text>
-              </svg>
-              <div
-                v-for="c in cityBubbles"
-                :key="c.id"
-                class="city-bubble"
-                :class="{ 'city-bubble--hot': c.hot }"
-                :style="{
-                  left: c.x + '%',
-                  top: c.y + '%',
-                  animationDelay: c.delay + 's',
-                }"
-              >
-                <span v-if="c.hot" class="city-bubble__glow" aria-hidden="true" />
-                <div class="city-bubble__card">
-                  <span class="city-bubble__name">{{ c.name }}</span>
-                  <div class="city-bubble__signal">
-                    <span class="city-bubble__issue">{{ c.issue }}</span>
-                    <span class="city-bubble__level" :data-tone="c.tone">{{ c.level }}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="map-sticker map-sticker--1" aria-hidden="true">
-                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M16 4l3.5 8.2L28 16l-8.5 3.8L16 28l-3.5-8.2L4 16l8.5-3.8L16 4z"
-                    fill="#fef08a"
-                    stroke="#f59e0b"
-                    stroke-width="1.2"
-                  />
-                </svg>
-              </div>
-              <div class="map-sticker map-sticker--2" aria-hidden="true">
-                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M16 26c-6 0-10-4.5-10-9 0-5 4-9 10-9s10 4 10 9c0 4.5-4 9-10 9z"
-                    fill="#fecdd3"
-                    stroke="#fb7185"
-                    stroke-width="1.2"
-                  />
-                </svg>
-              </div>
-              <div class="map-sticker map-sticker--3" aria-hidden="true">
-                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M8 20c4-8 12-8 16 0-4 4-12 4-16 0z"
-                    fill="#bbf7d0"
-                    stroke="#34d399"
-                    stroke-width="1.2"
-                  />
-                </svg>
+              <div class="hero-preview__body">
+                <p v-if="snapshotLoading" class="hero-preview__headline hero-preview__headline--skeleton" />
+                <p v-else-if="dashboardHeadline" class="hero-preview__headline">{{ dashboardHeadline }}</p>
+                <ul class="hero-preview__metrics" role="list">
+                  <template v-if="snapshotLoading">
+                    <li v-for="n in 3" :key="'hps' + n" class="hero-preview__metric hero-preview__metric--skeleton" />
+                  </template>
+                  <template v-else>
+                    <li
+                      v-for="row in virusDashboardRowsOrdered"
+                      :key="row.kind"
+                      class="hero-preview__metric"
+                      :data-tone="row.tone"
+                    >
+                      <span class="hero-preview__metric-label">{{ row.label }}</span>
+                      <span class="hero-preview__metric-value">{{ row.value }}</span>
+                    </li>
+                  </template>
+                </ul>
               </div>
             </div>
-            <p class="metro-radar__foot">
-              {{ $t('home.hero.mapFoot') }}
-            </p>
-            <p class="metro-radar__foot-note">
-              {{ $t('home.hero.mapLiveDataHint') }}
-            </p>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="weekly-snapshot" class="snapshot-dashboard" aria-labelledby="snapshot-section-title">
+    <section class="value-strip" :aria-label="$t('home.valueStrip.a11y')">
+      <div class="value-strip__inner">
+        <a href="#weekly-snapshot" class="value-strip__item">{{ $t('home.valueStrip.snapshot') }}</a>
+        <a href="#how-read-snapshot" class="value-strip__item">{{ $t('home.valueStrip.howRead') }}</a>
+        <a href="#language-intro" class="value-strip__item">{{ $t('home.valueStrip.languages') }}</a>
+      </div>
+    </section>
+
+    <section id="weekly-snapshot" class="snapshot-dashboard snapshot-dashboard--clean" aria-labelledby="snapshot-section-title">
       <div class="snapshot-dashboard__inner">
         <header class="snapshot-dashboard__header">
           <h2 id="snapshot-section-title" class="snapshot-dashboard__title">
             {{ $t('home.snapshotSection.title') }}
           </h2>
-          <p class="snapshot-dashboard__subtitle">{{ $t('home.snapshotSection.deck') }}</p>
-        </header>
-
-        <div v-if="!snapshotLoading" class="snapshot-dashboard__toolbar">
-          <div class="snapshot-context" role="note" :data-variant="snapshot ? 'live' : 'fallback'">
-            <span class="snapshot-context__label">{{
-              snapshot ? $t('home.hero.heroCardsLiveTitle') : $t('home.hero.heroCardsFallbackTitle')
-            }}</span>
-            <span class="snapshot-context__text">{{
-              snapshot ? $t('home.hero.heroCardsLiveBody') : $t('home.hero.heroCardsFallbackBody')
-            }}</span>
-          </div>
-          <div
-            v-if="snapshotLooksOutdated && snapshot"
-            class="snapshot-dashboard__stale-flag"
+          <p class="snapshot-dashboard__subtitle">{{ $t('home.snapshotSection.deckShort') }}</p>
+          <p
+            v-if="!snapshotLoading && snapshotLooksOutdated && snapshot"
+            class="snapshot-dashboard__stale-inline"
             role="status"
           >
-            <LittleBuggyMascot class="snapshot-dashboard__stale-flag-mascot" pose="think" size="xs" />
-            <span>{{ $t('home.hero.pipelineQuietBanner') }}</span>
-          </div>
-        </div>
+            {{ $t('home.hero.pipelineQuietBanner') }}
+          </p>
+        </header>
 
-        <div class="snapshot-dashboard__board">
-          <div
-            class="hero-snapshot-panel hero-snapshot-panel--dashboard hero-snapshot-panel--wide"
-            :data-live="snapshot ? 'yes' : 'no'"
-            :class="{ 'hero-snapshot-panel--loading': snapshotLoading }"
-          >
-            <div class="hero-snapshot-panel__main hero-snapshot-panel__main--dashboard">
-              <template v-if="snapshotLoading">
-                <div class="snapshot-dash__headline snapshot-dash__headline--skeleton" aria-hidden="true" />
-                <ul
-                  class="snapshot-dash__grid snapshot-dash__grid--virus snapshot-dash__grid--skeleton"
-                  aria-busy="true"
-                  :aria-label="$t('home.hero.loadingSnapshot')"
+        <div
+          class="snapshot-surface"
+          :data-live="snapshot ? 'yes' : 'no'"
+          :class="{ 'snapshot-surface--loading': snapshotLoading }"
+        >
+          <template v-if="snapshotLoading">
+            <div class="snapshot-dash__headline snapshot-dash__headline--skeleton" aria-hidden="true" />
+            <ul
+              class="snapshot-dash__grid snapshot-dash__grid--virus snapshot-dash__grid--skeleton"
+              aria-busy="true"
+              :aria-label="$t('home.hero.loadingSnapshot')"
+            >
+              <li v-for="n in 3" :key="'vsk' + n" class="snapshot-dash__skeleton-card" />
+            </ul>
+          </template>
+          <template v-else>
+            <p v-if="dashboardHeadline" class="snapshot-dash__headline">{{ dashboardHeadline }}</p>
+            <p v-if="dashboardHeadlineSub" class="snapshot-dash__sub">{{ dashboardHeadlineSub }}</p>
+
+            <p class="snapshot-dash__row-eyebrow">{{ $t('home.hero.dashboardRowViruses') }}</p>
+            <ul class="snapshot-dash__grid snapshot-dash__grid--virus" role="list">
+              <li
+                v-for="row in virusDashboardRowsOrdered"
+                :key="row.kind"
+                class="snapshot-dash__cell"
+                role="listitem"
+              >
+                <div
+                  class="snapshot-dash__card snapshot-dash__card--interactive"
+                  :class="{ 'snapshot-dash__card--priority': row.priorityTop }"
+                  :data-tone="row.tone"
+                  role="button"
+                  tabindex="0"
+                  :aria-label="$t('home.common.learnMore', { topic: row.label })"
+                  @click="onHeroCardActivate(row)"
+                  @keydown="onHeroCardKeydown($event, row)"
                 >
-                  <li v-for="n in 3" :key="'vsk' + n" class="snapshot-dash__skeleton-card" />
-                </ul>
-              </template>
-              <template v-else>
-                <p v-if="dashboardHeadline" class="snapshot-dash__headline">{{ dashboardHeadline }}</p>
-                <p v-if="dashboardHeadlineSub" class="snapshot-dash__sub">{{ dashboardHeadlineSub }}</p>
+                  <span v-if="row.priorityTop" class="snapshot-dash__priority-badge">{{
+                    $t('home.common.mostActive')
+                  }}</span>
+                  <span class="snapshot-dash__card-icon" aria-hidden="true">{{ row.sticker }}</span>
+                  <div class="snapshot-dash__card-body">
+                    <span class="snapshot-dash__card-title">{{ row.label }}</span>
+                    <span class="snapshot-dash__card-level">{{ row.value }}</span>
+                    <span class="snapshot-dash__card-note">{{ row.blurb }}</span>
+                  </div>
+                </div>
+              </li>
+            </ul>
 
-                <p class="snapshot-dash__row-eyebrow">{{ $t('home.hero.dashboardRowViruses') }}</p>
-                <ul class="snapshot-dash__grid snapshot-dash__grid--virus" role="list">
-                  <li
-                    v-for="row in virusDashboardRowsOrdered"
-                    :key="row.kind"
-                    class="snapshot-dash__cell"
-                    role="listitem"
+            <template v-if="snapshot">
+              <p class="snapshot-dash__row-eyebrow">{{ $t('home.hero.dashboardRowEnv') }}</p>
+              <ul class="snapshot-dash__grid snapshot-dash__grid--env" role="list">
+                <li
+                  v-for="row in envDashboardRowsOrdered"
+                  :key="row.kind"
+                  class="snapshot-dash__cell"
+                  role="listitem"
+                >
+                  <div
+                    class="snapshot-dash__card snapshot-dash__card--interactive"
+                    :class="{ 'snapshot-dash__card--priority': row.priorityTop }"
+                    :data-tone="row.tone"
+                    role="button"
+                    tabindex="0"
+                    :aria-label="$t('home.common.learnMore', { topic: row.label })"
+                    @click="onEnvCardActivate(row)"
+                    @keydown="onEnvCardKeydown($event, row)"
                   >
-                    <div
-                      class="snapshot-dash__card snapshot-dash__card--interactive"
-                      :class="{ 'snapshot-dash__card--priority': row.priorityTop }"
-                      :data-tone="row.tone"
-                      role="button"
-                      tabindex="0"
-                      :aria-label="$t('home.common.learnMore', { topic: row.label })"
-                      @click="onHeroCardActivate(row)"
-                      @keydown="onHeroCardKeydown($event, row)"
-                    >
-                      <span v-if="row.priorityTop" class="snapshot-dash__priority-badge">{{
-                        $t('home.common.mostActive')
-                      }}</span>
-                      <span class="snapshot-dash__card-icon" aria-hidden="true">{{ row.sticker }}</span>
-                      <div class="snapshot-dash__card-body">
-                        <span class="snapshot-dash__card-title">{{ row.label }}</span>
-                        <span class="snapshot-dash__card-level">{{ row.value }}</span>
-                        <span class="snapshot-dash__card-note">{{ row.blurb }}</span>
-                      </div>
+                    <span v-if="row.priorityTop" class="snapshot-dash__priority-badge">{{
+                      $t('home.common.mostActive')
+                    }}</span>
+                    <span class="snapshot-dash__card-icon" aria-hidden="true">{{ row.sticker }}</span>
+                    <div class="snapshot-dash__card-body">
+                      <span class="snapshot-dash__card-title">{{ row.label }}</span>
+                      <span class="snapshot-dash__card-level">{{ row.value }}</span>
+                      <span class="snapshot-dash__card-note">{{ row.blurb }}</span>
                     </div>
-                  </li>
-                </ul>
+                  </div>
+                </li>
+              </ul>
+            </template>
 
-                <template v-if="snapshot">
-                  <p class="snapshot-dash__row-eyebrow">{{ $t('home.hero.dashboardRowEnv') }}</p>
-                  <ul class="snapshot-dash__grid snapshot-dash__grid--env" role="list">
-                    <li
-                      v-for="row in envDashboardRowsOrdered"
-                      :key="row.kind"
-                      class="snapshot-dash__cell"
-                      role="listitem"
-                    >
-                      <div
-                        class="snapshot-dash__card snapshot-dash__card--interactive"
-                        :class="{ 'snapshot-dash__card--priority': row.priorityTop }"
-                        :data-tone="row.tone"
-                        role="button"
-                        tabindex="0"
-                        :aria-label="$t('home.common.learnMore', { topic: row.label })"
-                        @click="onEnvCardActivate(row)"
-                        @keydown="onEnvCardKeydown($event, row)"
-                      >
-                        <span v-if="row.priorityTop" class="snapshot-dash__priority-badge">{{
-                          $t('home.common.mostActive')
-                        }}</span>
-                        <span class="snapshot-dash__card-icon" aria-hidden="true">{{ row.sticker }}</span>
-                        <div class="snapshot-dash__card-body">
-                          <span class="snapshot-dash__card-title">{{ row.label }}</span>
-                          <span class="snapshot-dash__card-level">{{ row.value }}</span>
-                          <span class="snapshot-dash__card-note">{{ row.blurb }}</span>
-                        </div>
-                      </div>
-                    </li>
-                  </ul>
-                </template>
+            <p v-if="snapshot?.data_quality_note" class="snapshot-dash__dq" role="status">
+              {{ snapshot.data_quality_note }}
+            </p>
 
-                <div class="snapshot-dash__fineprint">
+            <div class="snapshot-foot">
+              <details class="snapshot-foot__drawer">
+                <summary class="snapshot-foot__summary">{{ $t('home.snapshotSection.dataInfoSummary') }}</summary>
+                <div class="snapshot-foot__drawer-body">
+                  <p class="snapshot-foot__p">
+                    {{
+                      snapshot ? $t('home.trustPanel.cadenceLive') : $t('home.trustPanel.cadenceFallback')
+                    }}
+                  </p>
+                  <p class="snapshot-foot__p">{{ $t('home.trustPanel.mixedBody') }}</p>
+                  <p v-if="!snapshot" class="snapshot-foot__p">{{ $t('home.hero.trustDefault') }}</p>
+                  <p v-if="snapshot" class="snapshot-foot__p">{{ $t('home.hero.trustSnapshot') }}</p>
+                  <p v-if="snapshotLiveVsIllustrative" class="snapshot-foot__p">{{ snapshotLiveVsIllustrative }}</p>
+                  <p class="snapshot-foot__p">{{ $t('home.hero.trustAware') }}</p>
                   <details
                     v-if="snapshot && !snapshotShortSummary && parentWeekSummaryLines.length"
-                    class="snapshot-dash__details"
+                    class="snapshot-foot__nested"
                   >
                     <summary>{{ $t('home.snapshotSection.moreDetail') }}</summary>
                     <p
                       v-for="(line, idx) in parentWeekSummaryLines"
                       :key="idx"
-                      class="snapshot-dash__details-p"
+                      class="snapshot-foot__p"
                     >
                       {{ line }}
                     </p>
                   </details>
-                  <p v-if="snapshotLiveVsIllustrative" class="snapshot-dash__fineprint-line">
-                    {{ snapshotLiveVsIllustrative }}
-                  </p>
-                  <p v-if="snapshot" class="snapshot-dash__fineprint-line snapshot-dash__fineprint-line--muted">
-                    {{ $t('home.hero.trustSnapshot') }}
-                  </p>
                 </div>
+              </details>
 
-                <p v-if="snapshot?.data_quality_note" class="snapshot-dash__dq" role="status">
-                  {{ snapshot.data_quality_note }}
-                </p>
-              </template>
+              <nav
+                v-if="!snapshotLoading"
+                class="snapshot-foot__links"
+                :aria-label="$t('home.hero.sourcesFooterLabel')"
+              >
+                <time v-if="formattedUpdatedAt" class="snapshot-foot__time" :datetime="snapshot.updated_at">{{
+                  formattedUpdatedAt
+                }}</time>
+                <button type="button" class="snapshot-foot__linkish" @click="openTrendDetail('how_it_works')">
+                  {{ $t('home.hero.howSources') }}
+                </button>
+                <template v-for="row in provenanceRows" :key="row.key">
+                  <a
+                    v-if="row.url"
+                    class="snapshot-foot__linkish"
+                    :href="row.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >{{ row.name }}</a>
+                  <span v-else class="snapshot-foot__muted">{{ row.name }}</span>
+                </template>
+              </nav>
             </div>
+          </template>
+        </div>
+      </div>
+    </section>
 
-            <footer
-              v-if="!snapshotLoading && snapshot && provenanceRows.length"
-              class="hero-snapshot-panel__sources-footer"
-            >
-              <div class="snapshot-sources-foot">
-                <p v-if="formattedUpdatedAt" class="snapshot-sources-foot__updated">
-                  <time :datetime="snapshot.updated_at">{{ formattedUpdatedAt }}</time>
-                </p>
-                <p class="snapshot-sources-foot__label">{{ $t('home.hero.sourcesFooterLabel') }}</p>
-                <ul class="snapshot-sources-foot__list" role="list">
-                  <li
-                    v-for="row in provenanceRows"
-                    :key="row.key"
-                    class="snapshot-sources-foot__item"
-                  >
-                    <a
-                      v-if="row.url"
-                      class="snapshot-sources-foot__link"
-                      :href="row.url"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >{{ row.name }}</a>
-                    <span v-else class="snapshot-sources-foot__name">{{ row.name }}</span>
-                  </li>
-                </ul>
-              </div>
-            </footer>
+    <section
+      id="how-read-snapshot"
+      class="home-read-guide"
+      aria-labelledby="read-guide-heading"
+    >
+      <div class="home-read-guide__inner">
+        <h2 id="read-guide-heading" class="home-read-guide__title">{{ $t('home.readGuide.title') }}</h2>
+        <p class="home-read-guide__deck">{{ $t('home.readGuide.deck') }}</p>
+        <ol class="home-read-guide__steps">
+          <li>{{ $t('home.readGuide.step1') }}</li>
+          <li>{{ $t('home.readGuide.step2') }}</li>
+          <li>{{ $t('home.readGuide.step3') }}</li>
+        </ol>
+        <div class="home-read-guide__actions">
+          <a href="#language-intro" class="home-read-guide__link">{{ $t('home.readGuide.linkLanguages') }}</a>
+          <span class="home-read-guide__dot" aria-hidden="true">·</span>
+          <a href="#littlebug-help" class="home-read-guide__link">{{ $t('home.readGuide.linkHelp') }}</a>
+          <span class="home-read-guide__dot" aria-hidden="true">·</span>
+          <button type="button" class="home-read-guide__btn" @click="openTrendDetail('how_it_works')">
+            {{ $t('home.readGuide.linkData') }}
+          </button>
+        </div>
+      </div>
+    </section>
 
-            <aside
-              v-if="!snapshotLoading"
-              class="snapshot-dashboard__trust"
-              :aria-label="$t('home.trustPanel.asideLabel')"
-            >
-              <div class="snapshot-dashboard__trust-grid">
-                <div class="trust-card trust-card--soft trust-card--compact">
-                  <h4 class="trust-card__h">{{ $t('home.trustPanel.cadenceTitle') }}</h4>
-                  <p class="trust-card__p">
-                    {{
-                      snapshot ? $t('home.trustPanel.cadenceLive') : $t('home.trustPanel.cadenceFallback')
-                    }}
-                  </p>
-                </div>
-                <div class="trust-card trust-card--soft trust-card--compact">
-                  <h4 class="trust-card__h">{{ $t('home.trustPanel.mixedTitle') }}</h4>
-                  <p class="trust-card__p">{{ $t('home.trustPanel.mixedBody') }}</p>
-                </div>
-                <div v-if="!snapshot" class="trust-card trust-card--warm trust-card--compact">
-                  <div class="trust-card__mascot-row">
-                    <LittleBuggyMascot pose="peek" size="sm" />
-                    <p class="trust-card__p trust-card__p--tight">{{ $t('home.hero.trustDefault') }}</p>
-                  </div>
-                </div>
-              </div>
-              <button type="button" class="trust-panel-cta trust-panel-cta--inline" @click="openTrendDetail('how_it_works')">
-                <span class="trust-panel-cta__main">{{ $t('home.hero.howSources') }}</span>
-                <span class="trust-panel-cta__sub">{{ $t('home.provenance.fullStory') }}</span>
-              </button>
-              <p class="snapshot-dashboard__trust-hint">{{ $t('home.trustPanel.mascotHint') }}</p>
-            </aside>
+    <MetroMapSection />
 
-            <aside
-              v-if="snapshotLoading"
-              class="snapshot-dashboard__trust snapshot-dashboard__trust--skeleton"
-              aria-hidden="true"
-            >
-              <div v-for="n in 3" :key="'sk-aside' + n" class="trust-skeleton-card" />
-            </aside>
-          </div>
-
-          <div v-if="!snapshotLoading" class="snapshot-dashboard__nextbox">
-            <h3 class="snapshot-dashboard__nextbox-title">{{ $t('home.snapshotSection.nextTitle') }}</h3>
-            <p class="snapshot-dashboard__nextbox-intro">{{ $t('home.snapshotSection.nextIntro') }}</p>
-            <ol class="snapshot-dashboard__nextbox-list">
-              <li>{{ $t('home.snapshotSection.next1') }}</li>
-              <li>{{ $t('home.snapshotSection.next2') }}</li>
-              <li>{{ $t('home.snapshotSection.next3') }}</li>
-            </ol>
-          </div>
-
-          <div class="snapshot-dashboard__aware">
-            <p class="hero__aware hero__aware--snapshot-foot">
-              <LittleBuggyMascot class="hero__aware__mascot" pose="calm" size="sm" />
-              <span class="hero__aware__text">{{ $t('home.hero.trustAware') }}</span>
-            </p>
-          </div>
+    <section
+      id="language-intro"
+      class="home-language-section section--warm-slab"
+      aria-labelledby="language-intro-heading"
+    >
+      <div class="home-language-section__inner">
+        <h2 id="language-intro-heading" class="section__title">{{ $t('home.languageSection.title') }}</h2>
+        <p class="section__deck section__deck--tight">{{ $t('home.languageSection.deck') }}</p>
+        <p class="home-language-section__value">{{ $t('home.languageSection.valueNote') }}</p>
+        <p class="home-language-section__hint">{{ $t('home.languageSection.hint') }}</p>
+        <div class="home-language-section__switcher">
+          <LanguageSwitcher variant="hero" />
         </div>
       </div>
     </section>
@@ -1367,7 +1076,7 @@ function onActiveCardKeydown(e, item) {
       </div>
     </section>
 
-    <section class="section seek section--warm-slab" aria-labelledby="seek-heading">
+    <section id="littlebug-help" class="section seek section--warm-slab" aria-labelledby="seek-heading">
       <div class="seek-card seek-card--reassuring">
         <div class="seek-card__head">
           <div class="seek-card__mascot" aria-hidden="true">
@@ -1403,7 +1112,7 @@ function onActiveCardKeydown(e, item) {
   z-index: 0;
   display: flex;
   flex-direction: column;
-  gap: clamp(2.75rem, 7vw, 4.75rem);
+  gap: clamp(2rem, 5.5vw, 3.75rem);
 }
 
 .section--warm-slab {
@@ -1604,6 +1313,24 @@ function onActiveCardKeydown(e, item) {
   outline: 3px dashed rgba(253, 186, 116, 0.38);
   outline-offset: 5px;
   overflow: hidden;
+}
+
+.hero.hero--product {
+  position: relative;
+  padding: clamp(2.25rem, 5.5vw, 4rem) clamp(1.25rem, 4vw, 2rem);
+  margin: 0;
+  border-radius: 0;
+  background: linear-gradient(165deg, #fbfcfe 0%, #f1f5f9 52%, #eef2ff 100%);
+  background-image: none;
+  border: none;
+  box-shadow: none;
+  outline: none;
+  outline-offset: 0;
+  overflow: visible;
+}
+
+.hero.hero--product::before {
+  display: none;
 }
 
 .hero::before {
@@ -1828,6 +1555,349 @@ function onActiveCardKeydown(e, item) {
   z-index: 1;
 }
 
+.hero__shell {
+  width: 100%;
+  max-width: min(1120px, 100%);
+  margin: 0 auto;
+}
+
+.hero__grid-product {
+  display: grid;
+  gap: clamp(2rem, 5vw, 3.25rem);
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  .hero__grid-product {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
+    gap: clamp(2.5rem, 5vw, 4rem);
+  }
+}
+
+@media (max-width: 899px) {
+  .hero__column--visual {
+    order: -1;
+  }
+}
+
+.hero__column--copy {
+  min-width: 0;
+}
+
+.hero__headline {
+  margin: 0 0 0.65rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4.2vw, 2.65rem);
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  text-shadow: none;
+  max-width: 20ch;
+}
+
+.hero__lede {
+  margin: 0 0 1.75rem;
+  font-size: clamp(0.98rem, 2vw, 1.125rem);
+  line-height: 1.55;
+  font-weight: 500;
+  color: #64748b;
+  max-width: 26rem;
+}
+
+.hero__cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 1rem;
+}
+
+.hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.72rem 1.4rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  border-radius: 999px;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.hero__cta--primary {
+  color: #fff;
+  background: linear-gradient(135deg, #fb7185 0%, #e879f9 48%, #a78bfa 100%);
+  border: none;
+  box-shadow: 0 4px 20px rgba(244, 114, 182, 0.26);
+}
+
+.hero__cta--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 26px rgba(167, 139, 250, 0.3);
+}
+
+.hero__cta--secondary {
+  color: var(--color-ink);
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.hero__cta--secondary:hover {
+  background: #fff;
+  border-color: rgba(100, 116, 139, 0.5);
+}
+
+.hero__cta:focus-visible {
+  outline: 2px solid #a78bfa;
+  outline-offset: 2px;
+}
+
+.hero__lang-hint {
+  margin: 1rem 0 0;
+  max-width: 28rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.hero-preview {
+  width: 100%;
+  max-width: min(26rem, 100%);
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 22px 48px rgba(15, 23, 42, 0.09),
+    0 0 0 1px rgba(15, 23, 42, 0.055);
+  overflow: hidden;
+}
+
+@media (min-width: 900px) {
+  .hero-preview {
+    margin-right: 0;
+    margin-left: auto;
+  }
+}
+
+.hero-preview__chrome {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.hero-preview__dots {
+  display: flex;
+  gap: 5px;
+}
+
+.hero-preview__dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e2e8f0;
+}
+
+.hero-preview__dots span:nth-child(1) {
+  background: #fda4af;
+}
+
+.hero-preview__dots span:nth-child(2) {
+  background: #fcd34d;
+}
+
+.hero-preview__dots span:nth-child(3) {
+  background: #86efac;
+}
+
+.hero-preview__brand {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.hero-preview__body {
+  padding: 1rem 1.05rem 1.1rem;
+}
+
+.hero-preview__headline {
+  margin: 0 0 0.8rem;
+  font-family: var(--font-display);
+  font-size: clamp(0.95rem, 2.2vw, 1.05rem);
+  font-weight: 800;
+  line-height: 1.32;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+
+.hero-preview__headline--skeleton {
+  height: 1.35rem;
+  max-width: 92%;
+  border-radius: 7px;
+  background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+  background-size: 200% 100%;
+  animation: hero-shimmer 1.35s ease-in-out infinite;
+}
+
+.hero-preview__metrics {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.hero-preview__metric {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.95);
+  border: 1px solid rgba(226, 232, 240, 0.75);
+}
+
+.hero-preview__metric[data-tone='hot'] {
+  background: rgba(254, 242, 242, 0.55);
+  border-color: rgba(252, 165, 165, 0.32);
+}
+
+.hero-preview__metric[data-tone='watch'] {
+  background: rgba(254, 252, 232, 0.55);
+  border-color: rgba(253, 224, 71, 0.28);
+}
+
+.hero-preview__metric[data-tone='rise'] {
+  background: rgba(236, 253, 245, 0.55);
+  border-color: rgba(110, 231, 183, 0.28);
+}
+
+.hero-preview__metric--skeleton {
+  height: 2.35rem;
+  border: none;
+  background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+  background-size: 200% 100%;
+  animation: hero-shimmer 1.35s ease-in-out infinite;
+}
+
+.hero-preview__metric-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--color-ink-soft);
+}
+
+.hero-preview__metric-value {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-ink);
+}
+
+.value-strip {
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.value-strip__inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.35rem;
+  max-width: min(1120px, 100%);
+  margin: 0 auto;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .value-strip__inner {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem 1.25rem;
+    align-items: center;
+  }
+}
+
+.value-strip__item {
+  display: block;
+  padding: 0.4rem 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #475569;
+  text-decoration: none;
+  border-radius: 8px;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.value-strip__item:hover {
+  color: #4c1d95;
+  background: rgba(99, 102, 241, 0.07);
+}
+
+.value-strip__item:focus-visible {
+  outline: 2px solid #a78bfa;
+  outline-offset: 2px;
+}
+
+.hero__figure {
+  margin: 0;
+}
+
+.hero__shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+  box-shadow:
+    0 24px 48px rgba(15, 23, 42, 0.09),
+    0 0 0 1px rgba(255, 255, 255, 0.75) inset;
+}
+
+.hero__alert {
+  margin: 1.5rem 0 0;
+  padding: 0;
+  max-width: 32rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-weight: 500;
+  color: #9a3412;
+}
+
+.hero__alert-main {
+  margin: 0 0 0.35rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.hero__alert-detail {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #64748b;
+  word-break: break-word;
+}
+
 .hero__grid--intro {
   width: 100%;
   max-width: min(1180px, 100%);
@@ -2036,9 +2106,313 @@ function onActiveCardKeydown(e, item) {
 /* —— Standalone snapshot dashboard (below hero) —— */
 .snapshot-dashboard {
   position: relative;
-  padding: clamp(2rem, 5vw, 3.5rem) clamp(1rem, 4vw, 2rem);
+  padding: clamp(1.05rem, 2.8vw, 1.75rem) clamp(1rem, 4vw, 2rem) clamp(2rem, 5vw, 3.25rem);
   background: linear-gradient(180deg, #e8eef5 0%, #f1f5f9 38%, #f8fafc 100%);
   border-top: 1px solid rgba(203, 213, 225, 0.65);
+}
+
+.snapshot-dashboard.snapshot-dashboard--clean {
+  padding: clamp(2rem, 5vw, 3.5rem) clamp(1.25rem, 4vw, 2rem) clamp(2.5rem, 6vw, 4rem);
+  background: #f8fafc;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.snapshot-dashboard--clean .snapshot-dashboard__header {
+  max-width: 38rem;
+}
+
+@media (min-width: 768px) {
+  .snapshot-dashboard--clean .snapshot-dashboard__header {
+    margin-left: 0;
+    margin-right: auto;
+    text-align: left;
+  }
+}
+
+.snapshot-dashboard__stale-inline {
+  margin: 0.65rem 0 0;
+  max-width: 40rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #9a3412;
+}
+
+.snapshot-surface {
+  max-width: min(56rem, 100%);
+  margin: 0 auto;
+}
+
+.snapshot-surface--loading {
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.snapshot-foot {
+  margin-top: clamp(1.25rem, 3vw, 1.75rem);
+  padding-top: 1rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.snapshot-foot__drawer {
+  margin: 0 0 0.85rem;
+  border: none;
+}
+
+.snapshot-foot__summary {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+  list-style: none;
+}
+
+.snapshot-foot__summary::-webkit-details-marker {
+  display: none;
+}
+
+.snapshot-foot__summary::after {
+  content: '';
+  width: 0.35em;
+  height: 0.35em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  margin-top: -0.15em;
+  opacity: 0.55;
+}
+
+.snapshot-foot__drawer[open] .snapshot-foot__summary::after {
+  transform: rotate(-135deg);
+  margin-top: 0.1em;
+}
+
+.snapshot-foot__drawer-body {
+  margin-top: 0.65rem;
+  padding: 0 0 0.15rem;
+  max-width: 40rem;
+}
+
+.snapshot-foot__p {
+  margin: 0 0 0.55rem;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.snapshot-foot__p:last-child {
+  margin-bottom: 0;
+}
+
+.snapshot-foot__nested {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0 0;
+  border-top: 1px dashed rgba(148, 163, 184, 0.35);
+}
+
+.snapshot-foot__nested summary {
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #5b21b6;
+}
+
+.snapshot-foot__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 1rem;
+}
+
+.snapshot-foot__time {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.snapshot-foot__linkish {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #5b21b6;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+  cursor: pointer;
+}
+
+.snapshot-foot__linkish:hover {
+  color: #4c1d95;
+}
+
+.snapshot-foot__muted {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.snapshot-dashboard--clean .snapshot-dash__headline,
+.snapshot-dashboard--clean .snapshot-dash__sub {
+  text-align: left;
+}
+
+.snapshot-dashboard--clean .snapshot-dash__row-eyebrow {
+  margin-top: 0.15rem;
+}
+
+.snapshot-dashboard--clean .snapshot-dash__card {
+  border: 1px solid rgba(226, 232, 240, 0.65);
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.snapshot-dashboard--clean .snapshot-dash__card::before {
+  opacity: 0.08;
+}
+
+.snapshot-dashboard--clean .snapshot-dash__card--interactive:hover {
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+.snapshot-dashboard--clean .snapshot-dash__skeleton-card {
+  border: 1px solid rgba(226, 232, 240, 0.5);
+  box-shadow: none;
+}
+
+.home-read-guide {
+  padding: clamp(1.5rem, 4vw, 2.35rem) clamp(1.25rem, 4vw, 1.75rem);
+  background: #fff;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+}
+
+.home-read-guide__inner {
+  max-width: min(40rem, 100%);
+  margin: 0 auto;
+}
+
+.home-read-guide__title {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--color-ink);
+}
+
+.home-read-guide__deck {
+  margin: 0 0 1rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.55;
+  color: var(--color-ink-muted);
+}
+
+.home-read-guide__steps {
+  margin: 0 0 1.15rem;
+  padding-left: 1.2rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.6;
+  color: #475569;
+}
+
+.home-read-guide__steps li {
+  margin-bottom: 0.45rem;
+}
+
+.home-read-guide__steps li:last-child {
+  margin-bottom: 0;
+}
+
+.home-read-guide__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+}
+
+.home-read-guide__link {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #5b21b6;
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+}
+
+.home-read-guide__link:hover {
+  color: #4c1d95;
+}
+
+.home-read-guide__dot {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  user-select: none;
+}
+
+.home-read-guide__btn {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #5b21b6;
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+  cursor: pointer;
+}
+
+.home-read-guide__btn:hover {
+  color: #4c1d95;
+}
+
+.home-read-guide__link:focus-visible,
+.home-read-guide__btn:focus-visible {
+  outline: 2px solid #a78bfa;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.home-language-section__inner {
+  max-width: min(42rem, 100%);
+  margin: 0 auto;
+  text-align: center;
+}
+
+.home-language-section__value {
+  margin: 0 auto 1rem;
+  padding: 0;
+  max-width: 38rem;
+  font-size: 0.98rem;
+  line-height: 1.62;
+  font-weight: 600;
+  color: var(--color-ink-muted);
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+
+.home-language-section__hint {
+  margin: 0 auto 1.1rem;
+  max-width: 34rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  font-weight: 600;
+  color: var(--color-ink-muted);
+}
+
+.home-language-section__switcher {
+  display: flex;
+  justify-content: center;
 }
 
 .snapshot-dashboard__inner {
@@ -3257,75 +3631,6 @@ function onActiveCardKeydown(e, item) {
   }
 }
 
-.hero__live-banner {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  margin: 0 auto 1rem;
-  padding: 0.75rem 1rem 0.75rem 0.85rem;
-  max-width: 32rem;
-  font-size: 0.84rem;
-  font-weight: 600;
-  line-height: 1.45;
-  color: var(--color-ink-muted);
-  background: rgba(255, 252, 247, 0.96);
-  border-radius: var(--radius-lg);
-  border: 3px dashed rgba(253, 186, 116, 0.55);
-  box-shadow: var(--shadow-sticker);
-}
-
-.hero__live-banner__mascot {
-  flex-shrink: 0;
-}
-
-.hero__live-banner__text {
-  flex: 1;
-  min-width: 0;
-}
-
-.hero__stale-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
-  margin: 0 auto 1rem;
-  padding: 0.75rem 1rem 0.85rem 0.85rem;
-  max-width: 32rem;
-  font-size: 0.84rem;
-  line-height: 1.45;
-  color: #7c2d12;
-  background-image: var(--pattern-dots-soft),
-    linear-gradient(135deg, #fffbeb 0%, #ffe4e6 48%, #ffedd5 100%);
-  background-size: var(--pattern-dots-size), auto;
-  border-radius: var(--radius-lg);
-  border: 3px solid rgba(251, 191, 36, 0.5);
-  box-shadow: var(--shadow-sticker);
-}
-
-.hero__stale-banner__mascot {
-  flex-shrink: 0;
-  margin-top: 0.05rem;
-}
-
-.hero__stale-banner__body {
-  flex: 1;
-  min-width: 0;
-}
-
-.hero__stale-banner__main {
-  margin: 0 0 0.35rem;
-  font-weight: 700;
-  color: var(--color-ink);
-}
-
-.hero__stale-banner__detail {
-  margin: 0;
-  font-size: 0.72rem;
-  font-weight: 600;
-  font-family: ui-monospace, monospace;
-  color: var(--color-ink-muted);
-  word-break: break-word;
-}
-
 .hero__data-scope {
   margin: 0 auto 0.9rem;
   padding: 0.75rem 1rem;
@@ -3415,11 +3720,6 @@ function onActiveCardKeydown(e, item) {
     margin-right: 0;
     align-items: flex-start;
     text-align: left;
-  }
-
-  .hero__stale-banner {
-    margin-left: 0;
-    margin-right: 0;
   }
 }
 
@@ -3531,8 +3831,7 @@ function onActiveCardKeydown(e, item) {
 
 @media (min-width: 900px) {
   .hero__live-heading,
-  .hero__live-meta,
-  .hero__live-banner {
+  .hero__live-meta {
     margin-left: 0;
     margin-right: 0;
   }
@@ -3567,524 +3866,6 @@ function onActiveCardKeydown(e, item) {
     margin-left: 0;
     margin-right: 0;
     justify-content: flex-start;
-  }
-}
-
-/* Metro city radar */
-.hero__visual {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-}
-
-.hero__visual--intro {
-  align-items: center;
-}
-
-@media (min-width: 900px) {
-  .hero__visual--intro {
-    align-items: stretch;
-  }
-}
-
-.metro-radar {
-  width: 100%;
-  max-width: 440px;
-  margin: 0 auto;
-}
-
-.hero__visual--intro .metro-radar {
-  max-width: min(100%, 540px);
-}
-
-@media (min-width: 900px) {
-  .hero__visual--intro .metro-radar {
-    max-width: none;
-    width: 100%;
-  }
-}
-
-.metro-radar--playful {
-  filter: drop-shadow(0 12px 0 rgba(255, 200, 140, 0.2));
-}
-
-.metro-radar--playful .metro-radar__plate {
-  animation: metro-plate-breathe 7s ease-in-out infinite;
-}
-
-@keyframes metro-plate-breathe {
-  0%,
-  100% {
-    box-shadow: var(--shadow-sticker-deep);
-  }
-  50% {
-    box-shadow:
-      6px 6px 0 rgba(251, 191, 36, 0.32),
-      0 4px 0 rgba(255, 255, 255, 0.85) inset,
-      0 20px 44px rgba(125, 211, 252, 0.14);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .metro-radar--playful .metro-radar__plate {
-    animation: none;
-  }
-}
-
-.metro-radar__head {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.65rem;
-  margin-bottom: 0.85rem;
-  padding: 0 0.2rem;
-}
-
-.metro-radar__head-main {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 0.85rem;
-  width: 100%;
-  justify-content: space-between;
-}
-
-.metro-radar__live-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.45rem 0.55rem;
-}
-
-.metro-radar__illus-pill {
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 0.28rem 0.5rem;
-  border-radius: 999px;
-  color: #78350f;
-  background: rgba(255, 251, 235, 0.95);
-  border: 2px dashed rgba(245, 158, 11, 0.55);
-}
-
-.metro-radar__live {
-  font-size: 0.86rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 0.45rem 1rem;
-  border-radius: var(--radius-pill);
-  color: #c2410c;
-  background: linear-gradient(135deg, #fff 0%, #ffedd5 100%);
-  border: 3px solid rgba(253, 186, 116, 0.65);
-  box-shadow: 3px 3px 0 rgba(125, 211, 252, 0.45);
-}
-
-.metro-radar__sub {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--color-ink-soft);
-  max-width: 12rem;
-  line-height: 1.35;
-  text-align: right;
-}
-
-@media (max-width: 420px) {
-  .metro-radar__sub {
-    text-align: left;
-    max-width: none;
-  }
-}
-
-.metro-radar__legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.metro-radar__pill {
-  font-family: var(--font-display);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 0.28rem 0.55rem;
-  border-radius: 10px;
-  border: 2px solid #fff;
-  box-shadow: 2px 2px 0 rgba(61, 53, 64, 0.08);
-}
-
-.metro-radar__pill--rsv {
-  background: linear-gradient(135deg, #fecdd3, #fda4af);
-  color: #9f1239;
-}
-
-.metro-radar__pill--air {
-  background: linear-gradient(135deg, #bae6fd, #7dd3fc);
-  color: #0c4a6e;
-}
-
-.metro-radar__pill--cough {
-  background: linear-gradient(135deg, #a7f3d0, #6ee7b7);
-  color: #065f46;
-}
-
-.metro-radar__plate {
-  position: relative;
-  width: 100%;
-  min-height: min(52vw, 300px);
-  max-height: 320px;
-  border-radius: var(--radius-map);
-  overflow: visible;
-  background:
-    var(--pattern-dots),
-    linear-gradient(168deg, #fff9e6 0%, #d4efff 38%, #e6faf3 72%, #ffe8f0 100%);
-  background-size: var(--pattern-dots-size), auto;
-  border: 5px solid #fff;
-  box-shadow: var(--shadow-sticker-deep);
-}
-
-.metro-radar__float-tags {
-  position: absolute;
-  inset: 0;
-  z-index: 4;
-  pointer-events: none;
-}
-
-.metro-float-tag {
-  position: absolute;
-  font-size: 0.58rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 0.3rem 0.5rem;
-  border-radius: 12px;
-  border: 2px solid #fff;
-  box-shadow: 3px 3px 0 rgba(253, 186, 116, 0.45);
-  background: linear-gradient(135deg, #fff 0%, #fef3c7 100%);
-  color: #92400e;
-  white-space: nowrap;
-  animation: tag-float 5s ease-in-out infinite;
-}
-
-.metro-float-tag--1 {
-  top: 6%;
-  left: 4%;
-  animation-delay: 0s;
-}
-
-.metro-float-tag--2 {
-  top: 10%;
-  right: 6%;
-  background: linear-gradient(135deg, #fff 0%, #e0f2fe 100%);
-  color: #0369a1;
-  animation-delay: -1.5s;
-}
-
-.metro-float-tag--3 {
-  bottom: 14%;
-  left: 8%;
-  background: linear-gradient(135deg, #fff 0%, #f5f3ff 100%);
-  color: #6d28d9;
-  animation-delay: -3s;
-  font-size: 0.52rem;
-}
-
-.metro-radar--playful .metro-float-tag {
-  box-shadow: 3px 3px 0 rgba(251, 182, 206, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
-}
-
-@keyframes tag-float {
-  0%,
-  100% {
-    transform: translateY(0) rotate(-1deg);
-  }
-  50% {
-    transform: translateY(-4px) rotate(1deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .metro-float-tag {
-    animation: none;
-  }
-}
-
-.metro-radar__pulses {
-  position: absolute;
-  left: 38%;
-  top: 44%;
-  width: 1px;
-  height: 1px;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.metro-radar__pulse {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 100px;
-  height: 100px;
-  margin: -50px 0 0 -50px;
-  border-radius: 50%;
-  border: 2.5px solid rgba(125, 211, 252, 0.5);
-  animation: metro-ripple 4.5s ease-out infinite;
-}
-
-.metro-radar__pulse--2 {
-  animation-delay: 1.4s;
-}
-
-.metro-radar__pulse--3 {
-  animation-delay: 2.8s;
-}
-
-@keyframes metro-ripple {
-  0% {
-    transform: scale(0.55);
-    opacity: 0.55;
-  }
-  100% {
-    transform: scale(2.6);
-    opacity: 0;
-  }
-}
-
-.metro-radar__svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  border-radius: calc(var(--radius-map) - 6px);
-  pointer-events: none;
-  display: block;
-}
-
-.city-bubble {
-  position: absolute;
-  z-index: 2;
-  transform: translate(-50%, -50%);
-  animation: city-float 5.5s ease-in-out infinite;
-}
-
-@keyframes city-float {
-  0%,
-  100% {
-    transform: translate(-50%, -50%) translateY(0);
-  }
-  50% {
-    transform: translate(-50%, -50%) translateY(-6px);
-  }
-}
-
-.city-bubble--hot .city-bubble__card {
-  box-shadow:
-    3px 3px 0 rgba(251, 113, 133, 0.3),
-    0 0 0 2px rgba(253, 186, 116, 0.45),
-    0 8px 22px rgba(74, 63, 60, 0.08);
-}
-
-.city-bubble__glow {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 72px;
-  height: 72px;
-  margin: -36px 0 0 -36px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(251, 113, 133, 0.45) 0%, transparent 70%);
-  animation: hotspot-glow 3s ease-in-out infinite;
-  z-index: -1;
-}
-
-@keyframes hotspot-glow {
-  0%,
-  100% {
-    opacity: 0.65;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.12);
-  }
-}
-
-.city-bubble__card {
-  position: relative;
-  padding: 0.55rem 0.75rem 0.6rem;
-  min-width: 6.25rem;
-  max-width: 8.5rem;
-  border-radius: 26px;
-  background:
-    var(--pattern-dots),
-    rgba(255, 252, 247, 0.98);
-  background-size: var(--pattern-dots-size), auto;
-  border: 3px solid #fff;
-  box-shadow: var(--shadow-sticker-deep);
-  backdrop-filter: blur(8px);
-  transform: rotate(-1deg);
-}
-
-.city-bubble__card::before {
-  content: '';
-  position: absolute;
-  top: -5px;
-  right: 10px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #fda4af, #fcd34d);
-  border: 2px solid #fff;
-  box-shadow: 0 0 0 2px rgba(255, 200, 140, 0.35);
-}
-
-.city-bubble:nth-child(even) .city-bubble__card {
-  transform: rotate(1.2deg);
-}
-
-.city-bubble__name {
-  display: block;
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.01em;
-  color: var(--color-ink);
-  line-height: 1.2;
-}
-
-.city-bubble__signal {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 0.2rem 0.35rem;
-  margin-top: 0.2rem;
-}
-
-.city-bubble__issue {
-  font-size: 0.68rem;
-  font-weight: 800;
-  color: var(--color-ink-muted);
-  line-height: 1.2;
-}
-
-.city-bubble__level {
-  font-size: 0.68rem;
-  font-weight: 800;
-  line-height: 1.2;
-  padding: 0.08rem 0.35rem;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.75);
-}
-
-.city-bubble__level[data-tone='rose'] {
-  color: #9f1239;
-  background: rgba(254, 205, 211, 0.55);
-}
-
-.city-bubble__level[data-tone='lilac'] {
-  color: #5b21b6;
-  background: rgba(221, 214, 254, 0.65);
-}
-
-.city-bubble__level[data-tone='sky'] {
-  color: #075985;
-  background: rgba(186, 230, 253, 0.65);
-}
-
-.city-bubble__level[data-tone='amber'] {
-  color: #92400e;
-  background: rgba(254, 243, 199, 0.85);
-}
-
-.city-bubble__level[data-tone='mint'] {
-  color: #065f46;
-  background: rgba(167, 243, 208, 0.65);
-}
-
-.map-sticker {
-  position: absolute;
-  z-index: 3;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 18px;
-  background: rgba(255, 252, 247, 0.96);
-  border: 3px solid #fff;
-  box-shadow: 3px 3px 0 rgba(186, 230, 253, 0.75);
-  animation: map-sticker-float 4.5s ease-in-out infinite;
-}
-
-.map-sticker svg {
-  width: 22px;
-  height: 22px;
-}
-
-.map-sticker--1 {
-  left: 6%;
-  top: 18%;
-  animation-delay: 0s;
-}
-
-.map-sticker--2 {
-  right: 8%;
-  bottom: 28%;
-  animation-delay: 0.8s;
-}
-
-.map-sticker--3 {
-  right: 12%;
-  top: 12%;
-  animation-delay: 1.5s;
-}
-
-@keyframes map-sticker-float {
-  0%,
-  100% {
-    transform: translateY(0) rotate(-4deg);
-  }
-  50% {
-    transform: translateY(-5px) rotate(3deg);
-  }
-}
-
-.metro-radar__foot {
-  margin: 0.85rem 0 0;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--color-ink-soft);
-  text-align: center;
-  line-height: 1.5;
-  padding: 0 0.35rem;
-}
-
-.metro-radar__foot-note {
-  margin: 0.55rem 0 0;
-  font-size: 0.72rem;
-  font-weight: 700;
-  font-style: italic;
-  color: #92400e;
-  text-align: center;
-  line-height: 1.5;
-  padding: 0 0.35rem;
-}
-
-@media (max-width: 520px) {
-  .city-bubble__card {
-    min-width: 5.75rem;
-    max-width: 7.25rem;
-    padding: 0.42rem 0.55rem 0.48rem;
-  }
-
-  .city-bubble__name {
-    font-size: 0.7rem;
-  }
-
-  .city-bubble__issue,
-  .city-bubble__level {
-    font-size: 0.62rem;
   }
 }
 

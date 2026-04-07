@@ -50,6 +50,10 @@ export function normalizeHomepageSummaryPayload(input) {
   o.rsv = str(o.rsv, 'Unknown')
   o.flu = str(o.flu, 'Unknown')
   o.covid = str(o.covid, 'Unknown')
+  /** Optional display names from JSON; when empty, UI falls back to i18n. */
+  o.rsv_label = str(o.rsv_label, '')
+  o.flu_label = str(o.flu_label, '')
+  o.covid_label = str(o.covid_label, '')
   o.air_quality = str(o.air_quality, 'Unavailable')
   o.weather = str(o.weather, 'Unavailable')
   o.outdoor_feel = str(o.outdoor_feel, 'Unavailable')
