@@ -6,6 +6,7 @@ import { useHomepageSnapshot } from './composables/useHomepageSnapshot.js'
 import { localeToHtmlLang } from './i18n'
 import LanguageSwitcher from './components/LanguageSwitcher.vue'
 import LittleBuggyMascot from './components/LittleBuggyMascot.vue'
+import EmergencyHelpCard from './components/EmergencyHelpCard.vue'
 import { localeToDateLocale } from './utils/localeDisplay.js'
 
 const { t, locale } = useI18n()
@@ -149,9 +150,12 @@ const snapshotBarTitle = computed(() => {
       <RouterView />
     </main>
     <footer class="site-footer">
-      <p>
-        {{ t('app.footer', { brand: t('app.brandName') }) }}
-      </p>
+      <div class="site-footer__inner">
+        <EmergencyHelpCard />
+        <p class="site-footer__copy">
+          {{ t('app.footer', { brand: t('app.brandName') }) }}
+        </p>
+      </div>
     </footer>
   </div>
 </template>
@@ -383,14 +387,22 @@ const snapshotBarTitle = computed(() => {
 }
 
 .site-footer {
-  padding: 1.5rem clamp(1rem, 4vw, 2rem);
+  padding: 1.5rem clamp(1rem, 4vw, 2rem) 1.65rem;
   background: linear-gradient(180deg, rgba(255, 251, 243, 0.9) 0%, rgba(232, 244, 252, 0.5) 100%);
   border-top: 3px dashed rgba(186, 230, 253, 0.55);
 }
 
-.site-footer p {
+.site-footer__inner {
   max-width: var(--layout-max);
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.25rem;
+}
+
+.site-footer__copy {
+  margin: 0;
   font-size: 0.86rem;
   line-height: 1.65;
   font-weight: 600;
@@ -398,7 +410,7 @@ const snapshotBarTitle = computed(() => {
   text-align: center;
 }
 
-.site-footer strong {
+.site-footer__copy strong {
   font-family: var(--font-display);
   font-weight: 700;
   color: var(--color-ink-muted);
