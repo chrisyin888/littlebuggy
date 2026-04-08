@@ -18,7 +18,7 @@ from app.services.fetch_bccdc_real import (
     PHAC_INFOBASE_API_LANDING,
     fetch_respiratory_bc_signals,
 )
-from app.services.fetch_weather_real import fetch_weather_vancouver
+from app.services.fetch_weather_real import fetch_weather_vancouver, weather_display_dict
 
 log = logging.getLogger("littlebuggy.homepage_builder")
 
@@ -100,6 +100,7 @@ def build_emergency_payload(*, region: str = "Metro Vancouver") -> dict[str, Any
         "covid": virus["covid"],
         "air_quality": env["air_quality"],
         "weather": env["weather"],
+        "weather_display": None,
         "outdoor_feel": built["outdoor_feel"],
         "summary": built["summary_text"],
         "updated_at": now.isoformat().replace("+00:00", "Z"),
@@ -149,6 +150,7 @@ def build_homepage_summary_dict(*, region: str = "Metro Vancouver") -> tuple[dic
         "air_quality": aqhi.air_quality if aqhi.ok else "Unavailable",
         "weather": wx.weather_summary if wx.ok else "Unavailable",
     }
+    weather_display = weather_display_dict(wx) if wx.ok else None
     sources = build_sources_bundle(resp, aqhi, wx)
     notes: list[str] = []
     if not resp.ok:
@@ -174,6 +176,7 @@ def build_homepage_summary_dict(*, region: str = "Metro Vancouver") -> tuple[dic
         "covid": virus["covid"],
         "air_quality": env["air_quality"],
         "weather": env["weather"],
+        "weather_display": weather_display,
         "outdoor_feel": built["outdoor_feel"],
         "summary": built["summary_text"],
         "updated_at": now.isoformat().replace("+00:00", "Z"),

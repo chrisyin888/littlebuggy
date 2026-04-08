@@ -15,6 +15,7 @@ _TREND_SNAPSHOT_COLUMNS = [
     ("weather_summary", "TEXT"),
     ("sources_json", "TEXT"),
     ("data_quality_note", "TEXT"),
+    ("weather_display_json", "TEXT"),
 ]
 
 

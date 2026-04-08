@@ -196,6 +196,44 @@
     "langPanelHint": "下方共七种语言可选；韩文、日文、印地语、菲律宾语、越南语在完整翻译上线前暂与英文界面一致。",
     "langRoadmap": "韩文、日文、印地语、菲律宾语、越南语译文将分批完善 — 版面结构不变。"
   },
+  "waitTimes": {
+    "nav": "急诊等候",
+    "title": "急诊等候时间",
+    "lead": "部分大温医院急诊预计等候；数字随官方更新。",
+    "backHome": "← 返回首页",
+    "loading": "正在加载最新等候时间…",
+    "errorGeneric": "暂时无法加载等候时间，请稍后再试。",
+    "errorNetwork": "无法连接服务器，请检查网络后重试。",
+    "estimatedWait": "预计等候",
+    "lastChecked": "上次检查：{time}",
+    "sourceUpdated": "来源更新时间：{time}",
+    "nearTimestampsNote": "若医院官方尚未发布新数据，数字可能与上次相同。",
+    "refreshHonestyNote": "每次刷新都会重新拉取，但若来源尚未更新，等候分钟数也可能不变。",
+    "nonePosted": "本次拉取里跟踪的医院都还没有新的等候数字——可稍后再试或点刷新。",
+    "disclaimer": "等候时间仅为估算，可能随时变化。就诊顺序按病情紧急程度，而非先到先得。危及生命请拨打 911。",
+    "sourceNote": "数据实时来自卑诗省公开的急诊等候时间网站（edwaittimes.ca），本站仅作展示。",
+    "refreshNow": "立即刷新",
+    "refreshing": "刷新中…",
+    "severity": {
+      "short": "较短",
+      "medium": "中等",
+      "long": "较长",
+      "unknown": "暂无"
+    }
+  },
+  "upccWaitTimes": {
+    "nav": "紧急初级护理等候",
+    "title": "紧急与初级护理中心（UPCC）等候时间",
+    "lead": "非急救的当日 urgent care。危及生命请打 911。",
+    "loading": "正在加载 UPCC 等候时间…",
+    "estimatedWait": "预计等候",
+    "disclaimer": "UPCC 用于较紧急、又挂不上家庭医生号的情况，不是普通门诊。等候为估算，实际按病情优先。危及生命请拨打 911。",
+    "sourceNote": "与上方急诊列表相同，数据来自卑诗省公开等候时间网站（edwaittimes.ca），本站仅筛选并展示 UPCC 网点。",
+    "legacyNoUpcc": "当前走急诊备用页面时，这里不列出 UPCC 等候。请几分钟后再试。",
+    "emptyList": "本次数据里这些 UPCC 还没有新的等候时间——请稍后再试。",
+    "refreshNow": "立即刷新",
+    "refreshing": "刷新中…"
+  },
   "brand": {
     "tag": "加拿大 · 多语言家庭",
     "tagShort": "大温哥华"
@@ -211,7 +249,7 @@
       },
       "status": {
         "ok": "正常",
-        "bad": "不可用 / 错误",
+        "bad": "未加载",
         "unknown": "未知"
       },
       "refreshedLine": "来源刷新：{label}",
@@ -220,10 +258,11 @@
     "pulseSuffix": "家庭脉搏",
     "pulseDefault": "大温哥华家庭脉搏",
     "valueStrip": {
-      "a11y": "快速入口",
+      "a11y": "快速跳转",
+      "erWaits": "急诊等候时间",
+      "upccWaits": "UPCC 等候时间",
       "snapshot": "看本周快照",
-      "howRead": "怎么读快照",
-      "languages": "用熟悉语言浏览"
+      "seekHelp": "何时就医"
     },
     "readGuide": {
       "title": "怎么读本周快照",
@@ -267,7 +306,8 @@
     },
     "snapshotSection": {
       "title": "本周快照",
-      "deckShort": "呼吸道、空气与天气——来自公开数据，按节奏更新。",
+      "deckShort": "大温公开数据：RSV、流感、新冠、天气、空气。",
+      "envEyebrow": "天气与空气",
       "dataInfoSummary": "数据与更新说明",
       "deck": "大温呼吸道信号、空气质量与天气——按节奏从公开数据源整理，页面打开时不会实时抓取。",
       "cta": "查看本周快照",
@@ -286,8 +326,10 @@
     },
     "hero": {
       "title": "本周孩子健康快照",
-      "subtitle": "本地家长最关心的健康信号，一眼看懂",
-      "btnSeeWeek": "查看本周快照",
+      "subtitle": "RSV、流感、新冠、天气、空气，一页看完。",
+      "btnSeeWeek": "打开快照",
+      "linkHowItWorks": "怎么运作",
+      "previewKicker": "本周",
       "langHint": "支持中文、英文及更多家庭常用语言",
       "btnHowRead": "怎么读本周快照",
       "virusLabels": {
@@ -322,7 +364,7 @@
       },
       "envBlurbs": {
         "air": "今天在外面呼吸起来有多轻松。",
-        "weather": "来自天气接口的当下天空和状况。",
+        "weather": "来自天气接口的今日预计最高/最低与状况，不是逐分钟实况。",
         "outdoor": "用大白话说说：适合公园还是适合沙发堡垒。"
       },
       "blurbs": {
@@ -353,6 +395,14 @@
         "lineViruses": "本周三项呼吸道卡片对应的公开水平约为 {rsv}、{flu}、{covid}——系人群层面参考，不是您家孩子的化验结果。",
         "lineEnv": "空气：{air}。天气：{weather}。"
       }
+    },
+    "weather": {
+      "defaultLocation": "温哥华",
+      "cardTitle": "{place}天气",
+      "highTemp": "最高 {n}°C",
+      "lowTemp": "最低 {n}°C",
+      "currentSmall": "当前约 {n}°C",
+      "weekSummaryRange": "最高 {high}°C，最低 {low}°C"
     },
     "trustPanel": {
       "asideLabel": "数据来源与说明",
@@ -438,14 +488,14 @@
       "nose": { "label": "流鼻涕或鼻塞", "tip": "托育季背景音！黏鼻涕加全身不舒服，往往和当周在传的小病一起走。" }
     },
     "seek": {
-      "title": "什么时候该寻求更多帮助",
-      "lead": "你最了解自家小人儿。若感觉很吓人或非常不对劲，诊所、护士热线或急救才是下一步。",
+      "title": "何时需要更多帮助",
+      "lead": "相信直觉。急救打 911；其他情况联系护士热线或诊所。",
       "lines": [
-        "呼吸看起来非常费力、嘴唇发紫，或喘鸣特别响",
-        "几乎不湿尿布、嘴很干，或很难叫醒",
-        "三个月以下发烧，或任何发烧拖过三天",
-        "吐个不停、大便带血，或肚子剧痛",
-        "意识混乱、脖子发僵，或轻轻按压不褪色的皮疹"
+        "呼吸很吃力、嘴唇发紫或喘鸣很响",
+        "几乎不尿、嘴很干，或很难叫醒",
+        "三个月内婴儿发烧，或发烧超过三天",
+        "不停呕吐、便血或肚子剧痛",
+        "意识不清、脖子发僵，或按压不褪色的皮疹"
       ]
     },
     "common": {

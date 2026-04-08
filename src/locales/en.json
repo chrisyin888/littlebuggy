@@ -196,6 +196,44 @@
     "langPanelHint": "Seven languages below — Korean, Japanese, Hindi, Filipino, and Vietnamese use English copy until their locale files ship.",
     "langRoadmap": "We’re filling in Korean, Japanese, Hindi, Filipino, and Vietnamese translations over time — the layout stays the same."
   },
+  "waitTimes": {
+    "nav": "ER waits",
+    "title": "Emergency Wait Times",
+    "lead": "Estimated waits at selected Lower Mainland ERs. Updates when the source posts new numbers.",
+    "backHome": "← Back to home",
+    "loading": "Loading the latest wait times…",
+    "errorGeneric": "We couldn’t load wait times just now. You can retry in a moment.",
+    "errorNetwork": "We couldn’t reach the server. Check your connection and try again.",
+    "estimatedWait": "Estimated wait",
+    "lastChecked": "Last checked: {time}",
+    "sourceUpdated": "Source updated: {time}",
+    "nearTimestampsNote": "Numbers may stay the same if the hospital source has not published a new update yet.",
+    "refreshHonestyNote": "Wait times may not change on every refresh if the source has not posted a newer update — a fresh check can still show the same minutes.",
+    "nonePosted": "No posted wait times for the hospitals we track in the latest pull—try refreshing in a moment.",
+    "disclaimer": "Wait times are estimates only and may change quickly. Patients are seen based on urgency, not arrival order. Call 911 for life-threatening emergencies.",
+    "sourceNote": "Data is fetched live from the public BC emergency wait times service (edwaittimes.ca) and shown here for convenience.",
+    "refreshNow": "Refresh now",
+    "refreshing": "Refreshing…",
+    "severity": {
+      "short": "Shorter wait",
+      "medium": "Moderate",
+      "long": "Longer wait",
+      "unknown": "N/A"
+    }
+  },
+  "upccWaitTimes": {
+    "nav": "Urgent care waits",
+    "title": "Urgent & Primary Care (UPCC) Wait Times",
+    "lead": "Same-day urgent care (not emergencies). Call 911 for life-threatening problems.",
+    "loading": "Loading UPCC wait times…",
+    "estimatedWait": "Estimated wait",
+    "disclaimer": "UPCC visits are for urgent (not routine) issues when you can’t see your usual clinic. Waits are estimates; you’ll be seen based on clinical need. Call 911 for life-threatening emergencies.",
+    "sourceNote": "Pulled from the same public BC wait-times service as the ER list (edwaittimes.ca), filtered to UPCC locations.",
+    "legacyNoUpcc": "When we use the backup ER page, UPCC waits aren’t listed here. Try again in a few minutes.",
+    "emptyList": "No posted waits for these centres in the latest pull—try again soon.",
+    "refreshNow": "Refresh now",
+    "refreshing": "Refreshing…"
+  },
   "brand": {
     "tag": "Canada · multilingual families",
     "tagShort": "Metro Vancouver"
@@ -211,7 +249,7 @@
       },
       "status": {
         "ok": "OK",
-        "bad": "Unavailable / error",
+        "bad": "Not loaded",
         "unknown": "Unknown"
       },
       "refreshedLine": "Source refresh: {label}",
@@ -220,10 +258,11 @@
     "pulseSuffix": "family pulse",
     "pulseDefault": "Metro Vancouver family pulse",
     "valueStrip": {
-      "a11y": "Quick ways to explore",
+      "a11y": "Jump to a section",
+      "erWaits": "ER wait times",
+      "upccWaits": "Urgent care waits",
       "snapshot": "This week’s snapshot",
-      "howRead": "How to read the snapshot",
-      "languages": "Browse in a familiar language"
+      "seekHelp": "When to get help"
     },
     "readGuide": {
       "title": "How to read this week’s snapshot",
@@ -267,7 +306,8 @@
     },
     "snapshotSection": {
       "title": "This week’s snapshot",
-      "deckShort": "Respiratory signals, air, and weather — from public sources, refreshed on a schedule.",
+      "deckShort": "Public data for Metro Vancouver — RSV, flu, COVID, weather, air.",
+      "envEyebrow": "Weather & air",
       "dataInfoSummary": "About this data & updates",
       "deck": "Metro Vancouver respiratory signals, air quality, and weather — refreshed on a schedule from public sources, not live scraping.",
       "cta": "This week’s snapshot",
@@ -286,8 +326,10 @@
     },
     "hero": {
       "title": "This week’s kids’ health snapshot",
-      "subtitle": "Local health signals parents care about — at a glance",
-      "btnSeeWeek": "See this week’s snapshot",
+      "subtitle": "RSV, flu, COVID, weather, and air — one screen.",
+      "btnSeeWeek": "Open snapshot",
+      "linkHowItWorks": "How this works",
+      "previewKicker": "This week",
       "langHint": "Supports Chinese, English, and more languages families use at home.",
       "btnHowRead": "How to read the snapshot",
       "virusLabels": {
@@ -322,7 +364,7 @@
       },
       "envBlurbs": {
         "air": "How easy-breathing it feels to be outside today.",
-        "weather": "Right-now sky and conditions from our weather feed.",
+        "weather": "Today’s expected high and low from our weather feed, plus conditions — not minute-by-minute.",
         "outdoor": "A plain-English read for park time vs couch time."
       },
       "blurbs": {
@@ -354,6 +396,14 @@
         "lineEnv": "Air: {air}. Weather: {weather}."
       }
     },
+    "weather": {
+      "defaultLocation": "Vancouver",
+      "cardTitle": "{place} Weather",
+      "highTemp": "High {n}°C",
+      "lowTemp": "Low {n}°C",
+      "currentSmall": "Current: {n}°C",
+      "weekSummaryRange": "High {high}°C, low {low}°C"
+    },
     "trustPanel": {
       "asideLabel": "Data sources and trust",
       "cadenceTitle": "How often this updates",
@@ -362,7 +412,7 @@
       "mixedTitle": "What’s snapshot vs playful",
       "mixedBody": "When loaded, the snapshot cards (respiratory, air, weather) match the saved data. Some editorial story cards stay decorative — friendly context, not official neighbourhood readings.",
       "partialTitle": "Some feeds didn’t refresh cleanly",
-      "partialBody": "A source may be temporarily unavailable. Treat numbers as incomplete and use “Where our data comes from” for the full walkthrough.",
+      "partialBody": "A feed may not refresh cleanly every run—treat numbers as incomplete and use “Where our data comes from” for the full walkthrough.",
       "mascotHint": "Want the friendly version of how we read signals? Tap the button above."
     },
     "topConcerns": {
@@ -438,14 +488,14 @@
       "nose": { "label": "Runny or stuffy nose", "tip": "Daycare season’s background soundtrack! Thicker mucus plus feeling crummy often tracks with whatever virus is visiting that week." }
     },
     "seek": {
-      "title": "When to loop in extra help",
-      "lead": "You know your little person best. If something feels scary or way off, your clinic, nurse line, or 911 is the right next step.",
+      "title": "When to seek more help",
+      "lead": "Trust your gut. Call 911 for emergencies; otherwise nurse line or clinic.",
       "lines": [
-        "Breathing looks really hard, lips turn blue, or wheezing is super loud",
-        "Hardly any wet diapers, super dry mouth, or so sleepy it’s hard to wake them",
-        "Tiny baby under 3 months with a fever, or any fever that hangs on past three days",
-        "Throwing up won’t stop, there’s blood in poop, or tummy pain is intense",
-        "Seems confused, neck is stiff, or a rash that doesn’t fade when you gently press it"
+        "Hard breathing, blue lips, or loud wheezing",
+        "Very dry or hardly peeing, or hard to wake",
+        "Baby under 3 months with fever, or fever over 3 days",
+        "Nonstop vomiting, blood in stool, or severe belly pain",
+        "Confusion, stiff neck, or rash that doesn’t fade when pressed"
       ]
     },
     "common": {

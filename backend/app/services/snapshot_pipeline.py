@@ -21,7 +21,7 @@ from app.models.trend_snapshot import TrendSnapshot
 from app.services.build_summary import build_summary
 from app.services.fetch_aqhi_real import fetch_aqhi_metro_vancouver
 from app.services.fetch_bccdc_real import fetch_respiratory_bc_signals
-from app.services.fetch_weather_real import fetch_weather_vancouver
+from app.services.fetch_weather_real import fetch_weather_vancouver, weather_display_dict
 from app.services.homepage_summary_builder import build_sources_bundle
 from app.services.save_snapshot import save_snapshot
 
@@ -50,6 +50,16 @@ def _env_from_snapshot(row: TrendSnapshot | None) -> dict[str, str]:
         "air_quality": row.air_quality_level,
         "weather": row.weather_summary,
     }
+
+
+def _weather_display_from_snapshot(row: TrendSnapshot | None) -> dict[str, Any] | None:
+    if row is None or not row.weather_display_json:
+        return None
+    try:
+        d = json.loads(row.weather_display_json)
+        return d if isinstance(d, dict) else None
+    except Exception:
+        return None
 
 
 def run_snapshot_job(db: Session, *, region: str, mode: RefreshMode) -> int:
@@ -158,6 +168,12 @@ def run_snapshot_job(db: Session, *, region: str, mode: RefreshMode) -> int:
     built = build_summary(virus, env)
     log.info("Pipeline mode=%s virus=%s env=%s", mode, virus, env)
 
+    weather_display: dict[str, Any] | None
+    if need_env:
+        weather_display = weather_display_dict(wx) if wx and wx.ok else None
+    else:
+        weather_display = _weather_display_from_snapshot(last)
+
     row = save_snapshot(
         db,
         region=region,
@@ -167,6 +183,7 @@ def run_snapshot_job(db: Session, *, region: str, mode: RefreshMode) -> int:
         summary_text=built["summary_text"],
         sources=sources,
         data_quality_note=data_quality_note,
+        weather_display=weather_display,
     )
     log.info("Saved trend_snapshots id=%s", row.id)
     return row.id

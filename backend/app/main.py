@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import api_router
+from app.api.routes import virus_trends, wait_times
 from app.config import settings
 from app.database import Base, engine
 from app.services.db_schema import ensure_trend_snapshot_columns
@@ -37,6 +38,8 @@ app.add_middleware(
 )
 
 app.include_router(api_router)
+app.include_router(virus_trends.public_router)
+app.include_router(wait_times.router)
 
 
 @app.get("/health")

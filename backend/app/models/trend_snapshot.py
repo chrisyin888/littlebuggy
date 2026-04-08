@@ -25,6 +25,8 @@ class TrendSnapshot(Base):
     air_quality_level: Mapped[str] = mapped_column(String(256), nullable=False)
 
     weather_summary: Mapped[str] = mapped_column(String(256), nullable=False, default="Unavailable")
+    # JSON: location_label, high_c, low_c, optional current_c, condition (see WeatherDisplayPayload).
+    weather_display_json: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     outdoor_feel: Mapped[str] = mapped_column(String(128), nullable=False)
     summary_text: Mapped[str] = mapped_column(Text, nullable=False)

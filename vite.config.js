@@ -16,6 +16,10 @@ export default defineConfig(({ mode }) => {
           target: apiProxyTarget,
           changeOrigin: true,
         },
+        '/wait-times': {
+          target: apiProxyTarget,
+          changeOrigin: true,
+        },
       },
     },
   }

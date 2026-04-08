@@ -49,7 +49,7 @@ def print_health(payload: dict[str, Any], fetch_warnings: list[str]) -> None:
         payload.get("weather", "")
     ).lower() not in ("", "unavailable")
     print(f"  virus cards:  {'OK' if virus_ok else 'partial/placeholder (Unknown)'}")
-    print(f"  env cards:    {'OK' if env_ok else 'partial/placeholder (Unavailable)'}")
+    print(f"  env cards:    {'OK' if env_ok else 'partial / placeholder'}")
     n_ok = sources_ok_count(payload)
     print(f"  sources:      {n_ok}/3 feeds marked ok in JSON")
     if payload.get("data_quality_note"):

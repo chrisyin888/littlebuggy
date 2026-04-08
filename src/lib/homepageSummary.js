@@ -56,6 +56,32 @@ export function normalizeHomepageSummaryPayload(input) {
   o.covid_label = str(o.covid_label, '')
   o.air_quality = str(o.air_quality, 'Unavailable')
   o.weather = str(o.weather, 'Unavailable')
+  const wdIn = o.weather_display
+  if (wdIn && typeof wdIn === 'object' && !Array.isArray(wdIn)) {
+    const wd = /** @type {Record<string, unknown>} */ (wdIn)
+    const num = (v) => {
+      const n = Number(v)
+      return Number.isFinite(n) ? n : null
+    }
+    const hi = num(wd.high_c)
+    const lo = num(wd.low_c)
+    const cur = num(wd.current_c)
+    const place =
+      typeof wd.location_label === 'string' && wd.location_label.trim()
+        ? wd.location_label.trim()
+        : 'Vancouver'
+    const cond =
+      wd.condition != null && String(wd.condition).trim() ? String(wd.condition).trim() : null
+    if (hi != null && lo != null) {
+      const block = { location_label: place, high_c: hi, low_c: lo, condition: cond }
+      if (cur != null) block.current_c = cur
+      o.weather_display = block
+    } else {
+      o.weather_display = null
+    }
+  } else {
+    o.weather_display = null
+  }
   o.outdoor_feel = str(o.outdoor_feel, 'Unavailable')
   o.updated_at = str(o.updated_at, '')
   o.short_summary = str(o.short_summary, '')

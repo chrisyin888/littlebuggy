@@ -10,6 +10,11 @@ const router = createRouter({
       component: HomeView,
     },
     {
+      path: '/wait-times',
+      name: 'waitTimes',
+      component: () => import('../views/WaitTimesView.vue'),
+    },
+    {
       path: '/admin/update',
       name: 'adminHomepageUpdate',
       component: () => import('../views/AdminHomepageUpdateView.vue'),

@@ -16,6 +16,7 @@ def save_snapshot(
     summary_text: str,
     sources: dict[str, Any] | None = None,
     data_quality_note: str | None = None,
+    weather_display: dict[str, Any] | None = None,
 ) -> TrendSnapshot:
     """
     Persist one trend_snapshots row. Called after fetch + build_summary.
@@ -28,6 +29,7 @@ def save_snapshot(
         pollen_level="",
         air_quality_level=env_data["air_quality"],
         weather_summary=env_data.get("weather", "Unavailable"),
+        weather_display_json=json.dumps(weather_display, ensure_ascii=False) if weather_display else None,
         outdoor_feel=outdoor_feel,
         summary_text=summary_text,
         sources_json=json.dumps(sources, ensure_ascii=False) if sources else None,

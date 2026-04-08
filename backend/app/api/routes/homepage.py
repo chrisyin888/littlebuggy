@@ -13,7 +13,12 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.trend_snapshot import TrendSnapshot
-from app.schemas.homepage import HomepageSummaryResponse, SourceMeta, SourcesBundle
+from app.schemas.homepage import (
+    HomepageSummaryResponse,
+    SourceMeta,
+    SourcesBundle,
+    WeatherDisplayPayload,
+)
 
 router = APIRouter()
 
@@ -37,6 +42,18 @@ _FALLBACK_SOURCES = SourcesBundle(
         status="unknown",
     ),
 )
+
+
+def _parse_weather_display(raw: str | None) -> WeatherDisplayPayload | None:
+    if not raw:
+        return None
+    try:
+        data = json.loads(raw)
+        if not isinstance(data, dict):
+            return None
+        return WeatherDisplayPayload.model_validate(data)
+    except Exception:
+        return None
 
 
 def _parse_sources(raw: str | None) -> SourcesBundle:
@@ -69,6 +86,7 @@ def homepage_summary(db: Session = Depends(get_db)) -> HomepageSummaryResponse:
         covid=row.covid_level,
         air_quality=row.air_quality_level,
         weather=row.weather_summary,
+        weather_display=_parse_weather_display(row.weather_display_json),
         outdoor_feel=row.outdoor_feel,
         summary=row.summary_text,
         updated_at=row.created_at,

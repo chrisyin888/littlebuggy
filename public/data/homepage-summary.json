@@ -3,11 +3,18 @@
   "rsv": "Medium (Stable)",
   "flu": "Medium (Falling)",
   "covid": "Low (Rising)",
-  "air_quality": "AQHI ~3 (Low Risk) — Metro Vancouver - NW",
-  "weather": "Clear · 11°C",
+  "air_quality": "AQHI ~3 (Low Risk) — Metro Vancouver - NE",
+  "weather": "3°–13°C · Clear",
+  "weather_display": {
+    "location_label": "Vancouver",
+    "high_c": 12.7,
+    "low_c": 3.0,
+    "condition": "Clear",
+    "current_c": 12.6
+  },
   "outdoor_feel": "Nice for a walk outside",
-  "summary": "In this week’s snapshot for Metro Vancouver, RSV looks medium (stable), flu medium (falling), and COVID low (rising)—neighbourhood context, not a test result for your child. Air: comfortable for most kids (lower risk on the AQHI scale). Weather: Clear · 11°C. For most families we’d call it “Nice for a walk outside” outside today.",
-  "updated_at": "2026-04-07T18:56:18Z",
+  "summary": "In this week’s snapshot for Metro Vancouver, RSV looks medium (stable), flu medium (falling), and COVID low (rising)—neighbourhood context, not a test result for your child. Air: comfortable for most kids (lower risk on the AQHI scale). Weather: 3°–13°C · Clear. For most families we’d call it “Nice for a walk outside” outside today.",
+  "updated_at": "2026-04-08T22:44:06Z",
   "sources": {
     "respiratory": {
       "name": "Public Health Agency of Canada — Health Infobase (wastewater, BC)",
@@ -18,18 +25,18 @@
     "aqhi": {
       "name": "Environment and Climate Change Canada — MSC GeoMet (AQHI)",
       "url": "https://open.canada.ca/data/en/dataset/28936e1b-681f-4c73-b04a-e86d4b3917c6",
-      "refreshed_label": "11:00 AM PDT Tuesday  7 April 2026",
+      "refreshed_label": "3:00 PM PDT Wednesday  8 April 2026",
       "status": "ok"
     },
     "weather": {
-      "name": "Open-Meteo (forecast API, current)",
+      "name": "Open-Meteo (forecast API, daily + current)",
       "url": "https://open-meteo.com/en/docs",
-      "refreshed_label": "2026-04-07T11:45",
+      "refreshed_label": "2026-04-08T15:30",
       "status": "ok"
     }
   },
   "data_quality_note": null,
-  "short_summary": "In this week’s snapshot for Metro Vancouver, RSV looks medium (stable), flu medium (falling), and COVID low (rising)—neighbourhood context, not a test result for your child. Air: comfortable for most kids (lower risk on the AQHI scale). Weather: Clear · 11°C. For most families we’d call it “Nice for a walk outside” outside today.",
+  "short_summary": "In this week’s snapshot for Metro Vancouver, RSV looks medium (stable), flu medium (falling), and COVID low (rising)—neighbourhood context, not a test result for your child. Air: comfortable for most kids (lower risk on the AQHI scale). Weather: 3°–13°C · Clear. For most families we’d call it “Nice for a walk outside” outside today.",
   "live_vs_illustrative_note": "What’s live in this snapshot: RSV, flu, COVID, air, and weather cards. What’s playful: the map bubbles and some story cards—they’re mood, not official area data.",
   "schema_version": 1
 }

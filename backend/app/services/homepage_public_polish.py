@@ -114,7 +114,7 @@ def polish_homepage_summary_payload(raw: dict[str, Any]) -> dict[str, Any]:
         )
     except Exception:
         fallback = str(out.get("summary") or "").strip()
-        short = (fallback[:500] + "…") if len(fallback) > 500 else (fallback or "Summary unavailable this run.")
+        short = (fallback[:500] + "…") if len(fallback) > 500 else (fallback or "Summary not ready this run.")
     out["short_summary"] = short
     out["summary"] = short
     out["live_vs_illustrative_note"] = LIVE_VS_ILLUSTRATIVE_EN

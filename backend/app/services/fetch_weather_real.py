@@ -1,12 +1,11 @@
 """
-Current weather for Vancouver core via Open-Meteo (forecast API, current conditions).
+Vancouver-area weather via Open-Meteo (forecast API): **today’s daily high/low** (primary) plus
+optional **current** temperature for a small secondary line.
 
 **Classification:** *third-party API* — Open-Meteo (https://open-meteo.com) aggregates models;
 terms: https://open-meteo.com/en/terms . No API key for non-commercial reasonable use.
 
-Environment Canada GeoMet weather layers exist, but Open-Meteo is simpler for a solo-founder V1
-current-conditions read. MSC remains the authoritative narrative for severe weather; this is
-a lightweight “what it feels like now” input for `outdoor_feel`.
+MSC remains the authoritative narrative for severe weather; this is a lightweight family snapshot.
 """
 
 from __future__ import annotations
@@ -61,6 +60,27 @@ class WeatherBundle:
     fetched_at: datetime
     error: str | None = None
     extra: dict[str, Any] | None = None
+    # Today’s range (daily forecast, local timezone); optional current for UI footnote
+    high_c: float | None = None
+    low_c: float | None = None
+    current_c: float | None = None
+    condition_label: str | None = None
+    location_label: str = "Vancouver"
+
+
+def weather_display_dict(b: WeatherBundle) -> dict[str, Any] | None:
+    """Structured block for API / static JSON; None when fetch failed."""
+    if not b.ok or b.high_c is None or b.low_c is None:
+        return None
+    out: dict[str, Any] = {
+        "location_label": b.location_label,
+        "high_c": round(float(b.high_c), 1),
+        "low_c": round(float(b.low_c), 1),
+        "condition": b.condition_label,
+    }
+    if b.current_c is not None:
+        out["current_c"] = round(float(b.current_c), 1)
+    return out
 
 
 def fetch_weather_vancouver() -> WeatherBundle:
@@ -69,7 +89,9 @@ def fetch_weather_vancouver() -> WeatherBundle:
         "latitude": LAT,
         "longitude": LON,
         "current": "temperature_2m,precipitation,weather_code,wind_speed_10m",
+        "daily": "temperature_2m_max,temperature_2m_min,weather_code",
         "timezone": "America/Vancouver",
+        "forecast_days": 2,
     }
     try:
         with http_client() as client:
@@ -89,6 +111,7 @@ def fetch_weather_vancouver() -> WeatherBundle:
         )
 
     cur = data.get("current") if isinstance(data, dict) else None
+    daily = data.get("daily") if isinstance(data, dict) else None
     if not isinstance(cur, dict):
         return WeatherBundle(
             ok=False,
@@ -101,9 +124,9 @@ def fetch_weather_vancouver() -> WeatherBundle:
         )
 
     try:
-        t = float(cur.get("temperature_2m"))
+        current_temp = float(cur.get("temperature_2m"))
         p = float(cur.get("precipitation") or 0)
-        wcode = int(cur.get("weather_code") or 0)
+        cur_wcode = int(cur.get("weather_code") or 0)
         wind = float(cur.get("wind_speed_10m") or 0)
     except (TypeError, ValueError):
         return WeatherBundle(
@@ -116,22 +139,50 @@ def fetch_weather_vancouver() -> WeatherBundle:
             error="bad_numeric_fields",
         )
 
-    label = _WMO_LABELS.get(wcode, f"Weather code {wcode}")
     when = cur.get("time")
-    bits = [f"{label}", f"{t:.0f}°C"]
+    high_c: float | None = None
+    low_c: float | None = None
+    day_wcode = cur_wcode
+    label: str
+
+    if isinstance(daily, dict):
+        times = daily.get("time") or []
+        maxs = daily.get("temperature_2m_max") or []
+        mins = daily.get("temperature_2m_min") or []
+        codes = daily.get("weather_code") or []
+        if times and maxs and mins and len(times) == len(maxs) == len(mins):
+            try:
+                high_c = float(maxs[0])
+                low_c = float(mins[0])
+                if codes and len(codes) > 0:
+                    day_wcode = int(codes[0])
+            except (TypeError, ValueError, IndexError):
+                high_c = low_c = None
+
+    if high_c is None or low_c is None:
+        high_c = low_c = current_temp
+        day_wcode = cur_wcode
+
+    label = _WMO_LABELS.get(day_wcode, f"Weather code {day_wcode}")
+    # Summary for text pipelines: range first (no leading “High” — avoids i18n level collisions).
+    summary = f"{low_c:.0f}°–{high_c:.0f}°C · {label}"
     if p > 0.2:
-        bits.append(f"precip ~{p:.1f} mm")
+        summary = f"{summary} · precip ~{p:.1f} mm"
     if wind >= 25:
-        bits.append(f"breezy ~{wind:.0f} km/h")
-    summary = " · ".join(bits)
+        summary = f"{summary} · breezy ~{wind:.0f} km/h"
 
     return WeatherBundle(
         ok=True,
         weather_summary=summary,
-        source_name="Open-Meteo (forecast API, current)",
+        source_name="Open-Meteo (forecast API, daily + current)",
         source_url="https://open-meteo.com/en/docs",
         source_updated_label=str(when) if when else None,
         fetched_at=fetched_at,
         error=None,
-        extra={"latitude": LAT, "longitude": LON, "weather_code": wcode},
+        extra={"latitude": LAT, "longitude": LON, "weather_code": day_wcode},
+        high_c=high_c,
+        low_c=low_c,
+        current_c=current_temp,
+        condition_label=label,
+        location_label="Vancouver",
     )

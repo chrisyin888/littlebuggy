@@ -6,6 +6,11 @@
 #    VITE_API_BASE_URL on the static service is optional unless you add other /api calls from the frontend.
 # 4) Cron jobs below must use the SAME DATABASE_URL value as the web service (Internal Database URL from Postgres).
 #    If your Render plan does not include Blueprint cron, create the same jobs manually: New → Cron Job.
+# 5) Virus trends JSON lives on the API web service disk. A separate Python cron cannot write that file; the
+#    virus-trends cron below calls POST /api/admin/virus-trends/refresh on the API. Set LITTLEBUGGY_API_URL to
+#    your public API base (e.g. https://littlebuggy-api.onrender.com) and ADMIN_HOMEPAGE_TOKEN to the same
+#    secret you use for homepage admin. Alternatively run `python3 -m app.jobs.refresh_virus_trends` where the
+#    process shares the API’s filesystem (e.g. single VPS).
 #
 # Smoke checks after deploy:
 #   curl https://<api>/health
@@ -70,4 +75,21 @@ services:
       - key: PYTHON_VERSION
         value: "3.12.0"
       - key: DATABASE_URL
+        sync: false
+
+  # ~11:30 PM America/Vancouver during daylight time (PDT): 06:30 UTC next calendar day. Standard time (PST)
+  # is one hour later local for the same UTC tick — adjust the cron if you need winter alignment.
+  - type: cron
+    name: littlebuggy-cron-virus-trends
+    region: oregon
+    rootDir: backend
+    schedule: "30 6 * * *"
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 -c "import os,urllib.error,urllib.request; b=os.environ['LITTLEBUGGY_API_URL'].rstrip('/'); u=b+'/api/admin/virus-trends/refresh'; t=os.environ['ADMIN_HOMEPAGE_TOKEN']; r=urllib.request.Request(u,method='POST',headers={'X-Admin-Token':t}); urllib.request.urlopen(r,timeout=120).read()"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+      - key: LITTLEBUGGY_API_URL
+        sync: false
+      - key: ADMIN_HOMEPAGE_TOKEN
         sync: false
