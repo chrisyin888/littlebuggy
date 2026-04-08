@@ -44,4 +44,12 @@ app.include_router(wait_times.router)
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "routes": {
+            "wait_times": "/wait-times",
+            "virus_trends": "/virus-trends",
+            "api_status": "/api/status",
+            "homepage_summary": "/api/homepage-summary",
+        },
+    }

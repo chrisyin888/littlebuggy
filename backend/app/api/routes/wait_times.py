@@ -26,7 +26,7 @@ def get_wait_times():
         body = fetch_er_wait_times_payload()
         return JSONResponse(content=body, headers=_NO_STORE_HEADERS)
     except Exception as e:
-        logger.warning("wait-times fetch failed: %s", e, exc_info=False)
+        logger.exception("wait-times upstream fetch/parse failed: %s", e)
         return JSONResponse(
             status_code=503,
             content={

@@ -326,10 +326,10 @@ function onEnvCardKeydown(e, row) {
               <a href="#weekly-snapshot" class="hero__cta hero__cta--primary">{{
                 $t('home.hero.btnSeeWeek')
               }}</a>
+              <button type="button" class="hero__micro-link" @click="openTrendDetail('how_it_works')">
+                {{ $t('home.hero.linkHowItWorks') }}
+              </button>
             </div>
-            <button type="button" class="hero__micro-link" @click="openTrendDetail('how_it_works')">
-              {{ $t('home.hero.linkHowItWorks') }}
-            </button>
 
             <p
               v-if="snapshotError && !snapshot && !snapshotLoading"
@@ -520,26 +520,32 @@ function onEnvCardKeydown(e, row) {
 
             <nav
               v-if="!snapshotLoading && (formattedUpdatedAt || provenanceRows.length)"
-              class="snapshot-foot__links snapshot-foot__links--simple"
+              class="snapshot-foot snapshot-foot--simple"
               :aria-label="$t('home.hero.sourcesFooterLabel')"
             >
-              <time v-if="formattedUpdatedAt && snapshot?.updated_at" class="snapshot-foot__time" :datetime="snapshot.updated_at">{{
-                formattedUpdatedAt
-              }}</time>
-              <button type="button" class="snapshot-foot__linkish" @click="openTrendDetail('how_it_works')">
-                {{ $t('home.hero.howSources') }}
-              </button>
-              <template v-for="row in provenanceRows" :key="row.key">
-                <a
-                  v-if="row.url"
-                  class="snapshot-foot__linkish"
-                  :href="row.url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >{{ row.name }}</a
-                >
-                <span v-else class="snapshot-foot__muted">{{ row.name }}</span>
-              </template>
+              <p v-if="formattedUpdatedAt && snapshot?.updated_at" class="snapshot-foot__meta">
+                <time class="snapshot-foot__time" :datetime="snapshot.updated_at">{{ formattedUpdatedAt }}</time>
+              </p>
+              <div class="snapshot-foot__actions">
+                <button type="button" class="snapshot-foot__linkish" @click="openTrendDetail('how_it_works')">
+                  {{ $t('home.hero.howSources') }}
+                </button>
+                <ul class="snapshot-foot__source-list" role="list">
+                  <li v-for="row in provenanceRows" :key="row.key" class="snapshot-foot__source-item">
+                    <a
+                      v-if="row.url"
+                      class="snapshot-foot__source-link"
+                      :href="row.url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      :title="row.name"
+                      :aria-label="row.name"
+                      >{{ row.kindLabel }}</a
+                    >
+                    <span v-else class="snapshot-foot__muted" :title="row.name">{{ row.kindLabel }}</span>
+                  </li>
+                </ul>
+              </div>
             </nav>
           </template>
         </div>
@@ -2588,15 +2594,63 @@ function onEnvCardKeydown(e, row) {
   color: #0f766e;
 }
 
-.snapshot-foot__links--simple {
+.hero__cta-row .hero__micro-link {
+  flex: 1 1 100%;
+  text-align: center;
+}
+
+@media (min-width: 480px) {
+  .hero__cta-row .hero__micro-link {
+    flex: 0 1 auto;
+    text-align: left;
+  }
+}
+
+.snapshot-foot--simple {
   margin-top: 1rem;
   padding-top: 0.75rem;
   border-top: 1px solid rgba(226, 232, 240, 0.9);
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.5rem 0.75rem;
 }
 
+.snapshot-foot__meta {
+  margin: 0 0 0.5rem;
+  text-align: center;
+}
+
+.snapshot-foot__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.snapshot-foot__source-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+}
+
+.snapshot-foot__source-item {
+  margin: 0;
+  text-align: center;
+}
+
+.snapshot-foot__source-link {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #5b21b6;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.snapshot-foot__source-link:hover {
+  color: #4c1d95;
+}
 
 /* Seek */
 .seek-card {

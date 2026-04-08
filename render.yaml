@@ -1,21 +1,20 @@
 # Render Blueprint — https://render.com/docs/blueprint-spec
 #
-# 1) Create a PostgreSQL instance on Render (or use an external DB), then set DATABASE_URL on the API service.
-# 2) Deploy the API; note its public URL (https://<name>.onrender.com).
-# 3) Static site: commit public/data/homepage-summary.json (npm run weekly:homepage before build).
-#    VITE_API_BASE_URL on the static service is optional unless you add other /api calls from the frontend.
-# 4) Cron jobs below must use the SAME DATABASE_URL value as the web service (Internal Database URL from Postgres).
-#    If your Render plan does not include Blueprint cron, create the same jobs manually: New → Cron Job.
-# 5) Virus trends JSON lives on the API web service disk. A separate Python cron cannot write that file; the
-#    virus-trends cron below calls POST /api/admin/virus-trends/refresh on the API. Set LITTLEBUGGY_API_URL to
-#    your public API base (e.g. https://littlebuggy-api.onrender.com) and ADMIN_HOMEPAGE_TOKEN to the same
-#    secret you use for homepage admin. Alternatively run `python3 -m app.jobs.refresh_virus_trends` where the
-#    process shares the API’s filesystem (e.g. single VPS).
+# Service URLs are derived from Render’s naming:
+#   API:  https://littlebuggy-api.onrender.com   (must match `name: littlebuggy-api` below)
+#   Site: https://littlebuggy-web.onrender.com   (must match `name: littlebuggy-web` below)
+# If you rename either service in the Render dashboard, update this file (VITE_API_BASE_URL, LITTLEBUGGY_API_URL).
 #
-# Smoke checks after deploy:
-#   curl https://<api>/health
-#   curl https://<api>/api/status
-#   curl https://<api>/api/homepage-summary
+# Custom domain (littlebuggy.ca): add it on the static service in the dashboard; CORS below already allows it.
+#
+# Local dev: npm run dev:all
+#
+# Manual steps left: connect GitHub + Blueprint in Render, add GoDaddy DNS, add custom domain on static service.
+
+databases:
+  - name: littlebuggy-db
+    plan: free
+    region: oregon
 
 services:
   - type: web
@@ -23,6 +22,8 @@ services:
     runtime: python
     plan: free
     region: oregon
+    branch: main
+    autoDeployTrigger: commit
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: python3 -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
@@ -31,13 +32,21 @@ services:
       - key: PYTHON_VERSION
         value: "3.12.0"
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: littlebuggy-db
+          property: connectionString
+      # No spaces. Includes custom domain + default Render hostname + local Vite for optional prod-API testing.
       - key: CORS_ORIGINS
-        sync: false
+        value: "https://littlebuggy.ca,https://www.littlebuggy.ca,https://littlebuggy-web.onrender.com,https://littlebuggy.onrender.com,http://localhost:5173,http://127.0.0.1:5173"
+      - key: ADMIN_HOMEPAGE_TOKEN
+        generateValue: true
 
   - type: web
     name: littlebuggy-web
     runtime: static
+    region: oregon
+    branch: main
+    autoDeployTrigger: commit
     rootDir: .
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
@@ -46,14 +55,15 @@ services:
         source: /*
         destination: /index.html
     envVars:
+      # Baked into the client bundle at build time (must match API public URL).
       - key: VITE_API_BASE_URL
-        sync: false
+        value: "https://littlebuggy-api.onrender.com"
 
-  # MVP schedule: daily AQHI+weather (bootstraps with a full run if the DB is empty), weekly respiratory refresh.
-  # Schedules are UTC. Adjust times for your ops window.
   - type: cron
     name: littlebuggy-cron-daily-environment
     region: oregon
+    branch: main
+    autoDeployTrigger: commit
     rootDir: backend
     schedule: "30 16 * * *"
     buildCommand: pip install -r requirements.txt
@@ -62,11 +72,15 @@ services:
       - key: PYTHON_VERSION
         value: "3.12.0"
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: littlebuggy-db
+          property: connectionString
 
   - type: cron
     name: littlebuggy-cron-weekly-respiratory
     region: oregon
+    branch: main
+    autoDeployTrigger: commit
     rootDir: backend
     schedule: "0 17 * * 1"
     buildCommand: pip install -r requirements.txt
@@ -75,13 +89,15 @@ services:
       - key: PYTHON_VERSION
         value: "3.12.0"
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: littlebuggy-db
+          property: connectionString
 
-  # ~11:30 PM America/Vancouver during daylight time (PDT): 06:30 UTC next calendar day. Standard time (PST)
-  # is one hour later local for the same UTC tick — adjust the cron if you need winter alignment.
   - type: cron
     name: littlebuggy-cron-virus-trends
     region: oregon
+    branch: main
+    autoDeployTrigger: commit
     rootDir: backend
     schedule: "30 6 * * *"
     buildCommand: pip install -r requirements.txt
@@ -90,6 +106,9 @@ services:
       - key: PYTHON_VERSION
         value: "3.12.0"
       - key: LITTLEBUGGY_API_URL
-        sync: false
+        value: "https://littlebuggy-api.onrender.com"
       - key: ADMIN_HOMEPAGE_TOKEN
-        sync: false
+        fromService:
+          name: littlebuggy-api
+          type: web
+          envVarKey: ADMIN_HOMEPAGE_TOKEN

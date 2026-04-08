@@ -28,34 +28,63 @@ async function runLoadWaitTimes(t, fromUser) {
   if (isFirst) loading.value = true
   else refreshing.value = true
 
+  let url = ''
   try {
-    const res = await fetch(buildWaitTimesRequestUrl(), { cache: 'no-store' })
+    url = buildWaitTimesRequestUrl()
+    const res = await fetch(url, { cache: 'no-store', mode: 'cors' })
+    const text = await res.text()
+
+    let data
+    try {
+      data = text ? JSON.parse(text) : null
+    } catch {
+      console.error('[LittleBuggy] wait-times: not JSON', {
+        status: res.status,
+        url,
+        contentType: res.headers.get('content-type'),
+        snippet: text.slice(0, 240),
+      })
+      error.value = t('waitTimes.errorGeneric')
+      return
+    }
+
     if (!res.ok) {
       let msg = t('waitTimes.errorGeneric')
-      try {
-        const body = await res.json()
-        const d = body?.detail
-        if (typeof d === 'string' && d.trim()) {
-          msg = d.trim()
-        } else if (Array.isArray(d) && d[0]?.msg) {
-          msg = String(d[0].msg)
-        }
-      } catch {
-        /* ignore */
+      const d = data?.detail
+      if (typeof d === 'string' && d.trim()) {
+        msg = d.trim()
+      } else if (Array.isArray(d) && d[0]?.msg) {
+        msg = String(d[0].msg)
       }
+      console.warn('[LittleBuggy] wait-times: HTTP', res.status, url, msg)
       error.value = msg
       return
     }
-    const data = await res.json()
-    if (data && Array.isArray(data.hospitals) && typeof data.checked_at === 'string') {
-      if (!Array.isArray(data.upcc_centres)) {
-        data.upcc_centres = []
-      }
-      payload.value = data
-    } else {
+
+    if (!data || typeof data !== 'object') {
+      console.error('[LittleBuggy] wait-times: empty JSON object', url)
       error.value = t('waitTimes.errorGeneric')
+      return
     }
-  } catch {
+    if (!Array.isArray(data.hospitals)) {
+      console.error('[LittleBuggy] wait-times: missing hospitals[]', url, Object.keys(data))
+      error.value = t('waitTimes.errorGeneric')
+      return
+    }
+
+    const checkedAt =
+      typeof data.checked_at === 'string' && data.checked_at.trim()
+        ? data.checked_at.trim()
+        : new Date().toISOString()
+
+    payload.value = {
+      ...data,
+      hospitals: data.hospitals,
+      upcc_centres: Array.isArray(data.upcc_centres) ? data.upcc_centres : [],
+      checked_at: checkedAt,
+    }
+  } catch (err) {
+    console.error('[LittleBuggy] wait-times: fetch error', url || buildWaitTimesRequestUrl(), err)
     error.value = t('waitTimes.errorNetwork')
   } finally {
     loading.value = false
