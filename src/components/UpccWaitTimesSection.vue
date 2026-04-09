@@ -123,6 +123,7 @@ function severityClass(w) {
               </span>
             </div>
             <p class="upcc-wait-card__city">{{ c.city }}</p>
+            <p v-if="c.address" class="upcc-wait-card__address">{{ c.address }}</p>
             <p class="upcc-wait-card__wait" aria-live="polite">
               <span class="upcc-wait-card__wait-label">{{ t('upccWaitTimes.estimatedWait') }}</span>
               <span class="upcc-wait-card__wait-value">{{ c.wait_text }}</span>
@@ -365,6 +366,14 @@ function severityClass(w) {
   font-size: 0.84rem;
   font-weight: 600;
   color: var(--color-ink-soft);
+}
+
+.upcc-wait-card__address {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  font-weight: 500;
+  color: var(--color-ink-muted);
 }
 
 .upcc-wait-card__wait {
