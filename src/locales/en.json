@@ -6,6 +6,7 @@
     "offline": "Snapshot offline — page may show friendly defaults until we reconnect ✦",
     "noTime": "Metro Vancouver snapshot — check the bar up top for when it was saved ✦",
     "latestLine": "Latest update: {when} · {region} · local trend snapshot",
+    "relativeLatestLine": "Updated {when} · {region} · local trend snapshot",
     "regionOnly": "{region} · local trend snapshot",
     "savedTooltip": "Snapshot saved: {date}",
     "phraseToday": "Today {time}",
@@ -304,6 +305,13 @@
         }
       }
     },
+    "trendSection": {
+      "title": "7-day trend",
+      "placeholder": "Illustrative preview — detailed charts coming soon.",
+      "rsv": "RSV",
+      "flu": "Flu",
+      "covid": "COVID"
+    },
     "snapshotSection": {
       "title": "This week’s snapshot",
       "deckShort": "Public data for Metro Vancouver — RSV, flu, COVID, weather, air.",
@@ -326,6 +334,8 @@
     },
     "hero": {
       "title": "This week’s kids’ health snapshot",
+      "tagline": "Real-time local health trends for kids in your area",
+      "trustDataLine": "Based on public health data. Not a medical diagnosis.",
       "subtitle": "RSV, flu, COVID, weather, and air — one screen.",
       "btnSeeWeek": "Open snapshot",
       "linkHowItWorks": "How this works",

@@ -8,6 +8,7 @@ import LanguageSwitcher from './components/LanguageSwitcher.vue'
 import LittleBuggyMascot from './components/LittleBuggyMascot.vue'
 import EmergencyHelpCard from './components/EmergencyHelpCard.vue'
 import { localeToDateLocale } from './utils/localeDisplay.js'
+import { formatRelativeTimePast } from './utils/relativeTime.js'
 
 const { t, locale } = useI18n()
 
@@ -67,8 +68,12 @@ const snapshotStatusText = computed(() => {
   if (!s?.updated_at) {
     return t('snapshot.noTime')
   }
-  const when = formatSnapshotUpdatePhrase(s.updated_at, t, locale.value)
   const region = (s.region || t('brand.tagShort')).trim()
+  const relative = formatRelativeTimePast(s.updated_at, locale.value)
+  if (relative) {
+    return t('snapshot.relativeLatestLine', { when: relative, region })
+  }
+  const when = formatSnapshotUpdatePhrase(s.updated_at, t, locale.value)
   if (!when) {
     return t('snapshot.regionOnly', { region })
   }
@@ -98,11 +103,12 @@ const snapshotBarTitle = computed(() => {
         aria-live="polite"
         :title="snapshotBarTitle"
       >
-        <span
-          class="snapshot-status-bar__dot"
-          :class="{ 'snapshot-status-bar__dot--busy': snapshotRefreshing }"
-          aria-hidden="true"
-        />
+        <span class="snapshot-status-bar__live" aria-hidden="true">
+          <span
+            class="snapshot-status-bar__dot"
+            :class="{ 'snapshot-status-bar__dot--busy': snapshotRefreshing }"
+          />
+        </span>
         <span class="snapshot-status-bar__text">{{ snapshotStatusText }}</span>
         <button
           type="button"
@@ -177,47 +183,68 @@ const snapshotBarTitle = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.65rem;
   flex-wrap: wrap;
   margin: 0;
-  padding: 0.42rem clamp(1rem, 4vw, 2rem);
-  font-size: 0.78rem;
+  padding: 0.55rem clamp(1rem, 4vw, 2rem);
+  font-size: 0.875rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.015em;
   text-align: center;
-  line-height: 1.35;
-  color: #6b21a8;
+  line-height: 1.4;
+  color: #4c1d95;
   background: linear-gradient(
-    95deg,
-    rgba(237, 233, 254, 0.97) 0%,
-    rgba(255, 248, 240, 0.95) 40%,
-    rgba(224, 242, 254, 0.92) 100%
+    105deg,
+    #e0f2fe 0%,
+    #dbeafe 18%,
+    #ede9fe 52%,
+    #fae8ff 78%,
+    #e9d5ff 100%
   );
-  border-bottom: 2px solid rgba(196, 181, 253, 0.45);
-  box-shadow: 0 4px 0 rgba(255, 200, 140, 0.22);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.snapshot-status-bar__live {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .snapshot-status-bar__dot {
   flex-shrink: 0;
-  width: 7px;
-  height: 7px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background: linear-gradient(145deg, #f9a8d4, #fcd34d);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
-  animation: status-pulse 2.8s ease-in-out infinite;
+  background: linear-gradient(145deg, #22d3ee, #a78bfa);
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.95),
+    0 0 12px rgba(167, 139, 250, 0.55);
+  animation:
+    status-pulse 2.4s ease-in-out infinite,
+    status-blink 1.6s ease-in-out infinite;
 }
 
 @keyframes status-pulse {
   0%,
   100% {
     transform: scale(1);
-    opacity: 0.85;
   }
   50% {
-    transform: scale(1.15);
+    transform: scale(1.12);
+  }
+}
+
+@keyframes status-blink {
+  0%,
+  100% {
     opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
   }
 }
 
@@ -228,9 +255,10 @@ const snapshotBarTitle = computed(() => {
 }
 
 .snapshot-status-bar__text {
-  max-width: 42rem;
-  flex: 1 1 12rem;
+  max-width: 46rem;
+  flex: 1 1 14rem;
   min-width: 0;
+  font-size: clamp(0.82rem, 2.4vw, 0.95rem);
 }
 
 .snapshot-status-bar__refresh {
@@ -240,18 +268,24 @@ const snapshotBarTitle = computed(() => {
   font-weight: 800;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  padding: 0.32rem 0.65rem;
-  border-radius: var(--radius-pill, 999px);
-  border: 2px solid rgba(196, 181, 253, 0.65);
-  background: rgba(255, 255, 255, 0.9);
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  border: 2px solid rgba(139, 92, 246, 0.35);
+  background: rgba(255, 255, 255, 0.92);
   color: #5b21b6;
   cursor: pointer;
-  box-shadow: 2px 2px 0 rgba(255, 200, 140, 0.35);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.12);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .snapshot-status-bar__refresh:hover:not(:disabled) {
   background: #fff;
-  border-color: rgba(167, 139, 250, 0.85);
+  border-color: rgba(124, 58, 237, 0.55);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.18);
 }
 
 .snapshot-status-bar__refresh:disabled {
@@ -260,7 +294,9 @@ const snapshotBarTitle = computed(() => {
 }
 
 .snapshot-status-bar__dot--busy {
-  animation: status-pulse 1.2s ease-in-out infinite;
+  animation:
+    status-pulse 1s ease-in-out infinite,
+    status-blink 0.85s ease-in-out infinite;
 }
 
 .awareness-bar {

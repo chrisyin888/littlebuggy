@@ -120,7 +120,8 @@ body {
 #metro-vancouver-map,
 #language-intro,
 #littlebug-help,
-#parents-pulse {
+#parents-pulse,
+#home-trend-preview-title {
   /* Sticky top stack (status bar + awareness) + breathing room */
   scroll-margin-top: 8.5rem;
 }

@@ -6,6 +6,7 @@
     "offline": "快照暂时离线 — 重新连接前页面会显示温和默认内容",
     "noTime": "大温哥华健康快照 — 更新时间见页面顶部状态栏",
     "latestLine": "最近更新：{when} · {region} · 本地趋势快照",
+    "relativeLatestLine": "更新于 {when} · {region} · 本地趋势快照",
     "regionOnly": "{region} · 本地趋势快照",
     "savedTooltip": "快照保存时间：{date}",
     "phraseToday": "今天 {time}",
@@ -304,6 +305,13 @@
         }
       }
     },
+    "trendSection": {
+      "title": "7 日趋势",
+      "placeholder": "示意预览 —— 详细图表即将推出。",
+      "rsv": "RSV",
+      "flu": "流感",
+      "covid": "新冠"
+    },
     "snapshotSection": {
       "title": "本周快照",
       "deckShort": "大温公开数据：RSV、流感、新冠、天气、空气。",
@@ -326,6 +334,8 @@
     },
     "hero": {
       "title": "本周孩子健康快照",
+      "tagline": "面向您所在地区的儿童本地健康趋势（实时整理）",
+      "trustDataLine": "基于公共卫生数据整理，不能替代医学诊断。",
       "subtitle": "RSV、流感、新冠、天气、空气，一页看完。",
       "btnSeeWeek": "打开快照",
       "linkHowItWorks": "怎么运作",

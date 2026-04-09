@@ -80,6 +80,14 @@ function severityScoreFromLabel(label, kind = 'virus') {
   return 2
 }
 
+/** Maps API virus label to UI tier for color row (low / medium / high). */
+function virusSeverityTierFromLabel(label) {
+  const s = severityScoreFromLabel(label, 'virus')
+  if (s <= 1.2) return 'low'
+  if (s <= 2.5) return 'medium'
+  return 'high'
+}
+
 function levelToToneAir(air) {
   const L = String(air || '').toLowerCase()
   if (/unhealthy|hazard|high\s*risk|poor|very|severe/i.test(L)) return 'hot'
@@ -117,6 +125,7 @@ const liveHeroCards = computed(() => {
       value: translateApiLevel(s.rsv, t),
       blurb: '',
       tone: levelToTone(s.rsv),
+      severity: virusSeverityTierFromLabel(s.rsv),
       sticker: '🐞',
     },
     {
@@ -125,6 +134,7 @@ const liveHeroCards = computed(() => {
       value: translateApiLevel(s.flu, t),
       blurb: '',
       tone: levelToTone(s.flu),
+      severity: virusSeverityTierFromLabel(s.flu),
       sticker: '🤒',
     },
     {
@@ -133,6 +143,7 @@ const liveHeroCards = computed(() => {
       value: translateApiLevel(s.covid, t),
       blurb: '',
       tone: levelToTone(s.covid),
+      severity: virusSeverityTierFromLabel(s.covid),
       sticker: '😷',
     },
   ]
@@ -145,6 +156,7 @@ const fallbackHeroSummary = computed(() => [
     value: '—',
     blurb: '',
     tone: 'watch',
+    severity: 'medium',
     sticker: '🐞',
   },
   {
@@ -153,6 +165,7 @@ const fallbackHeroSummary = computed(() => [
     value: '—',
     blurb: '',
     tone: 'watch',
+    severity: 'medium',
     sticker: '🤒',
   },
   {
@@ -161,6 +174,7 @@ const fallbackHeroSummary = computed(() => [
     value: '—',
     blurb: '',
     tone: 'watch',
+    severity: 'medium',
     sticker: '😷',
   },
 ])
@@ -178,6 +192,15 @@ const heroCards = computed(() => {
     })
   }
   return sortRowsBySeverity(fallbackHeroSummary.value, () => 2)
+})
+
+const trendPlaceholderRows = computed(() => {
+  void locale.value
+  return [
+    { key: 'rsv', label: t('home.trendSection.rsv'), width: '68%' },
+    { key: 'flu', label: t('home.trendSection.flu'), width: '52%' },
+    { key: 'covid', label: t('home.trendSection.covid'), width: '38%' },
+  ]
 })
 
 function weatherWeekSummaryLine(s) {
@@ -321,6 +344,7 @@ function onEnvCardKeydown(e, row) {
         <div class="hero__grid-product">
           <div class="hero__column hero__column--copy">
             <h1 id="hero-title" class="hero__headline">{{ $t('home.hero.title') }}</h1>
+            <p class="hero__tagline">{{ $t('home.hero.tagline') }}</p>
             <p class="hero__lede">{{ $t('home.hero.subtitle') }}</p>
             <div class="hero__cta-row">
               <a href="#weekly-snapshot" class="hero__cta hero__cta--primary">{{
@@ -330,6 +354,7 @@ function onEnvCardKeydown(e, row) {
                 {{ $t('home.hero.linkHowItWorks') }}
               </button>
             </div>
+            <p class="hero__trust-line" role="note">{{ $t('home.hero.trustDataLine') }}</p>
 
             <p
               v-if="snapshotError && !snapshot && !snapshotLoading"
@@ -371,17 +396,48 @@ function onEnvCardKeydown(e, row) {
                   </template>
                   <template v-else>
                     <li
-                      v-for="row in virusDashboardRowsOrdered"
+                      v-for="(row, vIdx) in virusDashboardRowsOrdered"
                       :key="row.kind"
                       class="hero-preview__metric"
+                      :class="[`hero-preview__metric--sev-${row.severity}`]"
                       :data-tone="row.tone"
+                      :style="{ animationDelay: `${0.08 + vIdx * 0.1}s` }"
                     >
-                      <span class="hero-preview__metric-label">{{ row.label }}</span>
+                      <span class="hero-preview__metric-left">
+                        <span
+                          class="hero-preview__severity-dot"
+                          :data-sev="row.severity"
+                          aria-hidden="true"
+                        />
+                        <span class="hero-preview__metric-label">{{ row.label }}</span>
+                      </span>
                       <span class="hero-preview__metric-value">{{ row.value }}</span>
                     </li>
                   </template>
                 </ul>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-trend-preview" aria-labelledby="home-trend-preview-title">
+      <div class="home-trend-preview__inner">
+        <h2 id="home-trend-preview-title" class="home-trend-preview__title">
+          {{ $t('home.trendSection.title') }}
+        </h2>
+        <p class="home-trend-preview__hint">{{ $t('home.trendSection.placeholder') }}</p>
+        <div class="home-trend-preview__bars" role="presentation">
+          <div
+            v-for="(row, tIdx) in trendPlaceholderRows"
+            :key="row.key"
+            class="home-trend-preview__row"
+            :style="{ animationDelay: `${0.06 + tIdx * 0.1}s` }"
+          >
+            <span class="home-trend-preview__label">{{ row.label }}</span>
+            <div class="home-trend-preview__track">
+              <div class="home-trend-preview__fill" :style="{ width: row.width }" />
             </div>
           </div>
         </div>
@@ -796,7 +852,7 @@ function onEnvCardKeydown(e, row) {
 
 .hero.hero--product {
   position: relative;
-  padding: clamp(2.25rem, 5.5vw, 4rem) clamp(1.25rem, 4vw, 2rem);
+  padding: clamp(2rem, 5vw, 3.5rem) clamp(1.25rem, 4vw, 2rem);
   margin: 0;
   border-radius: 0;
   background: linear-gradient(165deg, #fbfcfe 0%, #f1f5f9 52%, #eef2ff 100%);
@@ -1057,6 +1113,21 @@ function onEnvCardKeydown(e, row) {
   .hero__column--visual {
     order: -1;
   }
+
+  .hero__cta-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero__cta--primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .hero__micro-link {
+    width: 100%;
+    text-align: center;
+  }
 }
 
 .hero__column--copy {
@@ -1064,31 +1135,52 @@ function onEnvCardKeydown(e, row) {
 }
 
 .hero__headline {
-  margin: 0 0 0.65rem;
+  margin: 0 0 0.5rem;
   font-family: var(--font-display);
-  font-size: clamp(1.75rem, 4.2vw, 2.65rem);
-  font-weight: 700;
-  line-height: 1.18;
-  letter-spacing: -0.02em;
-  color: var(--color-ink);
+  font-size: clamp(1.62rem, 3.9vw, 2.45rem);
+  font-weight: 800;
+  line-height: 1.16;
+  letter-spacing: -0.025em;
+  color: #1e293b;
   text-shadow: none;
-  max-width: 20ch;
+  max-width: 22ch;
+}
+
+.hero__tagline {
+  margin: 0 0 1rem;
+  font-size: clamp(0.92rem, 1.85vw, 1.05rem);
+  line-height: 1.5;
+  font-weight: 600;
+  color: #6366f1;
+  letter-spacing: -0.01em;
+  max-width: 28rem;
 }
 
 .hero__lede {
-  margin: 0 0 1.75rem;
-  font-size: clamp(0.98rem, 2vw, 1.125rem);
-  line-height: 1.55;
+  margin: 0 0 1.5rem;
+  font-size: clamp(0.9rem, 1.75vw, 1.02rem);
+  line-height: 1.6;
   font-weight: 500;
   color: #64748b;
-  max-width: 26rem;
+  max-width: 28rem;
+}
+
+.hero__trust-line {
+  margin: 1rem 0 0;
+  padding: 0.5rem 0 0;
+  max-width: 28rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  font-weight: 600;
+  color: #64748b;
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
 }
 
 .hero__cta-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.65rem 1rem;
+  gap: 0.75rem 1rem;
 }
 
 .hero__cta {
@@ -1103,22 +1195,29 @@ function onEnvCardKeydown(e, row) {
   text-decoration: none;
   border-radius: 999px;
   transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    background 0.18s ease,
-    border-color 0.18s ease;
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .hero__cta--primary {
   color: #fff;
-  background: linear-gradient(135deg, #fb7185 0%, #e879f9 48%, #a78bfa 100%);
+  background: linear-gradient(120deg, #7c3aed 0%, #a855f7 45%, #ec4899 100%);
   border: none;
-  box-shadow: 0 4px 20px rgba(244, 114, 182, 0.26);
+  padding: 0.875rem 1.65rem;
+  font-size: 1.02rem;
+  border-radius: 16px;
+  box-shadow: 0 6px 22px rgba(124, 58, 237, 0.28);
 }
 
 .hero__cta--primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 26px rgba(167, 139, 250, 0.3);
+  transform: scale(1.03) translateY(-1px);
+  box-shadow: 0 12px 32px rgba(168, 85, 247, 0.35);
+}
+
+.hero__cta--primary:active {
+  transform: scale(1.01) translateY(0);
 }
 
 .hero__cta--secondary {
@@ -1152,13 +1251,14 @@ function onEnvCardKeydown(e, row) {
   max-width: min(26rem, 100%);
   margin-left: auto;
   margin-right: auto;
-  border-radius: 14px;
+  border-radius: 18px;
   background: #fff;
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.9) inset,
-    0 22px 48px rgba(15, 23, 42, 0.09),
-    0 0 0 1px rgba(15, 23, 42, 0.055);
+    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 10px 40px rgba(99, 102, 241, 0.08),
+    0 2px 12px rgba(15, 23, 42, 0.04);
   overflow: hidden;
+  transition: box-shadow 0.2s ease;
 }
 
 @media (min-width: 900px) {
@@ -1210,7 +1310,7 @@ function onEnvCardKeydown(e, row) {
 }
 
 .hero-preview__body {
-  padding: 1rem 1.05rem 1.1rem;
+  padding: 1.125rem 1.125rem 1.25rem;
 }
 
 .hero-preview__headline {
@@ -1238,33 +1338,90 @@ function onEnvCardKeydown(e, row) {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.625rem;
+}
+
+@keyframes hero-metric-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hero-preview__metric {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 0.65rem;
-  padding: 0.5rem 0.6rem;
-  border-radius: 10px;
-  background: rgba(248, 250, 252, 0.95);
-  border: 1px solid rgba(226, 232, 240, 0.75);
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(248, 250, 252, 0.98);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  animation: hero-metric-in 0.5s ease backwards;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .hero-preview__metric[data-tone='hot'] {
-  background: rgba(254, 242, 242, 0.55);
-  border-color: rgba(252, 165, 165, 0.32);
+  background: rgba(254, 242, 242, 0.5);
+  border-color: rgba(252, 165, 165, 0.35);
 }
 
 .hero-preview__metric[data-tone='watch'] {
-  background: rgba(254, 252, 232, 0.55);
-  border-color: rgba(253, 224, 71, 0.28);
+  background: rgba(254, 252, 232, 0.5);
+  border-color: rgba(253, 224, 71, 0.32);
 }
 
 .hero-preview__metric[data-tone='rise'] {
-  background: rgba(236, 253, 245, 0.55);
-  border-color: rgba(110, 231, 183, 0.28);
+  background: rgba(236, 253, 245, 0.5);
+  border-color: rgba(110, 231, 183, 0.32);
+}
+
+.hero-preview__metric--sev-low {
+  border-left: 3px solid #22c55e;
+}
+
+.hero-preview__metric--sev-medium {
+  border-left: 3px solid #eab308;
+}
+
+.hero-preview__metric--sev-high {
+  border-left: 3px solid #ef4444;
+}
+
+.hero-preview__metric-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.hero-preview__severity-dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+}
+
+.hero-preview__severity-dot[data-sev='low'] {
+  background: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+}
+
+.hero-preview__severity-dot[data-sev='medium'] {
+  background: #eab308;
+  box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.28);
+}
+
+.hero-preview__severity-dot[data-sev='high'] {
+  background: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
 }
 
 .hero-preview__metric--skeleton {
@@ -1289,6 +1446,103 @@ function onEnvCardKeydown(e, row) {
   font-weight: 700;
   line-height: 1.2;
   color: var(--color-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-preview__metric {
+    animation: none;
+  }
+
+  .home-trend-preview__row {
+    animation: none;
+  }
+}
+
+.home-trend-preview {
+  padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1rem, 4vw, 2rem);
+  margin: 0;
+}
+
+.home-trend-preview__inner {
+  max-width: min(1120px, 100%);
+  margin: 0 auto;
+  padding: clamp(1.25rem, 3vw, 1.75rem) clamp(1rem, 3vw, 1.5rem);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.06);
+}
+
+.home-trend-preview__title {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2.4vw, 1.35rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #334155;
+}
+
+.home-trend-preview__hint {
+  margin: 0 0 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #94a3b8;
+  line-height: 1.45;
+}
+
+.home-trend-preview__bars {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@keyframes home-trend-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-trend-preview__row {
+  display: grid;
+  grid-template-columns: minmax(4rem, 5.5rem) 1fr;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  animation: home-trend-row-in 0.45s ease backwards;
+}
+
+.home-trend-preview__label {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.home-trend-preview__track {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(226, 232, 240, 0.85);
+  overflow: hidden;
+}
+
+.home-trend-preview__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #a78bfa 0%, #e879f9 55%, #f472b6 100%);
+  opacity: 0.88;
+  transition: width 0.35s ease;
+}
+
+@media (max-width: 480px) {
+  .home-trend-preview__row {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
 }
 
 .value-strip {
