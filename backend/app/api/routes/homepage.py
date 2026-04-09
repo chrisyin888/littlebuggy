@@ -1,8 +1,9 @@
 """
-Latest snapshot row for ``GET /api/homepage-summary`` (optional; not used by the static-site MVP).
+Latest snapshot row for ``GET /api/homepage-summary``.
 
-The Vue app loads ``/data/homepage-summary.json`` from ``scripts/update_homepage_summary.py`` (static build).
-Keep this route when you add a live API + database again — same payload shape.
+The production Vue bundle requests this first; Render crons refresh the underlying DB daily
+(environment) and weekly (respiratory). If the API is unreachable, the client falls back to
+bundled ``/data/homepage-summary.json`` (see ``src/lib/homepageSummary.js``).
 """
 
 import json

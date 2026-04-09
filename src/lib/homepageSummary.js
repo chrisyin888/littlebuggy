@@ -1,9 +1,15 @@
 /**
- * Homepage summary — static JSON snapshot only (MVP invariants):
- * - Browser loads one file; no live fetch/analyze of health or weather APIs on each visit.
- * - No Postgres; generation is ``scripts/update_homepage_summary.py`` (optional later: swap URL to API).
- * - Copy is prepared offline (``homepage_summary_builder`` + ``homepage_public_polish``); not via ``snapshot_pipeline``/SQLAlchemy.
+ * Homepage summary:
+ * - **Production:** latest row from ``GET /api/homepage-summary`` (Render crons refresh the DB daily /
+ *   weekly). Falls back to bundled ``public/data/homepage-summary.json`` if the API fails.
+ * - **Dev:** static JSON only (same path), unless you point the Vite proxy at a running API and change
+ *   this module — keeps local UX predictable without Postgres.
  */
+
+import { apiUrl, resolvedApiBase } from './apiOrigin.js'
+
+/** Max wait for live API before using static fallback (cold starts / slow networks). */
+const LIVE_API_TIMEOUT_MS = 15_000
 
 /** Path under ``public/`` → URL ``{BASE_URL}data/homepage-summary.json``. */
 export const HOMEPAGE_SUMMARY_PUBLIC_PATH = 'data/homepage-summary.json'
@@ -103,6 +109,49 @@ export function normalizeHomepageSummaryPayload(input) {
   return o
 }
 
+/**
+ * @param {Response} res
+ * @returns {Promise<Record<string, unknown> | null>}
+ */
+async function normalizedPayloadFromOkJsonResponse(res) {
+  const contentType = res.headers.get('content-type') || ''
+  if (!res.ok || !contentType.includes('application/json')) {
+    return null
+  }
+  let raw
+  try {
+    raw = await res.json()
+  } catch {
+    return null
+  }
+  let normalized = normalizeHomepageSummaryPayload(raw)
+  if (!normalized) {
+    normalized = normalizeHomepageSummaryPayload({})
+  }
+  return /** @type {Record<string, unknown>} */ (normalized)
+}
+
+/**
+ * @returns {Promise<Record<string, unknown> | null>}
+ */
+async function tryFetchLiveHomepageSummary() {
+  const url = apiUrl('/api/homepage-summary')
+  const ctrl = new AbortController()
+  const tid = setTimeout(() => ctrl.abort(), LIVE_API_TIMEOUT_MS)
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+      signal: ctrl.signal,
+    })
+    return await normalizedPayloadFromOkJsonResponse(res)
+  } catch {
+    return null
+  } finally {
+    clearTimeout(tid)
+  }
+}
+
 export class HomepageFetchError extends Error {
   /**
    * @param {string} code
@@ -118,9 +167,23 @@ export class HomepageFetchError extends Error {
 }
 
 /**
- * Loads and normalizes homepage summary JSON (graceful defaults if fields are missing).
+ * Loads and normalizes homepage summary (live API in production when configured, else static JSON).
  */
 export async function fetchHomepageSummary() {
+  const useLiveApi = import.meta.env.PROD && Boolean(resolvedApiBase())
+  if (useLiveApi) {
+    const live = await tryFetchLiveHomepageSummary()
+    if (live) {
+      if (import.meta.env.VITE_DEBUG_API === 'true') {
+        console.info('[LittleBuggy] homepage summary: live API')
+      }
+      return live
+    }
+    if (import.meta.env.VITE_DEBUG_API === 'true') {
+      console.info('[LittleBuggy] homepage summary: API unavailable, falling back to static JSON')
+    }
+  }
+
   const url = resolveHomepageSummaryUrl()
 
   if (import.meta.env.VITE_DEBUG_API === 'true') {
