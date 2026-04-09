@@ -127,12 +127,35 @@ If you have not run the job yet, the API returns **404** with a hint to run `pyt
 
 ## Render
 
-### Web service
+### Web service (Little Buggy API — this repo)
 
-- **Root directory:** `backend` (recommended).
-- **Build command:** `pip install -r requirements.txt`
-- **Start command:** `python3 -m uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-- **Environment:** `DATABASE_URL` from Render PostgreSQL (Internal URL is fine for the API). Set `CORS_ORIGINS` to your static site URL(s), comma-separated (see repo root `README.md`).
+Deploy the API from the **Little Buggy** Git repository. Use a **dedicated** Render Web Service for this app (do not point your static site at an unrelated FastAPI service).
+
+**Manual dashboard settings**
+
+| Field | Value |
+|--------|--------|
+| **Root Directory** | `backend` |
+| **Build Command** | `pip install -r requirements.txt` |
+| **Start Command** | `python3 -m uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+| **Health Check Path** | `/health` |
+
+**Environment variables**
+
+| Key | Required | Notes |
+|-----|----------|--------|
+| `DATABASE_URL` | Yes (production) | Render PostgreSQL **Internal Database URL** (or other Postgres URL). Without it, the app falls back to SQLite on ephemeral disk — not suitable for production. |
+| `CORS_ORIGINS` | Recommended | Comma-separated **origins** your static site uses (no spaces), e.g. `https://your-static.onrender.com,https://littlebuggy.ca`. Use `*` only for quick tests. |
+| `PYTHON_VERSION` | Optional | e.g. `3.12.0` if not using `runtime.txt` / dashboard Python version. |
+| `ADMIN_HOMEPAGE_TOKEN` | Optional | Long secret for admin POST routes and virus-trends cron; omit to disable those endpoints. |
+
+**Routes to verify after deploy** (replace `BASE` with your service URL, no trailing slash):
+
+- `GET BASE/health` — JSON including `"status":"ok"`
+- `GET BASE/wait-times` — JSON with `hospitals`, `upcc_centres`, `checked_at`
+- `GET BASE/virus-trends` — JSON snapshot (defaults if never refreshed)
+
+**Static site:** set **`VITE_API_BASE_URL`** to the same **`BASE`** (the Web Service’s public `https://…` URL, no trailing slash) when building the frontend.
 
 `runtime.txt` pins the Python version for Render.
 

@@ -77,12 +77,54 @@ TARGET_UPCC_CENTRES: tuple[dict[str, str], ...] = (
         "city": "Richmond",
     },
     {"key": "metrotown_upcc", "match_name": "Metrotown UPCC", "name": "Metrotown UPCC", "city": "Burnaby"},
+    {"key": "edmonds_upcc", "match_name": "Edmonds UPCC", "name": "Edmonds UPCC", "city": "Burnaby"},
+    {"key": "port_moody_upcc", "match_name": "Port Moody UPCC", "name": "Port Moody UPCC", "city": "Port Moody"},
+    {
+        "key": "richmond_east_upcc",
+        "match_name": "Richmond East Urgent and Primary Care Centre",
+        "name": "Richmond East Urgent and Primary Care Centre",
+        "city": "Richmond",
+    },
+    {
+        "key": "surrey_whalley_upcc",
+        "match_name": "Surrey Whalley UPCC",
+        "name": "Surrey Whalley UPCC",
+        "city": "Surrey",
+    },
     {
         "key": "surrey_newton_upcc",
         "match_name": "Surrey Newton UPCC",
         "name": "Surrey Newton UPCC",
         "city": "Surrey",
     },
+    {
+        "key": "northeast_upcc",
+        "match_name": "Northeast Urgent and Primary Care Centre",
+        "name": "Northeast Urgent and Primary Care Centre",
+        "city": "Vancouver",
+    },
+    {
+        "key": "southeast_upcc",
+        "match_name": "Southeast Urgent and Primary Care Centre",
+        "name": "Southeast Urgent and Primary Care Centre",
+        "city": "Vancouver",
+    },
+    {
+        "key": "reach_upcc",
+        "match_name": "REACH Urgent and Primary Care Centre",
+        "name": "REACH Urgent and Primary Care Centre",
+        "city": "Vancouver",
+    },
+    {"key": "langley_upcc", "match_name": "Langley UPCC", "name": "Langley UPCC", "city": "Langley"},
+    {
+        "key": "ridge_meadows_upcc",
+        "match_name": "Ridge Meadows UPCC",
+        "name": "Ridge Meadows UPCC",
+        "city": "Maple Ridge",
+    },
+    {"key": "abbotsford_upcc", "match_name": "Abbotsford UPCC", "name": "Abbotsford UPCC", "city": "Abbotsford"},
+    {"key": "mission_upcc", "match_name": "Mission UPCC", "name": "Mission UPCC", "city": "Mission"},
+    {"key": "chilliwack_upcc", "match_name": "Chilliwack UPCC", "name": "Chilliwack UPCC", "city": "Chilliwack"},
 )
 
 

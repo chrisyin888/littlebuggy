@@ -11,12 +11,16 @@ export default defineConfig(({ mode }) => {
     plugins: [vue()],
     server: {
       proxy: {
-        // Local FastAPI: cd backend && python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+        // Local FastAPI: npm run dev:api (see package.json)
         '/api': {
           target: apiProxyTarget,
           changeOrigin: true,
         },
         '/wait-times': {
+          target: apiProxyTarget,
+          changeOrigin: true,
+        },
+        '/virus-trends': {
           target: apiProxyTarget,
           changeOrigin: true,
         },

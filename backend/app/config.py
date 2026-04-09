@@ -8,9 +8,9 @@ class Settings(BaseSettings):
     # Local dev: SQLite default works when you run from the `backend/` directory.
     database_url: str = "sqlite:///./littlebuggy.db"
 
-    # Comma-separated browser origins allowed to call the API (no spaces), or "*" for any origin.
-    # Production: set to your static site origin(s), e.g. https://littlebuggy.onrender.com
-    # With "*", credentials are disabled (fine for this read-only public API).
+    # Comma-separated browser origins (no spaces), or "*" for any origin.
+    # Render: set via CORS_ORIGINS (see root render.yaml — includes https://littlebuggy.ca and www).
+    # Local: "*" is fine; or list http://localhost:5173 if you lock CORS while testing.
     cors_origins: str = "*"
 
     # Admin-only: POST /api/admin/homepage-snapshot/regenerate (X-Admin-Token header). Leave unset to disable.
