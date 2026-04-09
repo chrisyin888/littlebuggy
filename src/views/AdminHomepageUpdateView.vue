@@ -61,6 +61,10 @@ const diskWriteFailed = computed(
   () => result.value?.disk_write_configured && !result.value?.written_to_disk,
 )
 
+const dbPersistFailed = computed(() =>
+  (result.value?.warnings || []).some((w) => String(w).startsWith('db_persist_failed')),
+)
+
 const sourcesPartial = computed(
   () => result.value && result.value.sources_ok_count < 3,
 )
@@ -71,10 +75,11 @@ const runOutcomeLabel = computed(() => {
   const r = result.value
   if (!r?.ok) return 'Failed'
   if (
-    r.written_to_disk &&
+    !diskWriteFailed.value &&
+    !dbPersistFailed.value &&
     !sourcesPartial.value &&
     feedWarnings.value.length === 0 &&
-    !diskWriteFailed.value
+    (r.written_to_disk || r.persisted_to_database)
   ) {
     return 'Success'
   }
@@ -98,6 +103,13 @@ const outcomeBanner = computed(() => {
       sub: 'HOMEPAGE_SUMMARY_OUTPUT_PATH is set on the API, but writing failed (permissions or bad path).',
     }
   }
+  if (dbPersistFailed.value) {
+    return {
+      kind: 'danger',
+      title: 'Snapshot built, but the database was not updated',
+      sub: 'Check DATABASE_URL on the API host and DB permissions. Production GET /api/homepage-summary still serves the previous row until a save succeeds.',
+    }
+  }
   if (r.written_to_disk) {
     const sub =
       feedWarnings.value.length || sourcesPartial.value
@@ -105,11 +117,18 @@ const outcomeBanner = computed(() => {
         : 'Data was fetched and JSON was written on the machine running the API.'
     return { kind: 'success', title: 'Snapshot saved to disk', sub }
   }
+  if (r.persisted_to_database) {
+    const sub =
+      feedWarnings.value.length || sourcesPartial.value
+        ? 'A new trend_snapshots row was saved. Some feeds reported issues — see warnings.'
+        : 'A new trend_snapshots row was saved. Production loads this via GET /api/homepage-summary.'
+    return { kind: 'success', title: 'Snapshot saved to database', sub }
+  }
   return {
     kind: 'info',
     title: 'Snapshot built (in memory only)',
     sub:
-      'The API generated fresh JSON but did not write a file — HOMEPAGE_SUMMARY_OUTPUT_PATH is not set. Typical for hosted APIs or minimal local setup.',
+      'The API generated fresh JSON but did not write to disk or database. Set HOMEPAGE_SUMMARY_OUTPUT_PATH and/or fix DATABASE_URL, or use Download full JSON.',
   }
 })
 
@@ -126,9 +145,16 @@ const whatHappened = computed(() => {
   } else if (!r.disk_write_configured) {
     lines.push('Did not write any file on the server — output path is not configured on the API.')
   }
+  if (r.persisted_to_database && r.database_snapshot_id != null) {
+    lines.push(
+      `Saved trend_snapshots id ${r.database_snapshot_id} — production GET /api/homepage-summary will return this row.`,
+    )
+  } else if (dbPersistFailed.value) {
+    lines.push('Database save failed — see warnings. The live API may still show the previous snapshot.')
+  }
   lines.push(`Sources reporting OK in JSON: ${r.sources_ok_count} of 3.`)
   if (r.updated_at) {
-    lines.push(`Snapshot timestamp (updated_at): ${r.updated_at}.`)
+    lines.push(`Build timestamp in payload (updated_at): ${r.updated_at}.`)
   }
   return lines
 })
@@ -152,6 +178,17 @@ const nextSteps = computed(() => {
     return steps
   }
 
+  if (r.persisted_to_database && !dbPersistFailed.value) {
+    steps.push({
+      text: 'Open the live homepage and click Refresh (or hard-reload). The production app requests GET /api/homepage-summary first, which now reads the new database row.',
+    })
+    steps.push({
+      text: 'Optional: run npm run weekly:homepage locally and commit public/data/homepage-summary.json so the static fallback file matches production.',
+      code: 'npm run weekly:homepage && git add public/data/homepage-summary.json && git commit -m "Update homepage summary" && git push',
+    })
+    return steps
+  }
+
   if (diskWriteFailed.value) {
     steps.push({
       text: 'Fix the path or permissions for HOMEPAGE_SUMMARY_OUTPUT_PATH on the API machine, then run Update again.',
@@ -169,7 +206,7 @@ const nextSteps = computed(() => {
     text: 'Otherwise: click Download full JSON and save the file as public/data/homepage-summary.json in your project.',
   })
   steps.push({
-    text: 'Then commit, build, and deploy — the public site does not pull JSON directly from the API.',
+    text: 'Then commit, build, and deploy. If your production build uses the live API for the homepage, also ensure POST /admin/homepage-snapshot/regenerate can write the database (see API env).',
     code: 'git add public/data/homepage-summary.json && git commit -m "Update homepage summary" && git push',
   })
   return steps
@@ -184,6 +221,9 @@ const nextStepHelperIntro = computed(() => {
   if (diskWriteFailed.value) {
     return 'The snapshot was generated, but nothing was saved on the API machine. Next:'
   }
+  if (result.value?.persisted_to_database && !dbPersistFailed.value) {
+    return 'The database was updated. Next:'
+  }
   return 'The snapshot was built in memory only — your repo file was not updated automatically. Next:'
 })
 
@@ -193,10 +233,10 @@ function parseHttpError(status, data) {
     typeof d === 'string' ? d : Array.isArray(d) ? d.map((x) => x.msg || JSON.stringify(x)).join(' ') : ''
   if (status === 503) {
     return {
-      title: 'Admin endpoint is off',
+      title: 'API could not complete regeneration',
       detail:
         msg ||
-        'Set ADMIN_HOMEPAGE_TOKEN in backend/.env (or API host env) and restart the API. Without it, regeneration is disabled.',
+        'Common causes: ADMIN_HOMEPAGE_TOKEN not set (admin disabled), or DATABASE_URL / Postgres unreachable so the snapshot row could not be saved.',
     }
   }
   if (status === 401) {
@@ -424,6 +464,21 @@ async function downloadFullJson() {
               </span>
             </div>
             <div class="adm-metric adm-metric--full">
+              <span class="adm-metric__label">Database (trend_snapshots)</span>
+              <span
+                class="adm-metric__value"
+                :class="{
+                  'adm-metric__value--ok': result.persisted_to_database,
+                  'adm-metric__value--bad': dbPersistFailed,
+                  'adm-metric__value--muted': !result.persisted_to_database && !dbPersistFailed,
+                }"
+              >
+                <template v-if="result.persisted_to_database">Yes — row id {{ result.database_snapshot_id }}</template>
+                <template v-else-if="dbPersistFailed">No — save failed</template>
+                <template v-else>No new row (check DATABASE_URL)</template>
+              </span>
+            </div>
+            <div class="adm-metric adm-metric--full">
               <span class="adm-metric__label">JSON on API disk</span>
               <span
                 class="adm-metric__value"
@@ -482,6 +537,12 @@ async function downloadFullJson() {
               <li>Commit the updated <code class="adm-code">public/data/homepage-summary.json</code>.</li>
               <li>Push and deploy so visitors get the new snapshot.</li>
             </template>
+            <template v-else-if="result.persisted_to_database && !dbPersistFailed">
+              <li>Hard-refresh the live homepage (or tap Refresh) so it refetches <code class="adm-code">GET /api/homepage-summary</code>.</li>
+              <li>
+                Optional: run <code class="adm-code">npm run weekly:homepage</code> and commit the JSON so dev / static fallback match production.
+              </li>
+            </template>
             <template v-else-if="diskWriteFailed">
               <li>Fix <code class="adm-code">HOMEPAGE_SUMMARY_OUTPUT_PATH</code> or permissions, then run Update again.</li>
               <li>Or use <strong>Download Full JSON</strong> and replace the file in your repo manually.</li>
@@ -492,7 +553,9 @@ async function downloadFullJson() {
                 if you want one-click saves from this page (restart the API).
               </li>
               <li>Or download the JSON and place it at <code class="adm-code">public/data/homepage-summary.json</code>.</li>
-              <li>Commit, build, and deploy — the live site only changes when you ship a new build.</li>
+              <li>
+                For production with the live API: ensure <code class="adm-code">DATABASE_URL</code> works so this button can insert a snapshot row.
+              </li>
             </template>
           </ol>
           <template v-for="(step, i) in nextSteps" :key="'c' + i">

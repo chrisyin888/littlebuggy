@@ -5,12 +5,12 @@ from __future__ import annotations
 import json
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.config import postgres_required_message_if_misconfigured
 from app.database import get_db
-from app.models.trend_snapshot import TrendSnapshot
 from app.schemas.status import SourceHealth, SystemStatusResponse
+from app.services.trend_snapshot_homepage import get_latest_homepage_snapshot_row
 
 router = APIRouter()
 
@@ -30,8 +30,22 @@ def system_status(db: Session = Depends(get_db)) -> SystemStatusResponse:
     Summarizes the latest `trend_snapshots` row: timestamps, source OK flags, and
     whether the homepage payload can be served.
     """
+    mis = postgres_required_message_if_misconfigured()
+    if mis:
+        dead = SourceHealth(present=False, status=None, ok=False)
+        return SystemStatusResponse(
+            database_ok=False,
+            last_snapshot_at=None,
+            homepage_summary_ready=False,
+            respiratory=dead,
+            environment=dead,
+            aqhi=dead,
+            weather=dead,
+            message=mis,
+        )
+
     try:
-        row = db.scalars(select(TrendSnapshot).order_by(TrendSnapshot.created_at.desc()).limit(1)).first()
+        row = get_latest_homepage_snapshot_row(db)
     except Exception:
         return SystemStatusResponse(
             database_ok=False,
@@ -53,7 +67,10 @@ def system_status(db: Session = Depends(get_db)) -> SystemStatusResponse:
             environment=SourceHealth(present=False, status=None, ok=False),
             aqhi=SourceHealth(present=False, status=None, ok=False),
             weather=SourceHealth(present=False, status=None, ok=False),
-            message="No snapshots yet. From backend/: python3 -m app.jobs.run_update (or run_weekly_respiratory, then run_daily_environment).",
+            message=(
+                "No snapshots yet in trend_snapshots. POST /api/admin/homepage-snapshot/regenerate "
+                "(X-Admin-Token), or: python3 -m app.jobs.run_update"
+            ),
         )
 
     blob: dict | None = None

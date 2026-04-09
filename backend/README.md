@@ -2,9 +2,9 @@
 
 FastAPI + PostgreSQL/SQLite. Ingests **real** public signals (respiratory proxies, AQHI, weather), builds a parent-friendly summary, stores `trend_snapshots` with **source metadata**, exposes `GET /api/homepage-summary`.
 
-**Homepage MVP:** the Vue app reads **`public/data/homepage-summary.json`** only (no DB on page load). Regenerate: `npm run weekly:homepage` → `homepage_static_generate.generate_homepage_summary_payload` (same as `scripts/update_homepage_summary.py`; no `snapshot_pipeline` / SQLAlchemy for that path). Cron + `GET /api/homepage-summary` remain optional for a future live API upgrade.
+**Homepage:** in **dev**, the Vue app loads **`public/data/homepage-summary.json`**. In **production**, the bundle requests **`GET /api/homepage-summary`** first (latest `trend_snapshots` row) and falls back to that static file if the API fails. Regenerate locally: **`npm run weekly:homepage`** (writes `public/data/...` only).
 
-**Optional admin trigger:** set **`ADMIN_HOMEPAGE_TOKEN`**, then **`POST /api/admin/homepage-snapshot/regenerate`** with header **`X-Admin-Token`**. Same fetch+polish pipeline; no DB writes for homepage content. Optionally set **`HOMEPAGE_SUMMARY_OUTPUT_PATH`** so the API writes the repo JSON file (usually local dev only). Frontend route **`/admin/update`** (bookmark only; not in nav) calls this when the API is reachable.
+**Admin trigger (updates production API data):** set **`ADMIN_HOMEPAGE_TOKEN`**, then **`POST /api/admin/homepage-snapshot/regenerate`** with header **`X-Admin-Token`**. Runs the same fetch+polish pipeline as `npm run weekly:homepage` and **inserts a new `trend_snapshots` row** so `GET /api/homepage-summary` returns fresh content. Optionally set **`HOMEPAGE_SUMMARY_OUTPUT_PATH`** so the same handler also writes JSON on the API machine (usually local dev). Frontend **`/admin/update`** calls this when the API is reachable.
 
 ## Python package layout
 

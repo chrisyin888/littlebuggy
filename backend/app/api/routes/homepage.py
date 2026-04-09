@@ -9,11 +9,11 @@ bundled ``/data/homepage-summary.json`` (see ``src/lib/homepageSummary.js``).
 import json
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.config import postgres_required_message_if_misconfigured
 from app.database import get_db
-from app.models.trend_snapshot import TrendSnapshot
+from app.services.trend_snapshot_homepage import get_latest_homepage_snapshot_row
 from app.schemas.homepage import (
     HomepageSummaryResponse,
     SourceMeta,
@@ -73,12 +73,20 @@ def _parse_sources(raw: str | None) -> SourcesBundle:
 
 @router.get("/homepage-summary", response_model=HomepageSummaryResponse)
 def homepage_summary(db: Session = Depends(get_db)) -> HomepageSummaryResponse:
-    """Latest automated snapshot for the LittleBuggy homepage."""
-    row = db.scalars(select(TrendSnapshot).order_by(TrendSnapshot.created_at.desc()).limit(1)).first()
+    """Latest automated snapshot for the LittleBuggy homepage (``trend_snapshots`` / ``TrendSnapshot``)."""
+    mis = postgres_required_message_if_misconfigured()
+    if mis:
+        raise HTTPException(status_code=503, detail=mis)
+
+    row = get_latest_homepage_snapshot_row(db)
     if row is None:
         raise HTTPException(
             status_code=404,
-            detail="No snapshot yet. From backend/: python3 -m app.jobs.run_update",
+            detail=(
+                "No snapshot yet in table trend_snapshots. "
+                "POST /api/admin/homepage-snapshot/regenerate with X-Admin-Token creates the first row, "
+                "or from backend/: python3 -m app.jobs.run_update"
+            ),
         )
     return HomepageSummaryResponse(
         region=row.region,

@@ -12,11 +12,14 @@
 # Manual steps left: connect GitHub + Blueprint in Render, add GoDaddy DNS, add custom domain on static service.
 
 databases:
+  # Single Postgres instance for API + crons (table trend_snapshots).
   - name: littlebuggy-db
     plan: free
     region: oregon
 
 services:
+  # Web API: shares DATABASE_URL with crons so trend_snapshots is one source of truth for
+  # POST /api/admin/homepage-snapshot/regenerate and GET /api/homepage-summary.
   - type: web
     name: littlebuggy-api
     runtime: python
@@ -31,6 +34,7 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.12.0"
+      # Managed Postgres (must stay linked — if this is missing, set DATABASE_URL from Dashboard → littlebuggy-db).
       - key: DATABASE_URL
         fromDatabase:
           name: littlebuggy-db
