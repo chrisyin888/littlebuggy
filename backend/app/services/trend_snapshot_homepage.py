@@ -17,10 +17,14 @@ from app.models.trend_snapshot import TrendSnapshot
 from app.services.save_snapshot import save_snapshot
 
 
-def get_latest_homepage_snapshot_row(db: Session) -> TrendSnapshot | None:
-    """Latest row for ``GET /api/homepage-summary`` (same ordering as status + pipeline)."""
+def get_latest_homepage_snapshot_row(db: Session, city_id: str = "vancouver") -> TrendSnapshot | None:
+    """Latest row for ``GET /api/homepage-summary`` for the given ``city_id``."""
+    cid = (city_id or "vancouver").strip().lower() or "vancouver"
     return db.scalars(
-        select(TrendSnapshot).order_by(TrendSnapshot.created_at.desc()).limit(1),
+        select(TrendSnapshot)
+        .where(TrendSnapshot.city_id == cid)
+        .order_by(TrendSnapshot.created_at.desc())
+        .limit(1),
     ).first()
 
 
@@ -30,6 +34,7 @@ def persist_static_homepage_payload(db: Session, payload: dict[str, Any]) -> Tre
     ``generate_homepage_summary_payload`` (same shape as ``public/data/homepage-summary.json``).
     Commits inside ``save_snapshot``.
     """
+    city_id = str(payload.get("city_id") or "vancouver").strip().lower() or "vancouver"
     region = str(payload.get("region") or "Metro Vancouver")
     virus_data = {
         "rsv": str(payload.get("rsv") or "Unknown"),
@@ -59,6 +64,7 @@ def persist_static_homepage_payload(db: Session, payload: dict[str, Any]) -> Tre
 
     return save_snapshot(
         db,
+        city_id=city_id,
         region=region,
         virus_data=virus_data,
         env_data=env_data,

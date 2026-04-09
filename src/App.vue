@@ -5,6 +5,8 @@ import { RouterView } from 'vue-router'
 import { useHomepageSnapshot } from './composables/useHomepageSnapshot.js'
 import { localeToHtmlLang } from './i18n'
 import LanguageSwitcher from './components/LanguageSwitcher.vue'
+import CitySwitcher from './components/CitySwitcher.vue'
+import { selectedCityId } from './composables/useSelectedCity.js'
 import LittleBuggyMascot from './components/LittleBuggyMascot.vue'
 import EmergencyHelpCard from './components/EmergencyHelpCard.vue'
 import { localeToDateLocale } from './utils/localeDisplay.js'
@@ -30,6 +32,10 @@ function onVisibilityRefresh() {
 onMounted(() => {
   ensureHomepageSnapshot().catch(() => {})
   document.addEventListener('visibilitychange', onVisibilityRefresh)
+})
+
+watch(selectedCityId, () => {
+  refreshHomepageSnapshot()
 })
 
 onUnmounted(() => {
@@ -148,7 +154,10 @@ const snapshotBarTitle = computed(() => {
             </span>
           </RouterLink>
 
-          <LanguageSwitcher variant="compact" />
+          <div class="site-header__controls">
+            <CitySwitcher />
+            <LanguageSwitcher variant="compact" />
+          </div>
         </div>
       </div>
     </header>
@@ -354,6 +363,13 @@ const snapshotBarTitle = computed(() => {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem 1rem;
+}
+
+.site-header__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.65rem;
 }
 
 .brand {

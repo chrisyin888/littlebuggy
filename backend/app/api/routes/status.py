@@ -45,7 +45,7 @@ def system_status(db: Session = Depends(get_db)) -> SystemStatusResponse:
         )
 
     try:
-        row = get_latest_homepage_snapshot_row(db)
+        row = get_latest_homepage_snapshot_row(db, "vancouver")
     except Exception:
         return SystemStatusResponse(
             database_ok=False,

@@ -12,13 +12,14 @@ from datetime import datetime, timezone
 from types import SimpleNamespace
 from typing import Any
 
+from app.config.cities import CityProfile, default_city
 from app.services.build_summary import build_summary
-from app.services.fetch_aqhi_real import fetch_aqhi_metro_vancouver
+from app.services.fetch_aqhi_real import fetch_aqhi_near
 from app.services.fetch_bccdc_real import (
     PHAC_INFOBASE_API_LANDING,
     fetch_respiratory_bc_signals,
 )
-from app.services.fetch_weather_real import fetch_weather_vancouver, weather_display_dict
+from app.services.fetch_weather_real import fetch_weather_at, weather_display_dict
 
 log = logging.getLogger("littlebuggy.homepage_builder")
 
@@ -84,8 +85,9 @@ def build_sources_bundle(resp: Any, aqhi: Any, wx: Any) -> dict[str, Any]:
     }
 
 
-def build_emergency_payload(*, region: str = "Metro Vancouver") -> dict[str, Any]:
+def build_emergency_payload(*, city: CityProfile | None = None) -> dict[str, Any]:
     """Last-resort shape if the whole merge fails (still valid for the Vue normalizer)."""
+    city = city or default_city()
     now = datetime.now(timezone.utc).replace(microsecond=0)
     resp = _failed_respiratory("merge_failed")
     aqhi = _failed_aqhi("merge_failed")
@@ -94,7 +96,8 @@ def build_emergency_payload(*, region: str = "Metro Vancouver") -> dict[str, Any
     env = {"air_quality": "Unavailable", "weather": "Unavailable"}
     built = build_summary(virus, env)
     return {
-        "region": region,
+        "city_id": city.id,
+        "region": city.name,
         "rsv": virus["rsv"],
         "flu": virus["flu"],
         "covid": virus["covid"],
@@ -109,12 +112,15 @@ def build_emergency_payload(*, region: str = "Metro Vancouver") -> dict[str, Any
     }
 
 
-def build_homepage_summary_dict(*, region: str = "Metro Vancouver") -> tuple[dict[str, Any], list[str]]:
+def build_homepage_summary_dict(*, city: CityProfile | None = None) -> tuple[dict[str, Any], list[str]]:
     """
     Fetch public feeds, merge, return payload for ``homepage-summary.json``.
 
+    Weather + AQHI use ``city`` coordinates; respiratory uses the existing national/BC-facing feed for all cities.
+
     Returns ``(payload, fetch_warnings)``. Warnings are for the terminal only (not written to JSON).
     """
+    city = city or default_city()
     warnings: list[str] = []
 
     try:
@@ -125,14 +131,19 @@ def build_homepage_summary_dict(*, region: str = "Metro Vancouver") -> tuple[dic
         resp = _failed_respiratory(str(e))
 
     try:
-        aqhi = fetch_aqhi_metro_vancouver()
+        aqhi = fetch_aqhi_near(city.lat, city.lng)
     except Exception as e:
         log.exception("AQHI fetch raised: %s", e)
         warnings.append(f"aqhi: exception ({e})")
         aqhi = _failed_aqhi(str(e))
 
     try:
-        wx = fetch_weather_vancouver()
+        wx = fetch_weather_at(
+            city.lat,
+            city.lng,
+            timezone=city.timezone,
+            location_label=city.weather_location_label,
+        )
     except Exception as e:
         log.exception("Weather fetch raised: %s", e)
         warnings.append(f"weather: exception ({e})")
@@ -170,7 +181,8 @@ def build_homepage_summary_dict(*, region: str = "Metro Vancouver") -> tuple[dic
 
     now = datetime.now(timezone.utc).replace(microsecond=0)
     payload = {
-        "region": region,
+        "city_id": city.id,
+        "region": city.name,
         "rsv": virus["rsv"],
         "flu": virus["flu"],
         "covid": virus["covid"],
@@ -186,7 +198,7 @@ def build_homepage_summary_dict(*, region: str = "Metro Vancouver") -> tuple[dic
     return payload, warnings
 
 
-def build_full_homepage_dict(*, region: str = "Metro Vancouver") -> dict[str, Any]:
+def build_full_homepage_dict(*, city: CityProfile | None = None) -> dict[str, Any]:
     """Backward-compatible: returns dict only (warnings dropped)."""
-    d, _ = build_homepage_summary_dict(region=region)
+    d, _ = build_homepage_summary_dict(city=city)
     return d

@@ -176,6 +176,7 @@ def run_snapshot_job(db: Session, *, region: str, mode: RefreshMode) -> int:
 
     row = save_snapshot(
         db,
+        city_id="vancouver",
         region=region,
         virus_data=virus,
         env_data=env,

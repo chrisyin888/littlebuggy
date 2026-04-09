@@ -12,6 +12,7 @@ from sqlalchemy.engine import Engine
 log = logging.getLogger(__name__)
 
 _TREND_SNAPSHOT_COLUMNS = [
+    ("city_id", "VARCHAR(32) DEFAULT 'vancouver'"),
     ("weather_summary", "TEXT"),
     ("sources_json", "TEXT"),
     ("data_quality_note", "TEXT"),
@@ -30,3 +31,12 @@ def ensure_trend_snapshot_columns(engine: Engine) -> None:
                 continue
             conn.execute(text(f"ALTER TABLE trend_snapshots ADD COLUMN {col} {ddl}"))
             log.info("Added column trend_snapshots.%s", col)
+        try:
+            conn.execute(
+                text(
+                    "UPDATE trend_snapshots SET city_id = 'vancouver' "
+                    "WHERE city_id IS NULL OR TRIM(city_id) = ''"
+                )
+            )
+        except Exception as e:
+            log.debug("city_id backfill skipped or unsupported: %s", e)

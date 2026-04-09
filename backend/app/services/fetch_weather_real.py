@@ -20,8 +20,8 @@ from app.services.http_util import http_client
 log = logging.getLogger(__name__)
 
 OPEN_METEO = "https://api.open-meteo.com/v1/forecast"
-# Downtown Vancouver-ish
-LAT, LON = 49.2827, -123.1207
+# Default centre (Metro Vancouver) — ``fetch_weather_vancouver`` delegates here.
+DEFAULT_LAT, DEFAULT_LON = 49.2827, -123.1207
 
 
 # WMO Weather interpretation codes (subset) — https://open-meteo.com/en/docs
@@ -83,14 +83,20 @@ def weather_display_dict(b: WeatherBundle) -> dict[str, Any] | None:
     return out
 
 
-def fetch_weather_vancouver() -> WeatherBundle:
+def fetch_weather_at(
+    lat: float,
+    lon: float,
+    *,
+    timezone: str,
+    location_label: str,
+) -> WeatherBundle:
     fetched_at = datetime.now(timezone.utc)
     params = {
-        "latitude": LAT,
-        "longitude": LON,
+        "latitude": lat,
+        "longitude": lon,
         "current": "temperature_2m,precipitation,weather_code,wind_speed_10m",
         "daily": "temperature_2m_max,temperature_2m_min,weather_code",
-        "timezone": "America/Vancouver",
+        "timezone": timezone,
         "forecast_days": 2,
     }
     try:
@@ -179,10 +185,19 @@ def fetch_weather_vancouver() -> WeatherBundle:
         source_updated_label=str(when) if when else None,
         fetched_at=fetched_at,
         error=None,
-        extra={"latitude": LAT, "longitude": LON, "weather_code": day_wcode},
+        extra={"latitude": lat, "longitude": lon, "weather_code": day_wcode},
         high_c=high_c,
         low_c=low_c,
         current_c=current_temp,
         condition_label=label,
+        location_label=location_label,
+    )
+
+
+def fetch_weather_vancouver() -> WeatherBundle:
+    return fetch_weather_at(
+        DEFAULT_LAT,
+        DEFAULT_LON,
+        timezone="America/Vancouver",
         location_label="Vancouver",
     )

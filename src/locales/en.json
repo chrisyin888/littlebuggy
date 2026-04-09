@@ -191,6 +191,7 @@
     "footer": "{brand} is built for multilingual families in Canada — friendly local health context in a language you can scan quickly. Not medical advice; your care team knows your child best.",
     "brandName": "LittleBuggy",
     "langSticker": "Your language",
+    "citySwitcher": "Region",
     "langSwitcher": "Language",
     "langSwitcherHero": "Choose interface language",
     "langPanelTitle": "Browse in your language",

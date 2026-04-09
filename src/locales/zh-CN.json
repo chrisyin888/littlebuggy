@@ -191,6 +191,7 @@
     "footer": "{brand} 为加拿大多语言家庭而做：把本地健康信号翻成你能安心扫一眼的语言 —— 不是医疗建议，最了解孩子的仍是你的医护团队。",
     "brandName": "LittleBuggy",
     "langSticker": "你的语言",
+    "citySwitcher": "地区",
     "langSwitcher": "语言",
     "langSwitcherHero": "选择界面语言",
     "langPanelTitle": "用你熟悉的语言浏览",

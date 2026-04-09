@@ -1,5 +1,7 @@
 import { ref, shallowRef } from 'vue'
 import { fetchHomepageSummary, HomepageFetchError } from '../lib/homepageSummary.js'
+import { DEFAULT_CITY_ID, getCityById } from '../config/cities.js'
+import { selectedCityId } from './useSelectedCity.js'
 import { i18n } from '../i18n/index.js'
 import { localeToDateLocale } from '../utils/localeDisplay.js'
 
@@ -18,32 +20,48 @@ export const snapshotError = ref(null)
 const TTL_MS = 12 * 60 * 1000
 
 let lastSuccessAt = 0
+let lastFetchedCityId = DEFAULT_CITY_ID
 let inflight = null
+/** @type {string | null} */
+let inflightCityId = null
+
+function resolveSnapshotCityId(opts = {}) {
+  const raw = opts.cityId != null ? opts.cityId : selectedCityId.value
+  return getCityById(typeof raw === 'string' ? raw : '').id
+}
 
 /**
  * Loads homepage summary from static `/data/homepage-summary.json` (see `npm run weekly:homepage`).
  * Uses TTL so a forced refresh can pick up a redeployed JSON without a full page reload.
- * @param {{ force?: boolean }} [opts] - `force: true` skips TTL and starts a new request.
+ * @param {{ force?: boolean, cityId?: string }} [opts] - `force: true` skips TTL and starts a new request; `cityId` overrides the global selected city for this fetch only.
  */
 export async function ensureHomepageSnapshot(opts = {}) {
   const force = opts.force === true
+  const cityId = resolveSnapshotCityId(opts)
   const now = Date.now()
 
-  if (!force && snapshot.value && lastSuccessAt > 0 && now - lastSuccessAt < TTL_MS) {
+  if (
+    !force &&
+    snapshot.value &&
+    lastSuccessAt > 0 &&
+    now - lastSuccessAt < TTL_MS &&
+    lastFetchedCityId === cityId
+  ) {
     return snapshot.value
   }
 
-  if (inflight && !force) {
+  if (inflight && !force && inflightCityId === cityId) {
     return inflight
   }
 
-  if (inflight && force) {
+  if (inflight && (force || inflightCityId !== cityId)) {
     try {
       await inflight
     } catch {
-      /* replaced by forced refresh */
+      /* replaced by forced refresh or city change */
     }
     inflight = null
+    inflightCityId = null
   }
 
   const hadData = !!snapshot.value
@@ -55,10 +73,12 @@ export async function ensureHomepageSnapshot(opts = {}) {
   }
   snapshotError.value = null
 
-  inflight = fetchHomepageSummary()
+  inflightCityId = cityId
+  inflight = fetchHomepageSummary(cityId)
     .then((data) => {
       snapshot.value = data
       lastSuccessAt = Date.now()
+      lastFetchedCityId = cityId
       snapshotError.value = null
       return data
     })
@@ -85,6 +105,7 @@ export async function ensureHomepageSnapshot(opts = {}) {
       snapshotLoading.value = false
       snapshotRefreshing.value = false
       inflight = null
+      inflightCityId = null
     })
 
   return inflight

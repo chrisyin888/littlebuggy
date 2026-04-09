@@ -57,10 +57,15 @@ class AQHIBundle:
     extra: dict[str, Any] | None = None
 
 
-def fetch_aqhi_metro_vancouver() -> AQHIBundle:
+def _bbox_around(lat: float, lng: float, delta: float = 0.42) -> str:
+    """CRS84 bbox: minLon,minLat,maxLon,maxLat (GeoMet AQHI layer)."""
+    return f"{lng - delta},{lat - delta},{lng + delta},{lat + delta}"
+
+
+def fetch_aqhi_for_bbox(bbox: str) -> AQHIBundle:
     fetched_at = datetime.now(timezone.utc)
     params = {
-        "bbox": MV_BBOX,
+        "bbox": bbox,
         "sortby": "-observation_datetime",
         "limit": "80",
         "f": "json",
@@ -145,5 +150,14 @@ def fetch_aqhi_metro_vancouver() -> AQHIBundle:
         or best.get("observation_datetime"),
         fetched_at=fetched_at,
         error=None,
-        extra={"geomet_collection": GEOMET_AQHI_ITEMS, "bbox": MV_BBOX},
+        extra={"geomet_collection": GEOMET_AQHI_ITEMS, "bbox": bbox},
     )
+
+
+def fetch_aqhi_metro_vancouver() -> AQHIBundle:
+    return fetch_aqhi_for_bbox(MV_BBOX)
+
+
+def fetch_aqhi_near(lat: float, lng: float, *, delta: float = 0.42) -> AQHIBundle:
+    """Nearest-station AQHI summary inside a small box around ``lat``/``lng``."""
+    return fetch_aqhi_for_bbox(_bbox_around(lat, lng, delta=delta))

@@ -6,6 +6,7 @@
  *   this module — keeps local UX predictable without Postgres.
  */
 
+import { CITIES, DEFAULT_CITY_ID, getCityById } from '../config/cities.js'
 import { apiUrl, resolvedApiBase } from './apiOrigin.js'
 
 /** Max wait for live API before using static fallback (cold starts / slow networks). */
@@ -52,6 +53,8 @@ export function normalizeHomepageSummaryPayload(input) {
     }
   }
 
+  const cid = str(o.city_id, DEFAULT_CITY_ID)
+  o.city_id = CITIES.some((c) => c.id === cid) ? cid : DEFAULT_CITY_ID
   o.region = str(o.region, 'Metro Vancouver')
   o.rsv = str(o.rsv, 'Unknown')
   o.flu = str(o.flu, 'Unknown')
@@ -110,6 +113,25 @@ export function normalizeHomepageSummaryPayload(input) {
 }
 
 /**
+ * When using bundled JSON (dev / API down), respiratory data may still be Vancouver-sourced;
+ * still show the user's selected city name and append a short note for non-default cities.
+ * @param {Record<string, unknown>} data
+ * @param {string} cityId
+ */
+export function applyStaticCityDisplayPatch(data, cityId) {
+  const cid = cityId || DEFAULT_CITY_ID
+  const city = getCityById(cid)
+  const out = { ...data, city_id: cid, region: city.name }
+  if (cid !== DEFAULT_CITY_ID) {
+    const hint =
+      'Bundled snapshot uses Metro Vancouver feeds; run the API for city-specific air and weather.'
+    const prev = typeof out.data_quality_note === 'string' ? out.data_quality_note.trim() : ''
+    out.data_quality_note = prev ? `${prev} ${hint}` : hint
+  }
+  return out
+}
+
+/**
  * @param {Response} res
  * @returns {Promise<Record<string, unknown> | null>}
  */
@@ -134,8 +156,9 @@ async function normalizedPayloadFromOkJsonResponse(res) {
 /**
  * @returns {Promise<Record<string, unknown> | null>}
  */
-async function tryFetchLiveHomepageSummary() {
-  const url = apiUrl('/api/homepage-summary')
+async function tryFetchLiveHomepageSummary(cityId = DEFAULT_CITY_ID) {
+  const q = new URLSearchParams({ city: cityId || DEFAULT_CITY_ID })
+  const url = `${apiUrl('/api/homepage-summary')}?${q}`
   const ctrl = new AbortController()
   const tid = setTimeout(() => ctrl.abort(), LIVE_API_TIMEOUT_MS)
   try {
@@ -169,10 +192,11 @@ export class HomepageFetchError extends Error {
 /**
  * Loads and normalizes homepage summary (live API in production when configured, else static JSON).
  */
-export async function fetchHomepageSummary() {
+export async function fetchHomepageSummary(cityId = DEFAULT_CITY_ID) {
+  const cid = cityId || DEFAULT_CITY_ID
   const useLiveApi = import.meta.env.PROD && Boolean(resolvedApiBase())
   if (useLiveApi) {
-    const live = await tryFetchLiveHomepageSummary()
+    const live = await tryFetchLiveHomepageSummary(cid)
     if (live) {
       if (import.meta.env.VITE_DEBUG_API === 'true') {
         console.info('[LittleBuggy] homepage summary: live API')
@@ -241,7 +265,7 @@ export async function fetchHomepageSummary() {
     if (!normalized) {
       normalized = normalizeHomepageSummaryPayload({})
     }
-    return /** @type {Record<string, unknown>} */ (normalized)
+    return /** @type {Record<string, unknown>} */ (applyStaticCityDisplayPatch(normalized, cid))
   }
 
   if (res.status === 404) {

@@ -29,6 +29,7 @@ class SourcesBundle(BaseModel):
 class HomepageSummaryResponse(BaseModel):
     """Stable JSON keys for the Vue frontend."""
 
+    city_id: str = Field(default="vancouver", description="Canonical city key (see app.config.cities).")
     region: str
     rsv: str
     flu: str

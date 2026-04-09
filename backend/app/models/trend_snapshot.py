@@ -15,6 +15,7 @@ class TrendSnapshot(Base):
     __tablename__ = "trend_snapshots"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    city_id: Mapped[str] = mapped_column(String(32), nullable=False, default="vancouver")
     region: Mapped[str] = mapped_column(String(128), nullable=False, default="Metro Vancouver")
 
     rsv_level: Mapped[str] = mapped_column(String(64), nullable=False)

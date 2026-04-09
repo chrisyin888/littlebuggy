@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from app.config.cities import resolve_city_id
 from app.services.homepage_public_polish import polish_homepage_summary_payload
 from app.services.homepage_summary_builder import (
     build_emergency_payload,
@@ -24,17 +25,20 @@ def _clip(s: str, n: int = 72) -> str:
     return s if len(s) <= n else s[: n - 1] + "…"
 
 
-def generate_homepage_summary_payload(*, region: str = "Metro Vancouver") -> tuple[dict[str, Any], list[str]]:
+def generate_homepage_summary_payload(*, city_id: str | None = None) -> tuple[dict[str, Any], list[str]]:
     """
     Fetch public feeds, polish, attach ``schema_version``.
 
+    ``city_id`` matches ``app.config.cities`` (default Vancouver).
+
     Returns ``(payload, fetch_warnings)``. Warnings are operator-facing only.
     """
+    city = resolve_city_id(city_id)
     fetch_warnings: list[str] = []
     try:
-        raw, fetch_warnings = build_homepage_summary_dict(region=region)
+        raw, fetch_warnings = build_homepage_summary_dict(city=city)
     except Exception as e:
-        raw = build_emergency_payload(region=region)
+        raw = build_emergency_payload(city=city)
         fetch_warnings.append(f"full_merge_failed: {e}")
 
     try:

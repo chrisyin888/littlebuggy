@@ -69,7 +69,7 @@ def main() -> None:
         write_homepage_summary_json,
     )
 
-    payload, fetch_warnings = generate_homepage_summary_payload(region="Metro Vancouver")
+    payload, fetch_warnings = generate_homepage_summary_payload()
 
     write_homepage_summary_json(OUT, payload)
     print(f"Wrote {OUT}")

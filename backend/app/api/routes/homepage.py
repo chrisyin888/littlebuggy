@@ -1,25 +1,29 @@
 """
 Latest snapshot row for ``GET /api/homepage-summary``.
 
-The production Vue bundle requests this first; Render crons refresh the underlying DB daily
-(environment) and weekly (respiratory). If the API is unreachable, the client falls back to
-bundled ``/data/homepage-summary.json`` (see ``src/lib/homepageSummary.js``).
+Supports ``?city=vancouver|gta|calgary`` (default Vancouver). Reads the newest ``trend_snapshots`` row
+for that ``city_id``; if none exists, builds a live payload (same pipeline as regenerate) so new cities work
+without a separate bootstrap step.
 """
 
 import json
+from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
+from app.config.cities import resolve_city_id
 from app.config import postgres_required_message_if_misconfigured
 from app.database import get_db
-from app.services.trend_snapshot_homepage import get_latest_homepage_snapshot_row
+from app.models.trend_snapshot import TrendSnapshot
 from app.schemas.homepage import (
     HomepageSummaryResponse,
     SourceMeta,
     SourcesBundle,
     WeatherDisplayPayload,
 )
+from app.services.homepage_static_generate import generate_homepage_summary_payload
+from app.services.trend_snapshot_homepage import get_latest_homepage_snapshot_row
 
 router = APIRouter()
 
@@ -71,24 +75,10 @@ def _parse_sources(raw: str | None) -> SourcesBundle:
         return _FALLBACK_SOURCES
 
 
-@router.get("/homepage-summary", response_model=HomepageSummaryResponse)
-def homepage_summary(db: Session = Depends(get_db)) -> HomepageSummaryResponse:
-    """Latest automated snapshot for the LittleBuggy homepage (``trend_snapshots`` / ``TrendSnapshot``)."""
-    mis = postgres_required_message_if_misconfigured()
-    if mis:
-        raise HTTPException(status_code=503, detail=mis)
-
-    row = get_latest_homepage_snapshot_row(db)
-    if row is None:
-        raise HTTPException(
-            status_code=404,
-            detail=(
-                "No snapshot yet in table trend_snapshots. "
-                "POST /api/admin/homepage-snapshot/regenerate with X-Admin-Token creates the first row, "
-                "or from backend/: python3 -m app.jobs.run_update"
-            ),
-        )
+def _row_to_response(row: TrendSnapshot) -> HomepageSummaryResponse:
+    cid = (row.city_id or "vancouver").strip().lower() or "vancouver"
     return HomepageSummaryResponse(
+        city_id=cid,
         region=row.region,
         rsv=row.rsv_level,
         flu=row.flu_level,
@@ -102,3 +92,80 @@ def homepage_summary(db: Session = Depends(get_db)) -> HomepageSummaryResponse:
         sources=_parse_sources(row.sources_json),
         data_quality_note=row.data_quality_note,
     )
+
+
+def _payload_to_response(payload: dict, city_id: str) -> HomepageSummaryResponse:
+    wd_raw = payload.get("weather_display")
+    weather_display = None
+    if isinstance(wd_raw, dict):
+        try:
+            weather_display = WeatherDisplayPayload.model_validate(wd_raw)
+        except Exception:
+            weather_display = None
+
+    src_in = payload.get("sources") if isinstance(payload.get("sources"), dict) else {}
+    try:
+        sources = SourcesBundle(
+            respiratory=SourceMeta(**src_in["respiratory"]),
+            aqhi=SourceMeta(**src_in["aqhi"]),
+            weather=SourceMeta(**src_in["weather"]),
+        )
+    except Exception:
+        sources = _FALLBACK_SOURCES
+
+    raw_u = payload.get("updated_at")
+    updated_at = datetime.now(timezone.utc)
+    if isinstance(raw_u, str) and raw_u.strip():
+        try:
+            updated_at = datetime.fromisoformat(raw_u.strip().replace("Z", "+00:00"))
+        except ValueError:
+            pass
+
+    dq = payload.get("data_quality_note")
+    dq_out = dq.strip() if isinstance(dq, str) and dq.strip() else None
+
+    return HomepageSummaryResponse(
+        city_id=city_id,
+        region=str(payload.get("region") or ""),
+        rsv=str(payload.get("rsv") or "Unknown"),
+        flu=str(payload.get("flu") or "Unknown"),
+        covid=str(payload.get("covid") or "Unknown"),
+        air_quality=str(payload.get("air_quality") or "Unavailable"),
+        weather=str(payload.get("weather") or "Unavailable"),
+        weather_display=weather_display,
+        outdoor_feel=str(payload.get("outdoor_feel") or "Unavailable"),
+        summary=str(payload.get("summary") or payload.get("short_summary") or ""),
+        updated_at=updated_at,
+        sources=sources,
+        data_quality_note=dq_out,
+    )
+
+
+@router.get("/homepage-summary", response_model=HomepageSummaryResponse)
+def homepage_summary(
+    city: str | None = Query(
+        None,
+        description="City id: vancouver (default), gta, calgary",
+    ),
+    db: Session = Depends(get_db),
+) -> HomepageSummaryResponse:
+    """Latest snapshot for one city, or a live-built payload when no DB row exists yet."""
+    mis = postgres_required_message_if_misconfigured()
+    if mis:
+        raise HTTPException(status_code=503, detail=mis)
+
+    profile = resolve_city_id(city)
+    row = get_latest_homepage_snapshot_row(db, profile.id)
+    if row is not None:
+        return _row_to_response(row)
+
+    try:
+        payload, _warnings = generate_homepage_summary_payload(city_id=profile.id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Could not build homepage summary for city={profile.id}: {e}",
+        ) from e
+
+    return _payload_to_response(payload, profile.id)
+

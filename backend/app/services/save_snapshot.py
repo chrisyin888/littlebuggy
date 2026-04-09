@@ -9,6 +9,7 @@ from app.models.trend_snapshot import TrendSnapshot
 def save_snapshot(
     db: Session,
     *,
+    city_id: str = "vancouver",
     region: str,
     virus_data: dict[str, str],
     env_data: dict[str, str],
@@ -22,6 +23,7 @@ def save_snapshot(
     Persist one trend_snapshots row. Called after fetch + build_summary.
     """
     row = TrendSnapshot(
+        city_id=city_id,
         region=region,
         rsv_level=virus_data["rsv"],
         flu_level=virus_data["flu"],
