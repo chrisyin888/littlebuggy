@@ -11,9 +11,13 @@ MSC remains the authoritative narrative for severe weather; this is a lightweigh
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+import threading
+import time
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from typing import Any
+
+import httpx
 
 from app.services.http_util import http_client
 
@@ -23,6 +27,13 @@ OPEN_METEO = "https://api.open-meteo.com/v1/forecast"
 # Default centre (Metro Vancouver) — ``fetch_weather_vancouver`` delegates here.
 DEFAULT_LAT, DEFAULT_LON = 49.2827, -123.1207
 
+# Retries + timeout: transient Open-Meteo failures are common; do not hang the snapshot build.
+WEATHER_MAX_ATTEMPTS = 3
+WEATHER_RETRY_DELAY_SEC = 0.75
+WEATHER_HTTP_TIMEOUT = httpx.Timeout(5.0, connect=5.0)
+
+# In-process fallback when Open-Meteo is down (per worker / script process). Not persisted across deploys.
+WEATHER_CACHE_MAX_AGE_SEC = 72 * 3600
 
 # WMO Weather interpretation codes (subset) — https://open-meteo.com/en/docs
 _WMO_LABELS: dict[int, str] = {
@@ -68,6 +79,41 @@ class WeatherBundle:
     location_label: str = "Vancouver"
 
 
+_cache_lock = threading.Lock()
+_last_good_weather: dict[tuple[Any, ...], tuple[WeatherBundle, datetime]] = {}
+
+
+def _weather_cache_key(lat: float, lon: float, timezone: str, location_label: str) -> tuple[Any, ...]:
+    return (round(lat, 6), round(lon, 6), timezone, location_label)
+
+
+def _weather_cache_put(key: tuple[Any, ...], bundle: WeatherBundle) -> None:
+    """Store a successful bundle (call only when bundle.ok)."""
+    stored_at = datetime.now(timezone.utc)
+    with _cache_lock:
+        _last_good_weather[key] = (bundle, stored_at)
+
+
+def _weather_cache_get_fresh_copy(
+    key: tuple[Any, ...],
+    *,
+    now: datetime,
+) -> tuple[WeatherBundle, float] | None:
+    """Return (shallow copy of last good bundle, age in seconds) if within max age."""
+    with _cache_lock:
+        entry = _last_good_weather.get(key)
+    if not entry:
+        return None
+    bundle, stored_at = entry
+    if not bundle.ok:
+        return None
+    age_sec = (now - stored_at).total_seconds()
+    if age_sec > WEATHER_CACHE_MAX_AGE_SEC:
+        return None
+    extra = dict(bundle.extra) if bundle.extra else None
+    return replace(bundle, extra=extra), age_sec
+
+
 def weather_display_dict(b: WeatherBundle) -> dict[str, Any] | None:
     """Structured block for API / static JSON; None when fetch failed."""
     if not b.ok or b.high_c is None or b.low_c is None:
@@ -83,29 +129,16 @@ def weather_display_dict(b: WeatherBundle) -> dict[str, Any] | None:
     return out
 
 
-def fetch_weather_at(
+def _parse_open_meteo_payload(
+    data: Any,
+    *,
     lat: float,
     lon: float,
-    *,
-    timezone: str,
     location_label: str,
+    fetched_at: datetime,
 ) -> WeatherBundle:
-    fetched_at = datetime.now(timezone.utc)
-    params = {
-        "latitude": lat,
-        "longitude": lon,
-        "current": "temperature_2m,precipitation,weather_code,wind_speed_10m",
-        "daily": "temperature_2m_max,temperature_2m_min,weather_code",
-        "timezone": timezone,
-        "forecast_days": 2,
-    }
-    try:
-        with http_client() as client:
-            r = client.get(OPEN_METEO, params=params)
-            r.raise_for_status()
-            data = r.json()
-    except Exception as e:
-        log.exception("Open-Meteo fetch failed: %s", e)
+    """Turn JSON body into a bundle; returns ok=False with error set when payload is unusable."""
+    if not isinstance(data, dict):
         return WeatherBundle(
             ok=False,
             weather_summary="Unavailable",
@@ -113,11 +146,11 @@ def fetch_weather_at(
             source_url="https://open-meteo.com/en/docs",
             source_updated_label=None,
             fetched_at=fetched_at,
-            error=str(e),
+            error="response_not_object",
         )
 
-    cur = data.get("current") if isinstance(data, dict) else None
-    daily = data.get("daily") if isinstance(data, dict) else None
+    cur = data.get("current")
+    daily = data.get("daily")
     if not isinstance(cur, dict):
         return WeatherBundle(
             ok=False,
@@ -149,7 +182,6 @@ def fetch_weather_at(
     high_c: float | None = None
     low_c: float | None = None
     day_wcode = cur_wcode
-    label: str
 
     if isinstance(daily, dict):
         times = daily.get("time") or []
@@ -170,7 +202,6 @@ def fetch_weather_at(
         day_wcode = cur_wcode
 
     label = _WMO_LABELS.get(day_wcode, f"Weather code {day_wcode}")
-    # Summary for text pipelines: range first (no leading “High” — avoids i18n level collisions).
     summary = f"{low_c:.0f}°–{high_c:.0f}°C · {label}"
     if p > 0.2:
         summary = f"{summary} · precip ~{p:.1f} mm"
@@ -191,6 +222,96 @@ def fetch_weather_at(
         current_c=current_temp,
         condition_label=label,
         location_label=location_label,
+    )
+
+
+def fetch_weather_at(
+    lat: float,
+    lon: float,
+    *,
+    timezone: str,
+    location_label: str,
+) -> WeatherBundle:
+    fetched_at = datetime.now(timezone.utc)
+    cache_key = _weather_cache_key(lat, lon, timezone, location_label)
+    params = {
+        "latitude": lat,
+        "longitude": lon,
+        "current": "temperature_2m,precipitation,weather_code,wind_speed_10m",
+        "daily": "temperature_2m_max,temperature_2m_min,weather_code",
+        "timezone": timezone,
+        "forecast_days": 2,
+    }
+
+    last_failure: str | None = None
+
+    for attempt in range(1, WEATHER_MAX_ATTEMPTS + 1):
+        data: Any = None
+        try:
+            with http_client() as client:
+                r = client.get(OPEN_METEO, params=params, timeout=WEATHER_HTTP_TIMEOUT)
+                r.raise_for_status()
+                data = r.json()
+        except Exception as e:
+            last_failure = f"{type(e).__name__}: {e}"
+            if attempt < WEATHER_MAX_ATTEMPTS:
+                log.warning(
+                    "Open-Meteo request failed (attempt %s/%s): %s; retrying in %.2fs",
+                    attempt,
+                    WEATHER_MAX_ATTEMPTS,
+                    last_failure,
+                    WEATHER_RETRY_DELAY_SEC,
+                )
+                time.sleep(WEATHER_RETRY_DELAY_SEC)
+            continue
+
+        bundle = _parse_open_meteo_payload(
+            data,
+            lat=lat,
+            lon=lon,
+            location_label=location_label,
+            fetched_at=fetched_at,
+        )
+        if bundle.ok:
+            _weather_cache_put(cache_key, bundle)
+            return bundle
+
+        last_failure = bundle.error or "parse_failed"
+        if attempt < WEATHER_MAX_ATTEMPTS:
+            log.warning(
+                "Open-Meteo unusable payload (attempt %s/%s): %s; retrying in %.2fs",
+                attempt,
+                WEATHER_MAX_ATTEMPTS,
+                last_failure,
+                WEATHER_RETRY_DELAY_SEC,
+            )
+            time.sleep(WEATHER_RETRY_DELAY_SEC)
+
+    log.error(
+        "Open-Meteo fetch failed after %s attempts; last failure: %s",
+        WEATHER_MAX_ATTEMPTS,
+        last_failure,
+    )
+    now = datetime.now(timezone.utc)
+    hit = _weather_cache_get_fresh_copy(cache_key, now=now)
+    if hit is not None:
+        cached, age_sec = hit
+        log.warning(
+            "Open-Meteo reusing in-process cached weather (age %.0fs, max %ss) after failure: %s",
+            age_sec,
+            WEATHER_CACHE_MAX_AGE_SEC,
+            last_failure,
+        )
+        return cached
+
+    return WeatherBundle(
+        ok=False,
+        weather_summary="Unavailable",
+        source_name="Open-Meteo",
+        source_url="https://open-meteo.com/en/docs",
+        source_updated_label=None,
+        fetched_at=fetched_at,
+        error=last_failure,
     )
 
 
