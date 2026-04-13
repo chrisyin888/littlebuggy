@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { apiUrl } from '../lib/apiOrigin.js'
 import { useI18n } from 'vue-i18n'
 import TrendDetailModal from '../components/TrendDetailModal.vue'
 import LittleBuggyMascot from '../components/LittleBuggyMascot.vue'
@@ -11,6 +12,40 @@ import { translateApiLevel } from '../utils/apiLabelMap.js'
 
 const { t, tm, locale } = useI18n()
 const { snapshot, snapshotLoading, snapshotError, formatSnapshotUpdatePhrase } = useHomepageSnapshot()
+
+const VISIT_SESSION_KEY = 'lb_visit_counted_session'
+const visitorsToday = ref(null)
+
+async function loadVisitCount() {
+  try {
+    const r = await fetch(apiUrl('/api/visit-count'))
+    if (!r.ok) return
+    const data = await r.json()
+    if (data && typeof data.count === 'number' && Number.isFinite(data.count)) {
+      visitorsToday.value = Math.max(0, Math.floor(data.count))
+    }
+  } catch {
+    /* non-fatal */
+  }
+}
+
+async function maybeTrackVisit() {
+  try {
+    if (typeof sessionStorage === 'undefined') return
+    if (sessionStorage.getItem(VISIT_SESSION_KEY) === '1') return
+    const r = await fetch(apiUrl('/api/track-visit'), { method: 'POST' })
+    if (r.ok) sessionStorage.setItem(VISIT_SESSION_KEY, '1')
+  } catch {
+    /* non-fatal */
+  }
+}
+
+onMounted(() => {
+  void (async () => {
+    await maybeTrackVisit()
+    await loadVisitCount()
+  })()
+})
 
 const provenanceRows = computed(() => {
   void locale.value
@@ -355,6 +390,9 @@ function onEnvCardKeydown(e, row) {
               </button>
             </div>
             <p class="hero__trust-line" role="note">{{ $t('home.hero.trustDataLine') }}</p>
+            <p v-if="visitorsToday != null" class="hero__visit-stat" role="status">
+              Visitors today: {{ visitorsToday }}
+            </p>
 
             <p
               v-if="snapshotError && !snapshot && !snapshotLoading"
@@ -1174,6 +1212,16 @@ function onEnvCardKeydown(e, row) {
   font-weight: 600;
   color: #64748b;
   border-top: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.hero__visit-stat {
+  margin: 0.5rem 0 0;
+  max-width: 28rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  font-weight: 500;
+  color: #94a3b8;
+  letter-spacing: 0.01em;
 }
 
 .hero__cta-row {

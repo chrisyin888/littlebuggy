@@ -12,7 +12,7 @@ from app.settings import (
     settings,
 )
 from app.database import Base, engine
-from app.models import VirusTrendsLatest  # noqa: F401 — register table for create_all (TrendSnapshot via routes)
+from app.models import Visit, VirusTrendsLatest  # noqa: F401 — register tables for create_all
 from app.services.db_schema import ensure_trend_snapshot_columns
 
 log = logging.getLogger("littlebuggy.api")
