@@ -83,8 +83,13 @@ _cache_lock = threading.Lock()
 _last_good_weather: dict[tuple[Any, ...], tuple[WeatherBundle, datetime]] = {}
 
 
-def _weather_cache_key(lat: float, lon: float, timezone: str, location_label: str) -> tuple[Any, ...]:
-    return (round(lat, 6), round(lon, 6), timezone, location_label)
+def _weather_cache_key(
+    lat: float,
+    lon: float,
+    iana_timezone: str,
+    location_label: str,
+) -> tuple[Any, ...]:
+    return (round(lat, 6), round(lon, 6), iana_timezone, location_label)
 
 
 def _weather_cache_put(key: tuple[Any, ...], bundle: WeatherBundle) -> None:
@@ -229,17 +234,17 @@ def fetch_weather_at(
     lat: float,
     lon: float,
     *,
-    timezone: str,
+    iana_timezone: str,
     location_label: str,
 ) -> WeatherBundle:
     fetched_at = datetime.now(timezone.utc)
-    cache_key = _weather_cache_key(lat, lon, timezone, location_label)
+    cache_key = _weather_cache_key(lat, lon, iana_timezone, location_label)
     params = {
         "latitude": lat,
         "longitude": lon,
         "current": "temperature_2m,precipitation,weather_code,wind_speed_10m",
         "daily": "temperature_2m_max,temperature_2m_min,weather_code",
-        "timezone": timezone,
+        "timezone": iana_timezone,
         "forecast_days": 2,
     }
 
@@ -319,6 +324,6 @@ def fetch_weather_vancouver() -> WeatherBundle:
     return fetch_weather_at(
         DEFAULT_LAT,
         DEFAULT_LON,
-        timezone="America/Vancouver",
+        iana_timezone="America/Vancouver",
         location_label="Vancouver",
     )

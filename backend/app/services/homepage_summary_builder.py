@@ -96,7 +96,7 @@ def fetch_homepage_signals(
             wx = fetch_weather_at(
                 city.lat,
                 city.lng,
-                timezone=city.timezone,
+                iana_timezone=city.timezone,
                 location_label=city.weather_location_label,
             )
         except Exception as e:
