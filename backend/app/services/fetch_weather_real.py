@@ -34,6 +34,9 @@ WEATHER_HTTP_TIMEOUT = httpx.Timeout(5.0, connect=5.0)
 
 # In-process fallback when Open-Meteo is down (per worker / script process). Not persisted across deploys.
 WEATHER_CACHE_MAX_AGE_SEC = 72 * 3600
+# When rate-limited (HTTP 429), allow slightly older cache so we do not hammer the API or show Unavailable.
+WEATHER_CACHE_429_SOFT_MAX_AGE_SEC = 14 * 24 * 3600
+WEATHER_429_BACKOFF_SEC = 4.0
 
 # WMO Weather interpretation codes (subset) — https://open-meteo.com/en/docs
 _WMO_LABELS: dict[int, str] = {
@@ -99,12 +102,21 @@ def _weather_cache_put(key: tuple[Any, ...], bundle: WeatherBundle) -> None:
         _last_good_weather[key] = (bundle, stored_at)
 
 
-def _weather_cache_get_fresh_copy(
+def _is_open_meteo_429(exc: BaseException) -> bool:
+    return (
+        isinstance(exc, httpx.HTTPStatusError)
+        and exc.response is not None
+        and exc.response.status_code == 429
+    )
+
+
+def _weather_cache_get_copy(
     key: tuple[Any, ...],
     *,
     now: datetime,
+    max_age_sec: float,
 ) -> tuple[WeatherBundle, float] | None:
-    """Return (shallow copy of last good bundle, age in seconds) if within max age."""
+    """Return (shallow copy of last good bundle, age in seconds) if entry exists and age <= max_age_sec."""
     with _cache_lock:
         entry = _last_good_weather.get(key)
     if not entry:
@@ -113,10 +125,19 @@ def _weather_cache_get_fresh_copy(
     if not bundle.ok:
         return None
     age_sec = (now - stored_at).total_seconds()
-    if age_sec > WEATHER_CACHE_MAX_AGE_SEC:
+    if age_sec > max_age_sec:
         return None
     extra = dict(bundle.extra) if bundle.extra else None
     return replace(bundle, extra=extra), age_sec
+
+
+def _weather_cache_get_fresh_copy(
+    key: tuple[Any, ...],
+    *,
+    now: datetime,
+) -> tuple[WeatherBundle, float] | None:
+    """Return cached bundle if within the normal freshness window."""
+    return _weather_cache_get_copy(key, now=now, max_age_sec=WEATHER_CACHE_MAX_AGE_SEC)
 
 
 def weather_display_dict(b: WeatherBundle) -> dict[str, Any] | None:
@@ -230,6 +251,87 @@ def _parse_open_meteo_payload(
     )
 
 
+def _weather_recover_after_429(
+    cache_key: tuple[Any, ...],
+    params: dict[str, Any],
+    *,
+    lat: float,
+    lon: float,
+    location_label: str,
+    fetched_at: datetime,
+) -> WeatherBundle | None:
+    """
+    Rate-limit path: prefer cache (no extra HTTP), then one slow retry, then older cache.
+    Returns a bundle to use, or None so caller can fall back to generic Unavailable handling.
+    """
+    now = datetime.now(timezone.utc)
+
+    hit = _weather_cache_get_fresh_copy(cache_key, now=now)
+    if hit is not None:
+        cached, age_sec = hit
+        log.warning(
+            "Open-Meteo HTTP 429: reusing in-process cached weather (age %.0fs, freshness window %.0fs)",
+            age_sec,
+            WEATHER_CACHE_MAX_AGE_SEC,
+        )
+        return cached
+
+    hit_soft = _weather_cache_get_copy(
+        cache_key,
+        now=now,
+        max_age_sec=WEATHER_CACHE_429_SOFT_MAX_AGE_SEC,
+    )
+    if hit_soft is not None:
+        cached, age_sec = hit_soft
+        log.warning(
+            "Open-Meteo HTTP 429: reusing older cached weather after rate limit (age %.0fs, soft_max %.0fs)",
+            age_sec,
+            WEATHER_CACHE_429_SOFT_MAX_AGE_SEC,
+        )
+        return cached
+
+    log.warning(
+        "Open-Meteo HTTP 429 with no in-process cache; sleeping %.1fs backoff then one retry (no tight retry loop)",
+        WEATHER_429_BACKOFF_SEC,
+    )
+    time.sleep(WEATHER_429_BACKOFF_SEC)
+
+    try:
+        with http_client() as client:
+            r = client.get(OPEN_METEO, params=params, timeout=WEATHER_HTTP_TIMEOUT)
+            r.raise_for_status()
+            data = r.json()
+        bundle = _parse_open_meteo_payload(
+            data,
+            lat=lat,
+            lon=lon,
+            location_label=location_label,
+            fetched_at=fetched_at,
+        )
+        if bundle.ok:
+            _weather_cache_put(cache_key, bundle)
+            return bundle
+    except Exception as e:
+        log.warning("Open-Meteo single post-429 retry failed: %s", e)
+
+    now2 = datetime.now(timezone.utc)
+    hit_soft2 = _weather_cache_get_copy(
+        cache_key,
+        now=now2,
+        max_age_sec=WEATHER_CACHE_429_SOFT_MAX_AGE_SEC,
+    )
+    if hit_soft2 is not None:
+        cached, age_sec = hit_soft2
+        log.warning(
+            "Open-Meteo HTTP 429 after backoff retry: reusing cached weather (age %.0fs, soft_max %.0fs)",
+            age_sec,
+            WEATHER_CACHE_429_SOFT_MAX_AGE_SEC,
+        )
+        return cached
+
+    return None
+
+
 def fetch_weather_at(
     lat: float,
     lon: float,
@@ -249,6 +351,7 @@ def fetch_weather_at(
     }
 
     last_failure: str | None = None
+    saw_429 = False
 
     for attempt in range(1, WEATHER_MAX_ATTEMPTS + 1):
         data: Any = None
@@ -259,6 +362,14 @@ def fetch_weather_at(
                 data = r.json()
         except Exception as e:
             last_failure = f"{type(e).__name__}: {e}"
+            if _is_open_meteo_429(e):
+                saw_429 = True
+                log.warning(
+                    "Open-Meteo HTTP 429 (attempt %s/%s); not continuing aggressive in-run retries",
+                    attempt,
+                    WEATHER_MAX_ATTEMPTS,
+                )
+                break
             if attempt < WEATHER_MAX_ATTEMPTS:
                 log.warning(
                     "Open-Meteo request failed (attempt %s/%s): %s; retrying in %.2fs",
@@ -291,6 +402,31 @@ def fetch_weather_at(
                 WEATHER_RETRY_DELAY_SEC,
             )
             time.sleep(WEATHER_RETRY_DELAY_SEC)
+
+    if saw_429:
+        recovered = _weather_recover_after_429(
+            cache_key,
+            params,
+            lat=lat,
+            lon=lon,
+            location_label=location_label,
+            fetched_at=fetched_at,
+        )
+        if recovered is not None:
+            return recovered
+        log.error(
+            "Open-Meteo HTTP 429 and no recoverable in-process cache after backoff; last error: %s",
+            last_failure,
+        )
+        return WeatherBundle(
+            ok=False,
+            weather_summary="Unavailable",
+            source_name="Open-Meteo",
+            source_url="https://open-meteo.com/en/docs",
+            source_updated_label=None,
+            fetched_at=fetched_at,
+            error=last_failure,
+        )
 
     log.error(
         "Open-Meteo fetch failed after %s attempts; last failure: %s",
