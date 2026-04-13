@@ -7,6 +7,7 @@ import LittleBuggyMascot from '../components/LittleBuggyMascot.vue'
 import ErWaitTimesSection from '../components/ErWaitTimesSection.vue'
 import UpccWaitTimesSection from '../components/UpccWaitTimesSection.vue'
 import { useHomepageSnapshot } from '../composables/useHomepageSnapshot.js'
+import { signalDisplayLine } from '../lib/homepageSummary.js'
 import { isTrendDetailKey, heroRowToDetailKey, envRowToDetailKey } from '../content/trendDetails.js'
 import { translateApiLevel } from '../utils/apiLabelMap.js'
 
@@ -143,45 +144,35 @@ function sortRowsBySeverity(rows, scoreFn) {
   }))
 }
 
-function virusCardLabel(s, kind) {
-  const raw = s[`${kind}_label`]
-  if (typeof raw === 'string' && raw.trim()) return raw.trim()
-  return t(`home.hero.virusLabels.${kind}`)
+/** Max respiratory signal rows in the hero mockup and primary snapshot grid; extras go in an expandable block. */
+const HERO_VIRUS_VISIBLE_MAX = 4
+
+const STICKER_BY_SIGNAL_KEY = { rsv: '🐞', flu: '🤒', covid: '😷' }
+
+function stickerForSignalKey(key) {
+  const k = String(key || '').toLowerCase()
+  return STICKER_BY_SIGNAL_KEY[k] || '🦠'
 }
 
 const liveHeroCards = computed(() => {
   void locale.value
   const s = snapshot.value
   if (!s) return null
-  return [
-    {
-      kind: 'rsv',
-      label: virusCardLabel(s, 'rsv'),
-      value: translateApiLevel(s.rsv, t),
+  const rows = Array.isArray(s.signals) ? s.signals : []
+  if (!rows.length) return []
+  return rows.map((sig) => {
+    const display = signalDisplayLine(sig.level, sig.trend)
+    return {
+      kind: sig.key,
+      label: sig.label,
+      value: translateApiLevel(display, t),
       blurb: '',
-      tone: levelToTone(s.rsv),
-      severity: virusSeverityTierFromLabel(s.rsv),
-      sticker: '🐞',
-    },
-    {
-      kind: 'flu',
-      label: virusCardLabel(s, 'flu'),
-      value: translateApiLevel(s.flu, t),
-      blurb: '',
-      tone: levelToTone(s.flu),
-      severity: virusSeverityTierFromLabel(s.flu),
-      sticker: '🤒',
-    },
-    {
-      kind: 'covid',
-      label: virusCardLabel(s, 'covid'),
-      value: translateApiLevel(s.covid, t),
-      blurb: '',
-      tone: levelToTone(s.covid),
-      severity: virusSeverityTierFromLabel(s.covid),
-      sticker: '😷',
-    },
-  ]
+      tone: levelToTone(display),
+      severity: virusSeverityTierFromLabel(display),
+      sticker: stickerForSignalKey(sig.key),
+      sortValue: display,
+    }
+  })
 })
 
 const fallbackHeroSummary = computed(() => [
@@ -193,6 +184,7 @@ const fallbackHeroSummary = computed(() => [
     tone: 'watch',
     severity: 'medium',
     sticker: '🐞',
+    sortValue: '—',
   },
   {
     kind: 'flu',
@@ -202,6 +194,7 @@ const fallbackHeroSummary = computed(() => [
     tone: 'watch',
     severity: 'medium',
     sticker: '🤒',
+    sortValue: '—',
   },
   {
     kind: 'covid',
@@ -211,6 +204,7 @@ const fallbackHeroSummary = computed(() => [
     tone: 'watch',
     severity: 'medium',
     sticker: '😷',
+    sortValue: '—',
   },
 ])
 
@@ -218,19 +212,41 @@ const heroCards = computed(() => {
   void locale.value
   const live = liveHeroCards.value
   const s = snapshot.value
-  if (live && s) {
-    return sortRowsBySeverity(live, (row) => {
-      if (row.kind === 'rsv') return severityScoreFromLabel(s.rsv, 'virus')
-      if (row.kind === 'flu') return severityScoreFromLabel(s.flu, 'virus')
-      if (row.kind === 'covid') return severityScoreFromLabel(s.covid, 'virus')
-      return 2
-    })
+  if (live && s && live.length) {
+    return sortRowsBySeverity(live, (row) => severityScoreFromLabel(row.sortValue, 'virus'))
   }
   return sortRowsBySeverity(fallbackHeroSummary.value, () => 2)
 })
 
-const trendPlaceholderRows = computed(() => {
+/** Decorative bar widths only — this strip is not a real chart; kept for visual rhythm. */
+const TREND_PREVIEW_DECORATIVE_WIDTHS = ['68%', '52%', '38%']
+
+function trendPreviewDecorativeWidth(index, total) {
+  if (total === 1) return '58%'
+  return TREND_PREVIEW_DECORATIVE_WIDTHS[index % TREND_PREVIEW_DECORATIVE_WIDTHS.length]
+}
+
+/**
+ * Home trend preview labels mirror `snapshot.signals` (same order as hero cards) when data exists.
+ * With no snapshot or empty `signals`, falls back to three skeleton rows (RSV / Flu / COVID i18n) — intentional placeholder-only until the summary loads; not a second source of truth.
+ */
+const trendPreviewExtraCount = computed(() => {
+  const live = liveHeroCards.value
+  if (!live || live.length <= HERO_VIRUS_VISIBLE_MAX) return 0
+  return live.length - HERO_VIRUS_VISIBLE_MAX
+})
+
+const trendPreviewRows = computed(() => {
   void locale.value
+  const live = liveHeroCards.value
+  if (live && live.length) {
+    const capped = live.slice(0, HERO_VIRUS_VISIBLE_MAX)
+    return capped.map((row, i) => ({
+      key: String(row.kind || `signal-${i}`),
+      label: row.label,
+      width: trendPreviewDecorativeWidth(i, capped.length),
+    }))
+  }
   return [
     { key: 'rsv', label: t('home.trendSection.rsv'), width: '68%' },
     { key: 'flu', label: t('home.trendSection.flu'), width: '52%' },
@@ -310,13 +326,42 @@ const formattedUpdatedAt = computed(() => {
 const virusDashboardRowsOrdered = computed(() => {
   void locale.value
   const live = liveHeroCards.value
-  if (live) {
-    const byKind = Object.fromEntries(live.map((r) => [r.kind, { ...r }]))
-    const order = ['rsv', 'flu', 'covid'].map((k) => byKind[k]).filter(Boolean)
+  if (live && live.length) {
     const priorityKind = heroCards.value.find((r) => r.priorityTop)?.kind
-    return order.map((r) => ({ ...r, priorityTop: r.kind === priorityKind }))
+    return heroCards.value.map((r) => ({ ...r, priorityTop: r.kind === priorityKind }))
   }
   return heroCards.value
+})
+
+const virusHeroPreviewRows = computed(() =>
+  virusDashboardRowsOrdered.value.slice(0, HERO_VIRUS_VISIBLE_MAX),
+)
+
+/** When live signals exceed the hero cap, remaining cards render under a collapsed `<details>` in the snapshot section. */
+const virusSnapshotOverflowRows = computed(() => {
+  const live = liveHeroCards.value
+  if (!live || !live.length) return []
+  return virusDashboardRowsOrdered.value.slice(HERO_VIRUS_VISIBLE_MAX)
+})
+
+const virusOverflowSummaryText = computed(() => {
+  void locale.value
+  const n = virusSnapshotOverflowRows.value.length
+  if (n < 1) return ''
+  if (locale.value === 'zh-CN') return t('home.hero.signalsOverflowSummary', { count: n })
+  return n === 1
+    ? t('home.hero.signalsOverflowSummary_one', { count: n })
+    : t('home.hero.signalsOverflowSummary_other', { count: n })
+})
+
+const trendPreviewExtraNoteText = computed(() => {
+  void locale.value
+  const n = trendPreviewExtraCount.value
+  if (n < 1) return ''
+  if (locale.value === 'zh-CN') return t('home.hero.signalsOverflowTrendNote', { count: n })
+  return n === 1
+    ? t('home.hero.signalsOverflowTrendNote_one', { count: n })
+    : t('home.hero.signalsOverflowTrendNote_other', { count: n })
 })
 
 const envDashboardRowsOrdered = computed(() => {
@@ -458,12 +503,16 @@ function onEnvCardKeydown(e, row) {
                 <p v-else class="hero-preview__headline">{{ $t('home.hero.previewKicker') }}</p>
                 <ul class="hero-preview__metrics" role="list">
                   <template v-if="snapshotLoading">
-                    <li v-for="n in 3" :key="'hps' + n" class="hero-preview__metric hero-preview__metric--skeleton" />
+                    <li
+                v-for="n in HERO_VIRUS_VISIBLE_MAX"
+                :key="'hps' + n"
+                class="hero-preview__metric hero-preview__metric--skeleton"
+              />
                   </template>
                   <template v-else>
                     <li
-                      v-for="(row, vIdx) in virusDashboardRowsOrdered"
-                      :key="row.kind"
+                      v-for="(row, vIdx) in virusHeroPreviewRows"
+                      :key="`${row.kind}-${vIdx}`"
                       class="hero-preview__metric"
                       :class="[`hero-preview__metric--sev-${row.severity}`]"
                       :data-tone="row.tone"
@@ -488,6 +537,7 @@ function onEnvCardKeydown(e, row) {
       </div>
     </section>
 
+    <!-- Trend preview: decorative bars + copy; labels from snapshot.signals when loaded (see trendPreviewRows). -->
     <section class="home-trend-preview" aria-labelledby="home-trend-preview-title">
       <div class="home-trend-preview__inner">
         <h2 id="home-trend-preview-title" class="home-trend-preview__title">
@@ -496,8 +546,8 @@ function onEnvCardKeydown(e, row) {
         <p class="home-trend-preview__hint">{{ $t('home.trendSection.placeholder') }}</p>
         <div class="home-trend-preview__bars" role="presentation">
           <div
-            v-for="(row, tIdx) in trendPlaceholderRows"
-            :key="row.key"
+            v-for="(row, tIdx) in trendPreviewRows"
+            :key="`${row.key}-${tIdx}`"
             class="home-trend-preview__row"
             :style="{ animationDelay: `${0.06 + tIdx * 0.1}s` }"
           >
@@ -507,6 +557,9 @@ function onEnvCardKeydown(e, row) {
             </div>
           </div>
         </div>
+        <p v-if="trendPreviewExtraCount" class="home-trend-preview__extra">
+          {{ trendPreviewExtraNoteText }}
+        </p>
       </div>
     </section>
 
@@ -550,15 +603,19 @@ function onEnvCardKeydown(e, row) {
               aria-busy="true"
               :aria-label="$t('home.hero.loadingSnapshot')"
             >
-              <li v-for="n in 3" :key="'vsk' + n" class="snapshot-dash__skeleton-card" />
+              <li
+                v-for="n in HERO_VIRUS_VISIBLE_MAX"
+                :key="'vsk' + n"
+                class="snapshot-dash__skeleton-card"
+              />
             </ul>
           </template>
           <template v-else>
             <p class="snapshot-dash__row-eyebrow">{{ $t('home.hero.dashboardRowViruses') }}</p>
             <ul class="snapshot-dash__grid snapshot-dash__grid--virus" role="list">
               <li
-                v-for="row in virusDashboardRowsOrdered"
-                :key="row.kind"
+                v-for="(row, vIdx) in virusHeroPreviewRows"
+                :key="`${row.kind}-${vIdx}`"
                 class="snapshot-dash__cell"
                 role="listitem"
               >
@@ -584,6 +641,47 @@ function onEnvCardKeydown(e, row) {
                 </div>
               </li>
             </ul>
+
+            <details
+              v-if="virusSnapshotOverflowRows.length"
+              class="snapshot-dash__virus-overflow"
+            >
+              <summary class="snapshot-dash__virus-overflow-summary">
+                {{ virusOverflowSummaryText }}
+              </summary>
+              <ul
+                class="snapshot-dash__grid snapshot-dash__grid--virus snapshot-dash__grid--virus-overflow"
+                role="list"
+              >
+                <li
+                  v-for="(row, vIdx) in virusSnapshotOverflowRows"
+                  :key="`${row.kind}-ov-${vIdx}`"
+                  class="snapshot-dash__cell"
+                  role="listitem"
+                >
+                  <div
+                    class="snapshot-dash__card snapshot-dash__card--interactive"
+                    :class="{ 'snapshot-dash__card--priority': row.priorityTop }"
+                    :data-tone="row.tone"
+                    role="button"
+                    tabindex="0"
+                    :aria-label="$t('home.common.learnMore', { topic: row.label })"
+                    @click="onHeroCardActivate(row)"
+                    @keydown="onHeroCardKeydown($event, row)"
+                  >
+                    <span v-if="row.priorityTop" class="snapshot-dash__priority-badge">{{
+                      $t('home.common.mostActive')
+                    }}</span>
+                    <span class="snapshot-dash__card-icon" aria-hidden="true">{{ row.sticker }}</span>
+                    <div class="snapshot-dash__card-body">
+                      <span class="snapshot-dash__card-title">{{ row.label }}</span>
+                      <span class="snapshot-dash__card-level">{{ row.value }}</span>
+                      <span v-if="row.blurb" class="snapshot-dash__card-note">{{ row.blurb }}</span>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </details>
 
             <template v-if="snapshot">
               <p class="snapshot-dash__row-eyebrow">{{ $t('home.snapshotSection.envEyebrow') }}</p>
@@ -1608,6 +1706,14 @@ function onEnvCardKeydown(e, row) {
   font-weight: 600;
   color: #94a3b8;
   line-height: 1.45;
+}
+
+.home-trend-preview__extra {
+  margin: 0.85rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #94a3b8;
 }
 
 .home-trend-preview__bars {
@@ -2697,6 +2803,38 @@ function onEnvCardKeydown(e, row) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.75rem;
   }
+}
+
+.snapshot-dash__virus-overflow {
+  margin: 0 0 1.15rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  background: rgba(248, 250, 252, 0.72);
+  overflow: hidden;
+}
+
+.snapshot-dash__virus-overflow-summary {
+  cursor: pointer;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  list-style: none;
+}
+
+.snapshot-dash__virus-overflow-summary::-webkit-details-marker {
+  display: none;
+}
+
+.snapshot-dash__virus-overflow[open] .snapshot-dash__virus-overflow-summary {
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.snapshot-dash__grid--virus-overflow {
+  margin: 0.65rem 0.85rem 0.85rem;
+  padding: 0;
 }
 
 .snapshot-dash__grid--skeleton {

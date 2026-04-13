@@ -357,6 +357,8 @@
       "heroCardsFallbackTitle": "示意模式",
       "heroCardsFallbackBody": "暂时读不到本周快照，卡片上是温和的示例内容，连上后会自动换成最新整理好的数字。",
       "sortHint": "卡片按「眼下看起来最活跃」排序。",
+      "signalsOverflowSummary": "另有 {count} 项呼吸道信号",
+      "signalsOverflowTrendNote": "下方「本周快照」中还有 {count} 项。",
       "dashboardRowViruses": "呼吸道相关信号",
       "dashboardRowEnv": "天气、空气与户外感受",
       "dashboardFallbackHeadline": "当前为温和示例快照 —— 运行每周更新脚本即可显示实时公开数据。",

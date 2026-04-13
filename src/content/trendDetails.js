@@ -16,13 +16,11 @@ export function isTrendDetailKey(key) {
   return typeof key === 'string' && TREND_DETAIL_KEYS.has(key)
 }
 
-/** Live hero rows use kind rsv | flu | covid */
+/** Live hero rows use ``kind`` = signal key (``rsv`` | ``flu`` | ``covid`` | unknown). */
 export function heroRowToDetailKey(row) {
-  if (row.kind === 'rsv' || row.kind === 'flu' || row.kind === 'covid') return row.kind
-  const v = String(row.value || '')
-  if (/rsv/i.test(v)) return 'rsv'
-  if (/fever|cough/i.test(v)) return 'cough_patterns'
-  return 'cough_patterns'
+  const k = row.kind
+  if (k === 'rsv' || k === 'flu' || k === 'covid') return k
+  return 'how_it_works'
 }
 
 export function envRowToDetailKey(row) {

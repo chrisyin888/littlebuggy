@@ -26,11 +26,27 @@ class SourcesBundle(BaseModel):
     weather: SourceMeta
 
 
+class HomepageSignal(BaseModel):
+    """One respiratory / health signal row (dynamic set; keys are not limited to rsv/flu/covid)."""
+
+    key: str = Field(description="Stable machine key, e.g. rsv, flu, covid, hmpv.")
+    label: str = Field(description="Short human label for cards and screen readers.")
+    level: str = Field(description="Primary level phrase (without parentheses), e.g. Medium.")
+    trend: str | None = Field(
+        default=None,
+        description="Optional qualifier from parentheses, e.g. Stable from 'Medium (Stable)'.",
+    )
+
+
 class HomepageSummaryResponse(BaseModel):
     """Stable JSON keys for the Vue frontend."""
 
     city_id: str = Field(default="vancouver", description="Canonical city key (see app.config.cities).")
     region: str
+    signals: list[HomepageSignal] = Field(
+        default_factory=list,
+        description="Ordered health signals for hero cards (preferred). Legacy rsv/flu/covid still set.",
+    )
     rsv: str
     flu: str
     covid: str

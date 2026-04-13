@@ -5,16 +5,103 @@ Map homepage summary payloads / DB rows to ``HomepageSummaryResponse`` (single c
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime, timezone
 from typing import Any
 
 from app.models.trend_snapshot import TrendSnapshot
 from app.schemas.homepage import (
+    HomepageSignal,
     HomepageSummaryResponse,
     SourceMeta,
     SourcesBundle,
     WeatherDisplayPayload,
 )
+
+# Stable ordering for known keys; unknown keys sort after, then alphabetically by key.
+_SIGNAL_ORDER = ("rsv", "flu", "covid")
+
+_DEFAULT_LABELS: dict[str, str] = {
+    "rsv": "RSV",
+    "flu": "Flu",
+    "covid": "COVID-19",
+}
+
+
+def _split_level_trend(raw: str) -> tuple[str, str | None]:
+    s = (raw or "").strip()
+    if not s:
+        return "Unknown", None
+    m = re.match(r"^(.+?)\s*\(([^)]+)\)\s*$", s)
+    if m:
+        return m.group(1).strip(), m.group(2).strip()
+    return s, None
+
+
+def _default_label_for_key(key: str) -> str:
+    return _DEFAULT_LABELS.get(key, key.replace("_", " ").strip().title() or "Signal")
+
+
+def _label_for_triple(blob: dict[str, Any], key: str, field: str) -> str:
+    raw = blob.get(field)
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip()
+    return _default_label_for_key(key)
+
+
+def _sort_signals(signals: list[HomepageSignal]) -> list[HomepageSignal]:
+    def sort_key(s: HomepageSignal) -> tuple[int, str]:
+        try:
+            i = _SIGNAL_ORDER.index(s.key)
+        except ValueError:
+            i = len(_SIGNAL_ORDER)
+        return (i, s.key)
+
+    return sorted(signals, key=sort_key)
+
+
+def _signals_from_dynamic_list(raw_list: list[Any]) -> list[HomepageSignal] | None:
+    out: list[HomepageSignal] = []
+    for item in raw_list:
+        if not isinstance(item, dict):
+            continue
+        k = str(item.get("key") or "").strip().lower()
+        if not k:
+            continue
+        label = str(item.get("label") or "").strip() or _default_label_for_key(k)
+        level_raw = str(item.get("level") or "").strip() or "Unknown"
+        trend_raw = item.get("trend")
+        trend = str(trend_raw).strip() if trend_raw is not None and str(trend_raw).strip() else None
+        if trend is not None:
+            level, _ = _split_level_trend(level_raw)
+        else:
+            level, trend = _split_level_trend(level_raw)
+        out.append(HomepageSignal(key=k, label=label, level=level, trend=trend))
+    return out if out else None
+
+
+def build_signals_from_blob(blob: dict[str, Any]) -> list[HomepageSignal]:
+    """
+    Preferred ``signals`` array for the API. Uses ``blob['signals']`` when present and valid;
+    otherwise derives from legacy rsv/flu/covid (or *_level) fields.
+    """
+    raw = blob.get("signals")
+    if isinstance(raw, list) and len(raw) > 0:
+        parsed = _signals_from_dynamic_list(raw)
+        if parsed is not None:
+            return _sort_signals(parsed)
+
+    triples: list[tuple[str, str, Any]] = [
+        ("rsv", _label_for_triple(blob, "rsv", "rsv_label"), blob.get("rsv") or blob.get("rsv_level")),
+        ("flu", _label_for_triple(blob, "flu", "flu_label"), blob.get("flu") or blob.get("flu_level")),
+        ("covid", _label_for_triple(blob, "covid", "covid_label"), blob.get("covid") or blob.get("covid_level")),
+    ]
+    built: list[HomepageSignal] = []
+    for key, label, raw_level in triples:
+        level_s = str(raw_level or "").strip() or "Unknown"
+        lev, trend = _split_level_trend(level_s)
+        built.append(HomepageSignal(key=key, label=label, level=lev, trend=trend))
+    return _sort_signals(built)
 
 _FALLBACK_SOURCES = SourcesBundle(
     respiratory=SourceMeta(
@@ -128,9 +215,12 @@ def homepage_summary_blob_to_response(blob: dict[str, Any]) -> HomepageSummaryRe
     dq = blob.get("data_quality_note")
     dq_out = dq.strip() if isinstance(dq, str) and dq.strip() else None
 
+    signals = build_signals_from_blob(blob)
+
     return HomepageSummaryResponse(
         city_id=cid,
         region=region,
+        signals=signals,
         rsv=rsv,
         flu=flu,
         covid=covid,

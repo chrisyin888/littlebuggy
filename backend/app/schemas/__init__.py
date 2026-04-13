@@ -1,3 +1,3 @@
-from app.schemas.homepage import HomepageSummaryResponse
+from app.schemas.homepage import HomepageSignal, HomepageSummaryResponse
 
-__all__ = ["HomepageSummaryResponse"]
+__all__ = ["HomepageSignal", "HomepageSummaryResponse"]

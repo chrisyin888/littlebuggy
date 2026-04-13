@@ -32,6 +32,112 @@ function isHomepageSummaryUrl(url) {
   return url.includes('homepage-summary.json')
 }
 
+/** Default English short names when API omits labels (matches backend). */
+const DEFAULT_SIGNAL_LABELS = /** @type {Record<string, string>} */ ({
+  rsv: 'RSV',
+  flu: 'Flu',
+  covid: 'COVID-19',
+})
+
+/** @param {string} key */
+function defaultLabelForKey(key) {
+  const k = String(key || '').toLowerCase()
+  if (DEFAULT_SIGNAL_LABELS[k]) return DEFAULT_SIGNAL_LABELS[k]
+  if (!k) return 'Signal'
+  return k
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+/**
+ * Split "Medium (Stable)" → level + trend; otherwise full string is level.
+ * @param {string} s
+ * @returns {{ level: string, trend: string | null }}
+ */
+export function splitLevelTrend(s) {
+  const t = String(s || '').trim()
+  if (!t) return { level: 'Unknown', trend: null }
+  const m = t.match(/^(.+?)\s*\(([^)]+)\)\s*$/)
+  if (m) return { level: m[1].trim(), trend: m[2].trim() }
+  return { level: t, trend: null }
+}
+
+/**
+ * @param {string} level
+ * @param {string | null} trend
+ */
+export function signalDisplayLine(level, trend) {
+  const lv = String(level || '').trim() || 'Unknown'
+  const tr = trend != null && String(trend).trim() ? String(trend).trim() : null
+  return tr ? `${lv} (${tr})` : lv
+}
+
+const _SIGNAL_SORT_ORDER = ['rsv', 'flu', 'covid']
+
+/**
+ * @param {Array<{ key: string, label: string, level: string, trend: string | null }>} signals
+ */
+function sortSignalsStable(signals) {
+  return [...signals].sort((a, b) => {
+    const ia = _SIGNAL_SORT_ORDER.indexOf(a.key)
+    const ib = _SIGNAL_SORT_ORDER.indexOf(b.key)
+    const sa = ia === -1 ? _SIGNAL_SORT_ORDER.length : ia
+    const sb = ib === -1 ? _SIGNAL_SORT_ORDER.length : ib
+    if (sa !== sb) return sa - sb
+    return a.key.localeCompare(b.key)
+  })
+}
+
+/**
+ * @param {Record<string, unknown>} o
+ * @param {(v: unknown, fallback?: string) => string} str
+ */
+function normalizeSignalsFromPayload(o, str) {
+  const raw = o.signals
+  if (Array.isArray(raw) && raw.length > 0) {
+    const out = []
+    for (const item of raw) {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) continue
+      const key = String(/** @type {Record<string, unknown>} */ (item).key || '')
+        .trim()
+        .toLowerCase()
+      if (!key) continue
+      let level = str(/** @type {Record<string, unknown>} */ (item).level, 'Unknown')
+      let trend =
+        /** @type {Record<string, unknown>} */ (item).trend != null
+          ? str(/** @type {Record<string, unknown>} */ (item).trend, '')
+          : ''
+      trend = trend || null
+      if (!trend && level.includes('(')) {
+        const sp = splitLevelTrend(level)
+        level = sp.level
+        trend = sp.trend
+      }
+      const label = str(/** @type {Record<string, unknown>} */ (item).label, '') || defaultLabelForKey(key)
+      out.push({ key, label: label.trim() || defaultLabelForKey(key), level, trend })
+    }
+    if (out.length) return sortSignalsStable(out)
+  }
+
+  const triples = [
+    ['rsv', 'rsv_label', o.rsv],
+    ['flu', 'flu_label', o.flu],
+    ['covid', 'covid_label', o.covid],
+  ]
+  const built = []
+  for (const [key, labelField, rawLevel] of triples) {
+    const lv = splitLevelTrend(str(rawLevel, 'Unknown'))
+    const lab = str(o[labelField], '') || defaultLabelForKey(key)
+    built.push({
+      key,
+      label: lab.trim() || defaultLabelForKey(key),
+      level: lv.level,
+      trend: lv.trend,
+    })
+  }
+  return sortSignalsStable(built)
+}
+
 /** @param {unknown} input */
 export function normalizeHomepageSummaryPayload(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return null
@@ -111,6 +217,7 @@ export function normalizeHomepageSummaryPayload(input) {
   if (typeof o.data_quality_note === 'string' && !o.data_quality_note.trim()) {
     o.data_quality_note = null
   }
+  o.signals = normalizeSignalsFromPayload(o, str)
   return o
 }
 
