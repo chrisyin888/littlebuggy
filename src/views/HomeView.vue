@@ -379,6 +379,37 @@ function onEnvCardKeydown(e, row) {
         <div class="hero__grid-product">
           <div class="hero__column hero__column--copy">
             <h1 id="hero-title" class="hero__headline">{{ $t('home.hero.title') }}</h1>
+            <div
+              v-if="visitorsToday != null"
+              class="hero__visit-wrap"
+              role="status"
+              aria-live="polite"
+            >
+              <div class="hero__visit-trust">
+                <span class="hero__visit-icon" aria-hidden="true">
+                  <svg class="hero__visit-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M12 3.5 5 6.2v5.3c0 4.2 2.9 8.1 7 9 4.1-.9 7-4.8 7-9V6.2L12 3.5Z"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="m9.2 12.3 1.7 1.7 3.9-3.9"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+                <p class="hero__visit-signal">
+                  Seen by
+                  <strong class="hero__visit-num">{{ visitorsToday }}</strong>
+                  visitors today
+                </p>
+              </div>
+            </div>
             <p class="hero__tagline">{{ $t('home.hero.tagline') }}</p>
             <p class="hero__lede">{{ $t('home.hero.subtitle') }}</p>
             <div class="hero__cta-row">
@@ -390,9 +421,6 @@ function onEnvCardKeydown(e, row) {
               </button>
             </div>
             <p class="hero__trust-line" role="note">{{ $t('home.hero.trustDataLine') }}</p>
-            <p v-if="visitorsToday != null" class="hero__visit-stat" role="status">
-              Visitors today: {{ visitorsToday }}
-            </p>
 
             <p
               v-if="snapshotError && !snapshot && !snapshotLoading"
@@ -1203,6 +1231,60 @@ function onEnvCardKeydown(e, row) {
   max-width: 28rem;
 }
 
+.hero__visit-wrap {
+  margin: 0 0 0.65rem;
+  max-width: min(28rem, 100%);
+}
+
+.hero__visit-trust {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem 0.4rem 0.5rem;
+  border-radius: 10px;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.95) 0%, rgba(241, 245, 249, 0.65) 100%);
+  border: 1px solid rgba(199, 210, 254, 0.45);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.88) inset,
+    0 2px 10px rgba(99, 102, 241, 0.06);
+}
+
+.hero__visit-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 8px;
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.16);
+}
+
+.hero__visit-svg {
+  width: 1rem;
+  height: 1rem;
+  opacity: 0.9;
+}
+
+.hero__visit-signal {
+  margin: 0;
+  font-size: clamp(0.875rem, 1.65vw, 0.9375rem);
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: #475569;
+}
+
+.hero__visit-num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #4338ca;
+  margin: 0 0.15em;
+}
+
 .hero__trust-line {
   margin: 1rem 0 0;
   padding: 0.5rem 0 0;
@@ -1212,16 +1294,6 @@ function onEnvCardKeydown(e, row) {
   font-weight: 600;
   color: #64748b;
   border-top: 1px solid rgba(148, 163, 184, 0.22);
-}
-
-.hero__visit-stat {
-  margin: 0.5rem 0 0;
-  max-width: 28rem;
-  font-size: 0.75rem;
-  line-height: 1.4;
-  font-weight: 500;
-  color: #94a3b8;
-  letter-spacing: 0.01em;
 }
 
 .hero__cta-row {

@@ -1,7 +1,9 @@
 /**
  * Homepage summary:
  * - **Production:** latest row from ``GET /api/homepage-summary`` (Render crons refresh the DB daily /
- *   weekly). Falls back to bundled ``public/data/homepage-summary.json`` if the API fails.
+ *   weekly). If ``VITE_API_BASE_URL`` is set, HTTP errors from that API (e.g. 503) surface as
+ *   {@link HomepageFetchError}; we only fall back to bundled ``public/data/homepage-summary.json`` when
+ *   the request does not complete (network / timeout).
  * - **Dev:** static JSON when no API base is configured; with ``VITE_API_BASE_URL`` (or proxy), uses the same
  *   ``GET /api/homepage-summary?city=`` as production so the city switcher loads real per-city data.
  */
@@ -153,8 +155,26 @@ async function normalizedPayloadFromOkJsonResponse(res) {
   return /** @type {Record<string, unknown>} */ (normalized)
 }
 
+export class HomepageFetchError extends Error {
+  /**
+   * @param {string} code
+   * @param {string} message
+   * @param {number} [status]
+   */
+  constructor(code, message, status) {
+    super(message)
+    this.name = 'HomepageFetchError'
+    this.code = code
+    this.status = status
+  }
+}
+
 /**
- * @returns {Promise<Record<string, unknown> | null>}
+ * Live homepage summary from the API.
+ *
+ * @returns {Promise<Record<string, unknown> | null>} Parsed payload, or `null` only when the request
+ *   did not reach a response (timeout / network). Any HTTP 4xx/5xx from the API throws
+ *   {@link HomepageFetchError} so we do not silently fall back to bundled JSON with a stale `updated_at`.
  */
 async function tryFetchLiveHomepageSummary(cityId = DEFAULT_CITY_ID) {
   const q = new URLSearchParams({ city: cityId || DEFAULT_CITY_ID })
@@ -167,25 +187,20 @@ async function tryFetchLiveHomepageSummary(cityId = DEFAULT_CITY_ID) {
       cache: 'no-store',
       signal: ctrl.signal,
     })
+    if (!res.ok) {
+      const detail = (await res.text().catch(() => '')).trim()
+      throw new HomepageFetchError(
+        'HTTP_ERROR',
+        detail || `GET /api/homepage-summary failed (${res.status})`,
+        res.status,
+      )
+    }
     return await normalizedPayloadFromOkJsonResponse(res)
-  } catch {
+  } catch (err) {
+    if (err instanceof HomepageFetchError) throw err
     return null
   } finally {
     clearTimeout(tid)
-  }
-}
-
-export class HomepageFetchError extends Error {
-  /**
-   * @param {string} code
-   * @param {string} message
-   * @param {number} [status]
-   */
-  constructor(code, message, status) {
-    super(message)
-    this.name = 'HomepageFetchError'
-    this.code = code
-    this.status = status
   }
 }
 
@@ -204,7 +219,7 @@ export async function fetchHomepageSummary(cityId = DEFAULT_CITY_ID) {
       return live
     }
     if (import.meta.env.VITE_DEBUG_API === 'true') {
-      console.info('[LittleBuggy] homepage summary: API unavailable, falling back to static JSON')
+      console.info('[LittleBuggy] homepage summary: API unreachable, falling back to static JSON')
     }
   }
 

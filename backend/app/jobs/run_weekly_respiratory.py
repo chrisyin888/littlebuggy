@@ -15,6 +15,7 @@ if str(_backend_root) not in sys.path:
     sys.path.insert(0, str(_backend_root))
 
 from app.database import Base, SessionLocal, engine
+from app.jobs.db_runtime import exit_if_render_database_not_postgres
 from app.models import TrendSnapshot  # noqa: F401
 from app.services.db_schema import ensure_trend_snapshot_columns
 from app.services.snapshot_pipeline import run_snapshot_job
@@ -23,6 +24,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 
 
 def main() -> int:
+    exit_if_render_database_not_postgres("run_weekly_respiratory")
     Base.metadata.create_all(bind=engine)
     ensure_trend_snapshot_columns(engine)
     db = SessionLocal()
