@@ -14,28 +14,25 @@ _backend_root = Path(__file__).resolve().parents[2]
 if str(_backend_root) not in sys.path:
     sys.path.insert(0, str(_backend_root))
 
-from sqlalchemy import select
-
 from app.database import Base, SessionLocal, engine
-from app.models import TrendSnapshot
 from app.services.db_schema import ensure_trend_snapshot_columns
 from app.services.snapshot_pipeline import run_snapshot_job
+from app.services.trend_snapshot_homepage import get_latest_homepage_snapshot_row
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", stream=sys.stdout)
 log = logging.getLogger("littlebuggy.daily_env")
 
 
-def main(region: str = "Metro Vancouver") -> int:
+def main() -> int:
     Base.metadata.create_all(bind=engine)
     ensure_trend_snapshot_columns(engine)
     db = SessionLocal()
     try:
-        has_row = db.scalars(select(TrendSnapshot).limit(1)).first() is not None
-        # First deploy: environment-only would leave virus levels as "Unknown" with no prior row.
+        has_row = get_latest_homepage_snapshot_row(db, "vancouver") is not None
         if not has_row:
-            log.info("No prior snapshot — running full pipeline once for bootstrap.")
-            return run_snapshot_job(db, region=region, mode="full")
-        return run_snapshot_job(db, region=region, mode="environment_only")
+            log.info("No prior Vancouver snapshot — running full pipeline once.")
+            return run_snapshot_job(db, city_id="vancouver", mode="full")
+        return run_snapshot_job(db, city_id="vancouver", mode="environment_only")
     finally:
         db.close()
 

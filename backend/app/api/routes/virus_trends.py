@@ -9,7 +9,7 @@ from typing import Any
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import JSONResponse
 
-from app.config import settings
+from app.settings import settings
 from app.services.virus_trends_fetch import BCCDC_RESPIRATORY_URL
 from app.services.virus_trends_refresh import run_virus_trends_refresh
 from app.services.virus_trends_storage import load_latest
@@ -85,8 +85,9 @@ def post_admin_virus_trends_refresh(x_admin_token: str | None = Header(default=N
             content={"ok": False, "detail": msg},
             headers=_NO_STORE_HEADERS,
         )
-    latest = load_latest()
+    # Omit snapshot body: avoids loading JSON from disk again and duplicating a large dict in the
+    # response (saves RSS on small Render instances). Clients use GET /virus-trends after refresh.
     return JSONResponse(
-        content={"ok": True, "message": msg, "snapshot": latest},
+        content={"ok": True, "message": msg},
         headers=_NO_STORE_HEADERS,
     )

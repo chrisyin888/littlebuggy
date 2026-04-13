@@ -29,13 +29,15 @@ logging.basicConfig(
 log = logging.getLogger("littlebuggy.update")
 
 
-def run_update(region: str = "Metro Vancouver") -> int:
+def run_update() -> int:
     Base.metadata.create_all(bind=engine)
     ensure_trend_snapshot_columns(engine)
 
     db = SessionLocal()
     try:
-        return run_snapshot_job(db, region=region, mode="full")
+        sid = run_snapshot_job(db, city_id="vancouver", mode="full")
+        log.info("Full snapshot id=%s (Metro Vancouver)", sid)
+        return sid
     finally:
         db.close()
 

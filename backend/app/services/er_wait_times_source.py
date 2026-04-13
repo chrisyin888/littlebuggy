@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import time
 from datetime import datetime
@@ -19,6 +20,9 @@ import httpx
 from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
+
+# Default off: drops per-row _debug from JSON and avoids per-hospital log lines (lower RSS + allocator churn on 512MB workers). Set WAIT_TIMES_DEBUG=1 for local troubleshooting.
+_WAIT_TIMES_DEBUG = os.environ.get("WAIT_TIMES_DEBUG", "").strip().lower() in ("1", "true", "yes")
 
 EDWAITTIMES_JSON_URL = "https://www.edwaittimes.ca/api/wait-times"
 EDWAITTIMES_LEGACY_URL = "https://www.edwaittimes.ca/legacy"
@@ -294,15 +298,15 @@ def _build_from_json_list(rows: list[dict[str, Any]]) -> tuple[list[dict[str, An
             "upstream_id": up_id,
         }
 
-        hospitals.append(
-            {
-                "key": meta["key"],
-                "name": meta["name"],
-                "city": meta["city"],
-                "wait_text": wait_text,
-                "_debug": dbg,
-            }
-        )
+        row_out: dict[str, Any] = {
+            "key": meta["key"],
+            "name": meta["name"],
+            "city": meta["city"],
+            "wait_text": wait_text,
+        }
+        if _WAIT_TIMES_DEBUG:
+            row_out["_debug"] = dbg
+        hospitals.append(row_out)
 
     return hospitals, latest
 
@@ -377,15 +381,15 @@ def _build_from_legacy_html(html: str) -> tuple[list[dict[str, Any]], datetime |
             "upstream_id": li_id,
         }
 
-        hospitals.append(
-            {
-                "key": meta["key"],
-                "name": meta["name"],
-                "city": meta["city"],
-                "wait_text": wait_text,
-                "_debug": dbg,
-            }
-        )
+        row_out: dict[str, Any] = {
+            "key": meta["key"],
+            "name": meta["name"],
+            "city": meta["city"],
+            "wait_text": wait_text,
+        }
+        if _WAIT_TIMES_DEBUG:
+            row_out["_debug"] = dbg
+        hospitals.append(row_out)
 
     return hospitals, latest
 
@@ -436,16 +440,16 @@ def _build_upcc_from_json_list(rows: list[dict[str, Any]]) -> tuple[list[dict[st
             "upstream_id": up_id,
         }
 
-        centres.append(
-            {
-                "key": meta["key"],
-                "name": meta["name"],
-                "city": meta["city"],
-                "address": meta.get("address", ""),
-                "wait_text": wait_text,
-                "_debug": dbg,
-            }
-        )
+        row_out: dict[str, Any] = {
+            "key": meta["key"],
+            "name": meta["name"],
+            "city": meta["city"],
+            "address": meta.get("address", ""),
+            "wait_text": wait_text,
+        }
+        if _WAIT_TIMES_DEBUG:
+            row_out["_debug"] = dbg
+        centres.append(row_out)
 
     return centres, latest
 
@@ -502,6 +506,7 @@ def fetch_er_wait_times_payload() -> dict[str, Any]:
         if isinstance(data, list):
             hospitals, source_latest = _build_from_json_list(data)
             upcc_centres, upcc_latest = _build_upcc_from_json_list(data)
+            del data  # provincial list can be large; release before optional legacy HTML fetch
             source_latest = _latest_of(source_latest, upcc_latest)
             fetched_url_used = json_url
             parse_mode = "json"
@@ -532,32 +537,34 @@ def fetch_er_wait_times_payload() -> dict[str, Any]:
         source_s = _format_ts_vancouver_naive(source_latest) if source_latest else None
 
         logger.info(
-            "wait-times DEBUG url=%s parse_mode=%s checked_at=%s source_updated_at=%s",
-            fetched_url_used,
+            "wait-times ok parse_mode=%s hospitals=%d upcc=%d checked_at=%s",
             parse_mode,
+            len(hospitals),
+            len(upcc_centres),
             checked_s,
-            source_s,
         )
-        for h in hospitals:
-            d = h.get("_debug") or {}
-            logger.info(
-                "wait-times DEBUG hospital key=%s raw=%r source_ts=%r slug=%r id=%r",
-                h.get("key"),
-                d.get("raw_before_format"),
-                d.get("source_timestamp_raw"),
-                d.get("upstream_slug"),
-                d.get("upstream_id"),
+        if _WAIT_TIMES_DEBUG:
+            logger.debug(
+                "wait-times url=%s source_updated_at=%s",
+                fetched_url_used,
+                source_s,
             )
-        for c in upcc_centres:
-            d = c.get("_debug") or {}
-            logger.info(
-                "wait-times DEBUG upcc key=%s raw=%r source_ts=%r slug=%r id=%r",
-                c.get("key"),
-                d.get("raw_before_format"),
-                d.get("source_timestamp_raw"),
-                d.get("upstream_slug"),
-                d.get("upstream_id"),
-            )
+            for h in hospitals:
+                d = h.get("_debug") or {}
+                logger.debug(
+                    "wait-times hospital key=%s raw=%r source_ts=%r",
+                    h.get("key"),
+                    d.get("raw_before_format"),
+                    d.get("source_timestamp_raw"),
+                )
+            for c in upcc_centres:
+                d = c.get("_debug") or {}
+                logger.debug(
+                    "wait-times upcc key=%s raw=%r source_ts=%r",
+                    c.get("key"),
+                    d.get("raw_before_format"),
+                    d.get("source_timestamp_raw"),
+                )
 
         hospitals_out = _filter_rows_with_waits(hospitals)
         upcc_out = _filter_rows_with_waits(upcc_centres)

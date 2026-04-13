@@ -13,13 +13,12 @@ import secrets
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.config import postgres_required_message_if_misconfigured, settings
-from app.config.cities import resolve_city_id
+from app.settings import postgres_required_message_if_misconfigured, settings
 from app.database import get_db
 from app.models.trend_snapshot import TrendSnapshot
 from app.services.homepage_static_generate import (
@@ -100,7 +99,6 @@ def _persist_and_verify(db: Session, payload: dict[str, Any]) -> tuple[TrendSnap
 )
 def regenerate_homepage_snapshot(
     x_admin_token: str | None = Header(default=None, alias="X-Admin-Token"),
-    city: str | None = Query(None, description="City id: vancouver, gta, calgary"),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     """
@@ -118,8 +116,7 @@ def regenerate_homepage_snapshot(
     if mis:
         raise HTTPException(status_code=503, detail=mis)
 
-    profile = resolve_city_id(city)
-    payload, warnings = generate_homepage_summary_payload(city_id=profile.id)
+    payload, warnings = generate_homepage_summary_payload(city_id="vancouver")
     n_ok = sources_ok_count(payload)
     preview = (payload.get("short_summary") or "")[: 360]
 
@@ -172,7 +169,6 @@ def regenerate_homepage_snapshot(
 @router.post("/admin/homepage-snapshot/regenerate/raw")
 def regenerate_homepage_snapshot_raw_json(
     x_admin_token: str | None = Header(default=None, alias="X-Admin-Token"),
-    city: str | None = Query(None, description="City id: vancouver, gta, calgary"),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     """Same auth as regenerate; persists to ``trend_snapshots`` then returns the full JSON (large)."""
@@ -182,8 +178,7 @@ def regenerate_homepage_snapshot_raw_json(
     if mis:
         raise HTTPException(status_code=503, detail=mis)
 
-    profile = resolve_city_id(city)
-    payload, _warnings = generate_homepage_summary_payload(city_id=profile.id)
+    payload, _warnings = generate_homepage_summary_payload(city_id="vancouver")
     row, updated_at_iso = _persist_and_verify(db, payload)
     out = dict(payload)
     out["updated_at"] = updated_at_iso

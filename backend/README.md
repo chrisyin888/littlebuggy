@@ -19,7 +19,10 @@ backend/                 ← working directory for all commands below
   app/
     __init__.py
     main.py              # FastAPI app + CORS + table bootstrap
-    config.py            # DATABASE_URL via pydantic-settings
+    config/              # settings (pydantic-settings) + cities (homepage regions)
+      __init__.py
+      settings.py
+      cities.py
     database.py          # SQLAlchemy engine + SessionLocal + get_db
     models/              # ORM
     schemas/             # Pydantic response models
@@ -39,7 +42,7 @@ backend/                 ← working directory for all commands below
 | **`app/jobs/run_update.py`** (`python3 -m app.jobs.run_update`) | **Full** pipeline: BC respiratory (PHAC wastewater API) + AQHI + weather → new `trend_snapshots` row. | Safe anytime; use for **first bootstrap**, local dev, or a **single daily cron** if you prefer one job over two. |
 | **`app/jobs/run_daily_environment.py`** | **AQHI + weather** only; copies RSV/flu/COVID labels from the **latest** row. If the table is **empty**, runs a **full** pipeline once (so the first scheduled run never saves all-`Unknown` viruses). | **Recommended daily** on production. |
 | **`app/jobs/run_weekly_respiratory.py`** | **Respiratory** fetch only; copies air/weather from the **latest** row. | **Recommended weekly** (source updates roughly weekly). |
-| **`app/services/snapshot_pipeline.py`** | Library: `run_snapshot_job(db, region, mode)` — **not** run directly; invoked by the three modules above. | — |
+| **`app/services/snapshot_pipeline.py`** | Library: `run_snapshot_job(db, city_id=…, mode)` — shared fetches with ``homepage_summary_builder``; **not** run directly; jobs loop `CITIES`. | — |
 
 **Cadence (production-safe MVP):** run **`run_daily_environment` daily** (fresh air + weather) and **`run_weekly_respiratory` weekly** (fresh virus trend labels). Alternatively, a **single daily** `run_update` is simpler operationally but hits every upstream API every day.
 

@@ -61,6 +61,56 @@ def _failed_weather(exc: str) -> Any:
     )
 
 
+def fetch_homepage_signals(
+    city: CityProfile,
+    *,
+    need_respiratory: bool = True,
+    need_environment: bool = True,
+) -> tuple[Any | None, Any | None, Any | None, list[str]]:
+    """
+    Shared live fetches for homepage JSON and DB snapshot jobs.
+
+    Skipped arms return ``None`` (caller merges from the latest per-city snapshot when needed).
+    """
+    warnings: list[str] = []
+    resp = aqhi = wx = None
+
+    if need_respiratory:
+        try:
+            resp = fetch_respiratory_bc_signals()
+        except Exception as e:
+            log.exception("Respiratory fetch raised: %s", e)
+            warnings.append(f"respiratory: exception ({e})")
+            resp = _failed_respiratory(str(e))
+        if not resp.ok:
+            warnings.append(f"respiratory: feed error ({getattr(resp, 'error', 'unknown')})")
+
+    if need_environment:
+        try:
+            aqhi = fetch_aqhi_near(city.lat, city.lng)
+        except Exception as e:
+            log.exception("AQHI fetch raised: %s", e)
+            warnings.append(f"aqhi: exception ({e})")
+            aqhi = _failed_aqhi(str(e))
+        try:
+            wx = fetch_weather_at(
+                city.lat,
+                city.lng,
+                timezone=city.timezone,
+                location_label=city.weather_location_label,
+            )
+        except Exception as e:
+            log.exception("Weather fetch raised: %s", e)
+            warnings.append(f"weather: exception ({e})")
+            wx = _failed_weather(str(e))
+        if aqhi and not aqhi.ok:
+            warnings.append(f"aqhi: feed error ({getattr(aqhi, 'error', 'unknown')})")
+        if wx and not wx.ok:
+            warnings.append(f"weather: feed error ({getattr(wx, 'error', 'unknown')})")
+
+    return resp, aqhi, wx, warnings
+
+
 def build_sources_bundle(resp: Any, aqhi: Any, wx: Any) -> dict[str, Any]:
     """Plain dict for JSON storage + API response (matches prior ``_build_sources`` shape)."""
 
@@ -121,40 +171,12 @@ def build_homepage_summary_dict(*, city: CityProfile | None = None) -> tuple[dic
     Returns ``(payload, fetch_warnings)``. Warnings are for the terminal only (not written to JSON).
     """
     city = city or default_city()
-    warnings: list[str] = []
-
-    try:
-        resp = fetch_respiratory_bc_signals()
-    except Exception as e:
-        log.exception("Respiratory fetch raised: %s", e)
-        warnings.append(f"respiratory: exception ({e})")
-        resp = _failed_respiratory(str(e))
-
-    try:
-        aqhi = fetch_aqhi_near(city.lat, city.lng)
-    except Exception as e:
-        log.exception("AQHI fetch raised: %s", e)
-        warnings.append(f"aqhi: exception ({e})")
-        aqhi = _failed_aqhi(str(e))
-
-    try:
-        wx = fetch_weather_at(
-            city.lat,
-            city.lng,
-            timezone=city.timezone,
-            location_label=city.weather_location_label,
-        )
-    except Exception as e:
-        log.exception("Weather fetch raised: %s", e)
-        warnings.append(f"weather: exception ({e})")
-        wx = _failed_weather(str(e))
-
-    if not resp.ok:
-        warnings.append(f"respiratory: feed error ({getattr(resp, 'error', 'unknown')})")
-    if not aqhi.ok:
-        warnings.append(f"aqhi: feed error ({getattr(aqhi, 'error', 'unknown')})")
-    if not wx.ok:
-        warnings.append(f"weather: feed error ({getattr(wx, 'error', 'unknown')})")
+    resp, aqhi, wx, warnings = fetch_homepage_signals(
+        city,
+        need_respiratory=True,
+        need_environment=True,
+    )
+    assert resp is not None and aqhi is not None and wx is not None
 
     virus = resp.virus if resp.ok else {"rsv": "Unknown", "flu": "Unknown", "covid": "Unknown"}
     env = {

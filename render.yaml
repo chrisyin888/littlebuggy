@@ -105,14 +105,12 @@ services:
     rootDir: backend
     schedule: "30 6 * * *"
     buildCommand: pip install -r requirements.txt
-    startCommand: python3 -c "import os,urllib.error,urllib.request; b=os.environ['LITTLEBUGGY_API_URL'].rstrip('/'); u=b+'/api/admin/virus-trends/refresh'; t=os.environ['ADMIN_HOMEPAGE_TOKEN']; r=urllib.request.Request(u,method='POST',headers={'X-Admin-Token':t}); urllib.request.urlopen(r,timeout=120).read()"
+    # Run fetch on the cron dyno (not HTTP to web) and persist to Postgres — same DB the API reads.
+    startCommand: python3 -m app.jobs.run_virus_trends
     envVars:
       - key: PYTHON_VERSION
         value: "3.12.0"
-      - key: LITTLEBUGGY_API_URL
-        value: "https://littlebuggy-api.onrender.com"
-      - key: ADMIN_HOMEPAGE_TOKEN
-        fromService:
-          name: littlebuggy-api
-          type: web
-          envVarKey: ADMIN_HOMEPAGE_TOKEN
+      - key: DATABASE_URL
+        fromDatabase:
+          name: littlebuggy-db
+          property: connectionString

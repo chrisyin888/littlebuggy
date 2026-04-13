@@ -6,12 +6,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import api_router
 from app.api.routes import virus_trends, wait_times
-from app.config import (
+from app.settings import (
     database_kind_from_url,
     postgres_required_message_if_misconfigured,
     settings,
 )
 from app.database import Base, engine
+from app.models import VirusTrendsLatest  # noqa: F401 — register table for create_all (TrendSnapshot via routes)
 from app.services.db_schema import ensure_trend_snapshot_columns
 
 log = logging.getLogger("littlebuggy.api")

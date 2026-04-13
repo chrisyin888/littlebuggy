@@ -1,21 +1,28 @@
-"""File-backed persistence for the latest virus trends snapshot (no database)."""
+"""Latest virus-trends snapshot: Postgres row on Render (shared with web); file on local SQLite."""
 
 from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
+
+from app.settings import settings
 
 log = logging.getLogger(__name__)
 
 VANCOUVER = ZoneInfo("America/Vancouver")
 
+_SINGLETON_ID = 1
+
+
+def _is_sqlite() -> bool:
+    return settings.database_url.strip().lower().startswith("sqlite")
+
 
 def _data_path() -> Path:
-    # backend/app/services -> parents[2] == backend/
     return Path(__file__).resolve().parents[2] / "data" / "virus_trends_latest.json"
 
 
@@ -33,7 +40,41 @@ def _fingerprint(body: dict[str, Any]) -> tuple[Any, ...]:
     )
 
 
+def _load_latest_db() -> dict[str, Any] | None:
+    from app.database import SessionLocal
+    from app.models.virus_trends_latest import VirusTrendsLatest
+
+    with SessionLocal() as db:
+        row = db.get(VirusTrendsLatest, _SINGLETON_ID)
+        if row is None:
+            return None
+        try:
+            return json.loads(row.body_json)
+        except json.JSONDecodeError:
+            log.warning("virus_trends_latest row has invalid JSON")
+            return None
+
+
+def _save_latest_db(payload: dict[str, Any]) -> None:
+    from app.database import SessionLocal
+    from app.models.virus_trends_latest import VirusTrendsLatest
+
+    raw = json.dumps(payload, ensure_ascii=False)
+    now = datetime.now(timezone.utc)
+    with SessionLocal() as db:
+        row = db.get(VirusTrendsLatest, _SINGLETON_ID)
+        if row is None:
+            db.add(VirusTrendsLatest(id=_SINGLETON_ID, body_json=raw, updated_at=now))
+        else:
+            row.body_json = raw
+            row.updated_at = now
+        db.commit()
+    log.info("Wrote virus trends to virus_trends_latest (database)")
+
+
 def load_latest() -> dict[str, Any] | None:
+    if not _is_sqlite():
+        return _load_latest_db()
     p = _data_path()
     if not p.is_file():
         return None
@@ -46,6 +87,9 @@ def load_latest() -> dict[str, Any] | None:
 
 
 def save_latest(payload: dict[str, Any]) -> None:
+    if not _is_sqlite():
+        _save_latest_db(payload)
+        return
     p = _data_path()
     p.parent.mkdir(parents=True, exist_ok=True)
     tmp = p.with_suffix(".tmp")
@@ -58,7 +102,7 @@ def save_latest(payload: dict[str, Any]) -> None:
 
 def merge_and_save_after_fetch(fresh_content: dict[str, Any]) -> dict[str, Any]:
     """
-    Always set checked_at to now. If scientific fingerprint unchanged vs previous file,
+    Always set checked_at to now. If scientific fingerprint unchanged vs previous,
     keep prior source_report_date / viruses / summary / etc. but still refresh checked_at.
     If changed, use fresh_content for those fields.
     """

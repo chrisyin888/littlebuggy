@@ -39,12 +39,14 @@ BCCDC_RESPIRATORY_HUMAN_URL = (
 )
 PHAC_INFOBASE_API_LANDING = "https://health-infobase.canada.ca/api/"
 
+# Smaller LIMIT than 800: cuts peak RSS from PHAC JSON + Python object overhead on 512MB hosts;
+# ~200 rows still spans many weeks across BC sites for percentile/trend logic.
 _SQL_HISTORY = """
 SELECT "Date", measureid, "Location", seven_day_rolling_avg
 FROM wastewater_daily
 WHERE pruid = 59 AND measureid IN ('covN2', 'rsv', 'fluA', 'fluB')
 ORDER BY "Date" DESC
-LIMIT 800
+LIMIT 200
 """
 
 
@@ -174,6 +176,8 @@ def fetch_respiratory_bc_signals() -> RespiratoryBundle:
         )
 
     by_date = _aggregate_by_date(rows)
+    del rows  # release large API list before further work (helps GC under memory pressure)
+
     if not by_date:
         return RespiratoryBundle(
             ok=False,

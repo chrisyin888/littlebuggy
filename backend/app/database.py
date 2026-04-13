@@ -10,15 +10,19 @@ from collections.abc import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker, declarative_base
 
-from app.config import settings
+from app.settings import settings
 
 _url = settings.database_url
 _sqlite = _url.strip().lower().startswith("sqlite")
 
 # Sync engine — simple and reliable for V1 cron + API.
+# Single small pool on Postgres: each connection costs RAM on the dyno; default pool is overkill for uvicorn --workers 1.
 _engine_kwargs: dict = {"pool_pre_ping": True}
 if _sqlite:
     _engine_kwargs["connect_args"] = {"check_same_thread": False}
+else:
+    _engine_kwargs["pool_size"] = 1
+    _engine_kwargs["max_overflow"] = 0
 
 engine = create_engine(_url, **_engine_kwargs)
 

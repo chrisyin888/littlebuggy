@@ -2,8 +2,8 @@
  * Homepage summary:
  * - **Production:** latest row from ``GET /api/homepage-summary`` (Render crons refresh the DB daily /
  *   weekly). Falls back to bundled ``public/data/homepage-summary.json`` if the API fails.
- * - **Dev:** static JSON only (same path), unless you point the Vite proxy at a running API and change
- *   this module — keeps local UX predictable without Postgres.
+ * - **Dev:** static JSON when no API base is configured; with ``VITE_API_BASE_URL`` (or proxy), uses the same
+ *   ``GET /api/homepage-summary?city=`` as production so the city switcher loads real per-city data.
  */
 
 import { CITIES, DEFAULT_CITY_ID, getCityById } from '../config/cities.js'
@@ -194,7 +194,7 @@ export class HomepageFetchError extends Error {
  */
 export async function fetchHomepageSummary(cityId = DEFAULT_CITY_ID) {
   const cid = cityId || DEFAULT_CITY_ID
-  const useLiveApi = import.meta.env.PROD && Boolean(resolvedApiBase())
+  const useLiveApi = Boolean(resolvedApiBase())
   if (useLiveApi) {
     const live = await tryFetchLiveHomepageSummary(cid)
     if (live) {

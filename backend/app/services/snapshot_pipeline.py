@@ -1,10 +1,8 @@
 """
-Fetch + merge + persist homepage snapshots.
+Fetch + merge + persist homepage snapshots (same signal fetches as ``homepage_summary_builder``).
 
-Supports:
-- full refresh (respiratory + environment)
-- weekly respiratory-only (reuses last snapshot for environment strings)
-- daily environment-only (reuses last snapshot for respiratory levels)
+Supports per-city rows (``city_id`` on ``trend_snapshots``) and modes that refresh a subset of feeds,
+reusing the latest snapshot **for that city** for the rest.
 """
 
 from __future__ import annotations
@@ -14,24 +12,22 @@ import logging
 from types import SimpleNamespace
 from typing import Any, Literal
 
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.config.cities import resolve_city_id
 from app.models.trend_snapshot import TrendSnapshot
 from app.services.build_summary import build_summary
-from app.services.fetch_aqhi_real import fetch_aqhi_metro_vancouver
-from app.services.fetch_bccdc_real import fetch_respiratory_bc_signals
-from app.services.fetch_weather_real import fetch_weather_vancouver, weather_display_dict
-from app.services.homepage_summary_builder import build_sources_bundle
+from app.services.fetch_weather_real import weather_display_dict
+from app.services.homepage_summary_builder import (
+    build_sources_bundle,
+    fetch_homepage_signals,
+)
 from app.services.save_snapshot import save_snapshot
+from app.services.trend_snapshot_homepage import get_latest_homepage_snapshot_row
 
 log = logging.getLogger("littlebuggy.pipeline")
 
 RefreshMode = Literal["full", "respiratory_only", "environment_only"]
-
-
-def _latest_snapshot(db: Session) -> TrendSnapshot | None:
-    return db.scalars(select(TrendSnapshot).order_by(TrendSnapshot.created_at.desc()).limit(1)).first()
 
 
 def _virus_from_snapshot(row: TrendSnapshot | None) -> dict[str, str]:
@@ -62,101 +58,116 @@ def _weather_display_from_snapshot(row: TrendSnapshot | None) -> dict[str, Any] 
         return None
 
 
-def run_snapshot_job(db: Session, *, region: str, mode: RefreshMode) -> int:
-    last = _latest_snapshot(db)
-
-    if mode == "full":
-        need_resp = True
-        need_env = True
-    elif mode == "respiratory_only":
-        need_resp = True
-        need_env = False
-    else:
-        need_resp = False
-        need_env = True
-
-    if need_resp:
-        resp = fetch_respiratory_bc_signals()
-        virus = resp.virus if resp.ok else _virus_from_snapshot(last)
-    else:
-        resp = None
-        virus = _virus_from_snapshot(last)
-
-    if need_env:
-        aqhi = fetch_aqhi_metro_vancouver()
-        wx = fetch_weather_vancouver()
-        env = {
-            "air_quality": aqhi.air_quality if aqhi.ok else "Unavailable",
-            "weather": wx.weather_summary if wx.ok else "Unavailable",
-        }
-    else:
-        aqhi = wx = None
-        env = _env_from_snapshot(last)
-
-    # Reconstruct minimal bundles for sources metadata when one side was skipped
-    if resp is None and last and last.sources_json:
+def _resp_bundle_from_sources_last(last: TrendSnapshot | None) -> Any:
+    if last and last.sources_json:
         try:
             prev = json.loads(last.sources_json)
             r_meta = prev.get("respiratory", {})
-
-            resp = SimpleNamespace(
+            return SimpleNamespace(
                 ok=r_meta.get("status") == "ok",
                 source_name=r_meta.get("name", ""),
                 source_url=r_meta.get("url", ""),
                 source_updated_label=r_meta.get("refreshed_label"),
             )
         except Exception:
-            resp = SimpleNamespace(
-                ok=False,
-                source_name="(carried forward)",
-                source_url="",
-                source_updated_label=None,
-            )
-    elif resp is None:
-        resp = SimpleNamespace(
+            pass
+    if last is None:
+        return SimpleNamespace(
             ok=False,
             source_name="(no prior snapshot)",
             source_url="",
             source_updated_label=None,
         )
+    return SimpleNamespace(
+        ok=False,
+        source_name="(carried forward)",
+        source_url="",
+        source_updated_label=None,
+    )
 
-    if aqhi is None or wx is None:
-        if last and last.sources_json:
-            try:
-                prev = json.loads(last.sources_json)
 
-                def sn(key: str) -> Any:
-                    m = prev.get(key, {})
-                    return SimpleNamespace(
-                        ok=m.get("status") == "ok",
-                        source_name=m.get("name", key),
-                        source_url=m.get("url", ""),
-                        source_updated_label=m.get("refreshed_label"),
-                        status=m.get("status"),
-                    )
+def _env_bundles_from_sources_last(last: TrendSnapshot | None) -> tuple[Any, Any]:
+    aqhi: Any = SimpleNamespace(
+        ok=False,
+        source_name="(carried forward)",
+        source_url="",
+        source_updated_label=None,
+    )
+    wx: Any = SimpleNamespace(
+        ok=False,
+        source_name="(carried forward)",
+        source_url="",
+        source_updated_label=None,
+    )
+    if last and last.sources_json:
+        try:
+            prev = json.loads(last.sources_json)
 
-                aqhi = aqhi or sn("aqhi")
-                wx = wx or sn("weather")
-            except Exception:
-                pass
+            def sn(key: str) -> Any:
+                m = prev.get(key, {})
+                return SimpleNamespace(
+                    ok=m.get("status") == "ok",
+                    source_name=m.get("name", key),
+                    source_url=m.get("url", ""),
+                    source_updated_label=m.get("refreshed_label"),
+                    status=m.get("status"),
+                )
 
-        aqhi = aqhi or SimpleNamespace(
-            ok=False,
-            source_name="(carried forward)",
-            source_url="",
-            source_updated_label=None,
-        )
-        wx = wx or SimpleNamespace(
-            ok=False,
-            source_name="(carried forward)",
-            source_url="",
-            source_updated_label=None,
-        )
+            aqhi = sn("aqhi")
+            wx = sn("weather")
+        except Exception:
+            pass
+    return aqhi, wx
+
+
+def run_snapshot_job(
+    db: Session,
+    *,
+    city_id: str | None = None,
+    mode: RefreshMode,
+) -> int:
+    """
+    Persist one ``trend_snapshots`` row for ``resolve_city_id(city_id)`` (default Vancouver).
+
+    Uses ``fetch_homepage_signals`` for live pulls — same inputs as ``build_homepage_summary_dict``.
+    """
+    city = resolve_city_id(city_id)
+    last = get_latest_homepage_snapshot_row(db, city.id)
+
+    if mode == "full":
+        need_resp = need_env = True
+    elif mode == "respiratory_only":
+        need_resp, need_env = True, False
+    else:
+        need_resp, need_env = False, True
+
+    resp, aqhi, wx, _w = fetch_homepage_signals(
+        city,
+        need_respiratory=need_resp,
+        need_environment=need_env,
+    )
+
+    if need_resp:
+        assert resp is not None
+        virus = resp.virus if resp.ok else _virus_from_snapshot(last)
+    else:
+        resp = _resp_bundle_from_sources_last(last)
+        virus = _virus_from_snapshot(last)
+
+    if need_env:
+        assert aqhi is not None and wx is not None
+        env = {
+            "air_quality": aqhi.air_quality if aqhi.ok else "Unavailable",
+            "weather": wx.weather_summary if wx.ok else "Unavailable",
+        }
+    else:
+        aqhi, wx = _env_bundles_from_sources_last(last)
+        env = _env_from_snapshot(last)
 
     sources = build_sources_bundle(resp, aqhi, wx)
 
     notes: list[str] = []
-    if need_resp and resp and not resp.ok:
+    if need_resp and resp and not getattr(resp, "ok", False):
         notes.append(f"Respiratory: {getattr(resp, 'error', 'fetch failed')}.")
     if need_env:
         if aqhi and not aqhi.ok:
@@ -166,7 +177,7 @@ def run_snapshot_job(db: Session, *, region: str, mode: RefreshMode) -> int:
     data_quality_note = " ".join(notes) if notes else None
 
     built = build_summary(virus, env)
-    log.info("Pipeline mode=%s virus=%s env=%s", mode, virus, env)
+    log.info("Pipeline city=%s mode=%s virus=%s env=%s", city.id, mode, virus, env)
 
     weather_display: dict[str, Any] | None
     if need_env:
@@ -176,8 +187,8 @@ def run_snapshot_job(db: Session, *, region: str, mode: RefreshMode) -> int:
 
     row = save_snapshot(
         db,
-        city_id="vancouver",
-        region=region,
+        city_id=city.id,
+        region=city.name,
         virus_data=virus,
         env_data=env,
         outdoor_feel=built["outdoor_feel"],
@@ -186,5 +197,5 @@ def run_snapshot_job(db: Session, *, region: str, mode: RefreshMode) -> int:
         data_quality_note=data_quality_note,
         weather_display=weather_display,
     )
-    log.info("Saved trend_snapshots id=%s", row.id)
+    log.info("Saved trend_snapshots id=%s city_id=%s", row.id, city.id)
     return row.id

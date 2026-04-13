@@ -2,6 +2,7 @@ import os
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy.engine.url import make_url
 
 
 class Settings(BaseSettings):
@@ -17,7 +18,7 @@ class Settings(BaseSettings):
         s = (v or "").strip()
         if not s:
             raise ValueError(
-                "DATABASE_URL is empty. Set it to your Postgres connection string (Render: link littlebuggy-db) "
+                "DATABASE_URL is empty. Set it to your Postgres connection string on Render, "
                 "or use sqlite:///./littlebuggy.db for local dev."
             )
         return s
@@ -45,10 +46,21 @@ def is_render_runtime() -> bool:
 
 def database_kind_from_url(url: str) -> str:
     """Coarse driver label for logs and /health (never log secrets)."""
-    u = url.strip().lower()
-    if u.startswith("sqlite"):
+    raw = (url or "").strip()
+    if not raw:
+        return "other"
+    try:
+        dialect = make_url(raw).drivername.lower().split("+", 1)[0]
+    except Exception:
+        # Unparseable strings: best-effort scheme match (same rules as SQLAlchemy URLs).
+        lowered = raw.lower()
+        if ":" not in lowered:
+            return "other"
+        scheme = lowered.split(":", 1)[0]
+        dialect = scheme.split("+", 1)[0]
+    if dialect == "sqlite":
         return "sqlite"
-    if u.startswith("postgres://") or u.startswith("postgresql://"):
+    if dialect in ("postgres", "postgresql"):
         return "postgresql"
     return "other"
 
@@ -64,8 +76,8 @@ def postgres_required_message_if_misconfigured() -> str | None:
     if database_kind_from_url(settings.database_url) == "postgresql":
         return None
     return (
-        "DATABASE_URL must point to Render Postgres (database littlebuggy-db), not SQLite. "
-        "In the Render dashboard: open web service littlebuggy-api → Environment → ensure DATABASE_URL "
-        "is linked from the littlebuggy-db database (Internal Database URL), then redeploy. "
-        "SQLite is only supported for local development."
+        "On Render, DATABASE_URL must be a PostgreSQL connection string (postgres:// or postgresql://, "
+        "including SQLAlchemy forms such as postgresql+psycopg://). SQLite is ephemeral on web services and "
+        "is only supported for local development. In the Render dashboard: open this service → Environment → "
+        "set DATABASE_URL from your Postgres instance (Internal Database URL), then redeploy."
     )

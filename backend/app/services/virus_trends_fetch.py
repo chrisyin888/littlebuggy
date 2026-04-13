@@ -36,12 +36,13 @@ BCCDC_RESPIRATORY_URL = (
 HEALTH_INFOBASE_WASTEWATER_QUERY_URL = "https://health-infobase.canada.ca/api/wastewater/query"
 PHAC_LANDING = "https://health-infobase.canada.ca/api/"
 
+# Aligned with fetch_bccdc_real: smaller LIMIT reduces peak memory from PHAC payloads on small dynos.
 _SQL = """
 SELECT "Date", measureid, "Location", seven_day_rolling_avg
 FROM wastewater_daily
 WHERE pruid = 59 AND measureid IN ('covN2', 'rsv', 'fluA', 'fluB')
 ORDER BY "Date" DESC
-LIMIT 800
+LIMIT 200
 """
 
 
@@ -189,6 +190,8 @@ def fetch_virus_trends() -> VirusTrendsFetchResult:
         )
 
     by_date = _aggregate_by_date(rows)
+    del rows
+
     if not by_date:
         return VirusTrendsFetchResult(
             ok=False,

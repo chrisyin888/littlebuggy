@@ -7,7 +7,7 @@ import json
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.config import postgres_required_message_if_misconfigured
+from app.settings import postgres_required_message_if_misconfigured
 from app.database import get_db
 from app.schemas.status import SourceHealth, SystemStatusResponse
 from app.services.trend_snapshot_homepage import get_latest_homepage_snapshot_row
