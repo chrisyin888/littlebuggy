@@ -269,6 +269,17 @@ function weatherWeekSummaryLine(s) {
   return translateApiLevel(s.weather, t)
 }
 
+function weatherStickerFromSnapshot(s, weatherDetail) {
+  const condition = String(weatherDetail?.condition || '')
+  const weatherLine = String(s?.weather || '')
+  const signal = `${condition} ${weatherLine}`.toLowerCase()
+  if (/rain|drizzle|shower|storm|thunder|sleet|雨|雷/.test(signal)) return '🌧️'
+  if (/snow|blizzard|flurr/.test(signal)) return '🌨️'
+  if (/fog|mist|haze|smoke/.test(signal)) return '🌫️'
+  if (/cloud|overcast/.test(signal)) return '☁️'
+  return '☀️'
+}
+
 const envSnapshotCards = computed(() => {
   void locale.value
   const s = snapshot.value
@@ -295,7 +306,7 @@ const envSnapshotCards = computed(() => {
         value: weatherWeekSummaryLine(s),
         blurb: '',
         tone: levelToTone(s.weather),
-        sticker: '☀️',
+        sticker: weatherStickerFromSnapshot(s, weatherDetail),
         sortValue: s.weather,
       },
       {
