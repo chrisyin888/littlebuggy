@@ -89,6 +89,11 @@ function severityClass(w) {
         {{ error }}
       </p>
 
+      <!-- City doesn't have wait times data yet -->
+      <p v-else-if="payload && payload.wait_times_available === false" class="upcc-waits-section__empty" role="status">
+        {{ t('upccWaitTimes.notAvailableForCity') }}
+      </p>
+
       <template v-else>
         <p v-if="error" class="upcc-waits-section__warn" role="status">
           {{ error }}

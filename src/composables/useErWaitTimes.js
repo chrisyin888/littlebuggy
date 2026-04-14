@@ -1,6 +1,8 @@
-import { onMounted, onUnmounted, ref, shallowRef } from 'vue'
+import { onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { apiUrl } from '../lib/apiOrigin.js'
+import { selectedCityId } from './useSelectedCity.js'
+import { i18n } from '../i18n/index.js'
 
 const POLL_MS = 5 * 60 * 1000
 
@@ -15,7 +17,8 @@ let pollTimerId = null
 let consumerCount = 0
 
 function buildWaitTimesRequestUrl() {
-  const path = `/wait-times?ts=${Date.now()}`
+  const city = encodeURIComponent(selectedCityId.value)
+  const path = `/wait-times?city=${city}&ts=${Date.now()}`
   return apiUrl(path)
 }
 
@@ -66,11 +69,6 @@ async function runLoadWaitTimes(t, fromUser) {
       error.value = t('waitTimes.errorGeneric')
       return
     }
-    if (!Array.isArray(data.hospitals)) {
-      console.error('[LittleBuggy] wait-times: missing hospitals[]', url, Object.keys(data))
-      error.value = t('waitTimes.errorGeneric')
-      return
-    }
 
     const checkedAt =
       typeof data.checked_at === 'string' && data.checked_at.trim()
@@ -79,9 +77,12 @@ async function runLoadWaitTimes(t, fromUser) {
 
     payload.value = {
       ...data,
-      hospitals: data.hospitals,
+      hospitals: Array.isArray(data.hospitals) ? data.hospitals : [],
       upcc_centres: Array.isArray(data.upcc_centres) ? data.upcc_centres : [],
       checked_at: checkedAt,
+      // Pass through availability flag from backend
+      wait_times_available: data.wait_times_available !== false,
+      wait_times_note: data.wait_times_note ?? null,
     }
   } catch (err) {
     console.error('[LittleBuggy] wait-times: fetch error', url || buildWaitTimesRequestUrl(), err)
@@ -92,6 +93,28 @@ async function runLoadWaitTimes(t, fromUser) {
     userRefreshInFlight.value = false
   }
 }
+
+function restartPollTimer() {
+  if (pollTimerId != null) {
+    window.clearInterval(pollTimerId)
+    pollTimerId = null
+  }
+  if (consumerCount > 0) {
+    const t = i18n.global.t
+    pollTimerId = window.setInterval(() => runLoadWaitTimes(t, false), POLL_MS)
+  }
+}
+
+// Module-level: re-fetch and reset state when city changes
+watch(selectedCityId, () => {
+  if (consumerCount <= 0) return
+  // Clear stale data so components show loading state for the new city
+  payload.value = null
+  loading.value = true
+  error.value = ''
+  const t = i18n.global.t
+  runLoadWaitTimes(t, false).then(() => restartPollTimer())
+})
 
 /**
  * Fetches GET /wait-times (FastAPI). Multiple components share one poll timer.
@@ -138,14 +161,23 @@ export function useErWaitTimes() {
 }
 
 /**
- * Map wait_text like "2h 45m" to severity for UI accent. "Unavailable" → null.
+ * Parse "Xh Ym" or "Xh Ym–Ah Bm" (range) → minutes. Returns null if unavailable.
+ */
+function _waitTextToMinutes(s) {
+  if (!s || /^unavailable/i.test(s)) return null
+  // Range: take lower bound
+  const part = s.includes('–') ? s.split('–')[0].trim() : s.trim()
+  const m = part.match(/^(\d+)\s*h\s*(\d{1,2})\s*m$/i)
+  if (!m) return null
+  return parseInt(m[1], 10) * 60 + parseInt(m[2], 10)
+}
+
+/**
+ * Map wait_text like "2h 45m" or "2h 15m–3h 51m" to severity for UI accent. "Unavailable" → null.
  */
 export function waitSeverityFromText(waitText) {
-  const s = String(waitText || '').trim()
-  if (!s || /^unavailable/i.test(s)) return null
-  const m = s.match(/^(\d+)\s*h\s*(\d{1,2})\s*m$/i)
-  if (!m) return null
-  const mins = parseInt(m[1], 10) * 60 + parseInt(m[2], 10)
+  const mins = _waitTextToMinutes(String(waitText || '').trim())
+  if (mins === null) return null
   if (mins < 120) return 'short'
   if (mins < 240) return 'medium'
   return 'long'

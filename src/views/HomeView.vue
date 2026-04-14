@@ -6,6 +6,7 @@ import TrendDetailModal from '../components/TrendDetailModal.vue'
 import LittleBuggyMascot from '../components/LittleBuggyMascot.vue'
 import ErWaitTimesSection from '../components/ErWaitTimesSection.vue'
 import UpccWaitTimesSection from '../components/UpccWaitTimesSection.vue'
+import CityPicker from '../components/CityPicker.vue'
 import { useHomepageSnapshot } from '../composables/useHomepageSnapshot.js'
 import { signalDisplayLine } from '../lib/homepageSummary.js'
 import { isTrendDetailKey, heroRowToDetailKey, envRowToDetailKey } from '../content/trendDetails.js'
@@ -430,6 +431,7 @@ function onEnvCardKeydown(e, row) {
 </script>
 <template>
   <div class="home">
+    <CityPicker />
     <section class="hero hero--product" aria-labelledby="hero-title">
       <div class="hero__shell">
         <div class="hero__grid-product">

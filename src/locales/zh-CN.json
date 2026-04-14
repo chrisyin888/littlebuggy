@@ -212,6 +212,7 @@
     "nearTimestampsNote": "若医院官方尚未发布新数据，数字可能与上次相同。",
     "refreshHonestyNote": "每次刷新都会重新拉取，但若来源尚未更新，等候分钟数也可能不变。",
     "nonePosted": "本次拉取里跟踪的医院都还没有新的等候数字——可稍后再试或点刷新。",
+    "notAvailableForCity": "该城市暂未提供实时急诊等候数据，我们正在努力接入更多城市。",
     "disclaimer": "等候时间仅为估算，可能随时变化。就诊顺序按病情紧急程度，而非先到先得。危及生命请拨打 911。",
     "sourceNote": "数据实时来自卑诗省公开的急诊等候时间网站（edwaittimes.ca），本站仅作展示。",
     "refreshNow": "立即刷新",
@@ -233,6 +234,7 @@
     "sourceNote": "与上方急诊列表相同，数据来自卑诗省公开等候时间网站（edwaittimes.ca），本站仅筛选并展示 UPCC 网点。",
     "legacyNoUpcc": "当前走急诊备用页面时，这里不列出 UPCC 等候。请几分钟后再试。",
     "emptyList": "本次数据里这些 UPCC 还没有新的等候时间——请稍后再试。",
+    "notAvailableForCity": "该城市暂未提供紧急护理等候数据。",
     "refreshNow": "立即刷新",
     "refreshing": "刷新中…"
   },

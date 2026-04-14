@@ -295,16 +295,17 @@ async function tryFetchLiveHomepageSummary(cityId = DEFAULT_CITY_ID) {
       signal: ctrl.signal,
     })
     if (!res.ok) {
-      const detail = (await res.text().catch(() => '')).trim()
-      throw new HomepageFetchError(
-        'HTTP_ERROR',
-        detail || `GET /api/homepage-summary failed (${res.status})`,
-        res.status,
-      )
+      // 5xx: backend down or snapshot not ready → return null so caller falls back to static JSON
+      // 4xx: unexpected API error → also return null to degrade gracefully
+      if (import.meta.env.VITE_DEBUG_API === 'true') {
+        const detail = (await res.text().catch(() => '')).trim()
+        console.warn(`[LittleBuggy] API ${res.status} for city=${cityId}:`, detail || '(no detail)')
+      }
+      return null
     }
     return await normalizedPayloadFromOkJsonResponse(res)
-  } catch (err) {
-    if (err instanceof HomepageFetchError) throw err
+  } catch {
+    // Network error / timeout / AbortError → return null, fall back to static JSON
     return null
   } finally {
     clearTimeout(tid)
@@ -316,7 +317,10 @@ async function tryFetchLiveHomepageSummary(cityId = DEFAULT_CITY_ID) {
  */
 export async function fetchHomepageSummary(cityId = DEFAULT_CITY_ID) {
   const cid = cityId || DEFAULT_CITY_ID
-  const useLiveApi = Boolean(resolvedApiBase())
+  // In dev, Vite proxies /api/* → local FastAPI (resolvedApiBase() returns '' but proxy still works).
+  // Always try the live API so city switching returns real per-city data.
+  // If the backend is not running, tryFetchLiveHomepageSummary returns null and we fall back to static JSON.
+  const useLiveApi = true
   if (useLiveApi) {
     const live = await tryFetchLiveHomepageSummary(cid)
     if (live) {

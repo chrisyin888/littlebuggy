@@ -84,6 +84,11 @@ function severityClass(w) {
         {{ error }}
       </p>
 
+      <!-- City doesn't have wait times data yet -->
+      <p v-else-if="payload && payload.wait_times_available === false" class="er-waits-section__empty" role="status">
+        {{ t('waitTimes.notAvailableForCity') }}
+      </p>
+
       <template v-else>
         <p v-if="error" class="er-waits-section__warn" role="status">
           {{ error }}

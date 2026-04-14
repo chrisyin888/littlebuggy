@@ -212,6 +212,7 @@
     "nearTimestampsNote": "Numbers may stay the same if the hospital source has not published a new update yet.",
     "refreshHonestyNote": "Wait times may not change on every refresh if the source has not posted a newer update — a fresh check can still show the same minutes.",
     "nonePosted": "No posted wait times for the hospitals we track in the latest pull—try refreshing in a moment.",
+    "notAvailableForCity": "Live ER wait times are not yet available for this city. We're working on adding more cities.",
     "disclaimer": "Wait times are estimates only and may change quickly. Patients are seen based on urgency, not arrival order. Call 911 for life-threatening emergencies.",
     "sourceNote": "Data is fetched live from the public BC emergency wait times service (edwaittimes.ca) and shown here for convenience.",
     "refreshNow": "Refresh now",
@@ -233,6 +234,7 @@
     "sourceNote": "Pulled from the same public BC wait-times service as the ER list (edwaittimes.ca), filtered to UPCC locations.",
     "legacyNoUpcc": "When we use the backup ER page, UPCC waits aren’t listed here. Try again in a few minutes.",
     "emptyList": "No posted waits for these centres in the latest pull—try again soon.",
+    "notAvailableForCity": "Urgent care wait times are not yet available for this city.",
     "refreshNow": "Refresh now",
     "refreshing": "Refreshing…"
   },

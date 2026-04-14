@@ -5,7 +5,6 @@ import { RouterView } from 'vue-router'
 import { useHomepageSnapshot } from './composables/useHomepageSnapshot.js'
 import { localeToHtmlLang } from './i18n'
 import LanguageSwitcher from './components/LanguageSwitcher.vue'
-import CitySwitcher from './components/CitySwitcher.vue'
 import { selectedCityId } from './composables/useSelectedCity.js'
 import LittleBuggyMascot from './components/LittleBuggyMascot.vue'
 import EmergencyHelpCard from './components/EmergencyHelpCard.vue'
@@ -102,36 +101,37 @@ const snapshotBarTitle = computed(() => {
 
 <template>
   <div class="app">
-    <div class="app-top-stack">
-      <p
-        class="snapshot-status-bar"
-        role="status"
-        aria-live="polite"
-        :title="snapshotBarTitle"
-      >
-        <span class="snapshot-status-bar__live" aria-hidden="true">
-          <span
-            class="snapshot-status-bar__dot"
-            :class="{ 'snapshot-status-bar__dot--busy': snapshotRefreshing }"
-          />
-        </span>
-        <span class="snapshot-status-bar__text">{{ snapshotStatusText }}</span>
-        <button
-          type="button"
-          class="snapshot-status-bar__refresh"
-          :disabled="snapshotLoading || snapshotRefreshing"
-          :aria-label="t('snapshot.refreshAria')"
-          @click="onClickRefresh"
+    <div class="site-sticky-top">
+      <div class="app-top-stack">
+        <p
+          class="snapshot-status-bar"
+          role="status"
+          aria-live="polite"
+          :title="snapshotBarTitle"
         >
-          {{ t('snapshot.refresh') }}
-        </button>
-      </p>
-      <div class="awareness-bar" role="note">
-        <LittleBuggyMascot class="awareness-bar__mascot" pose="calm" size="sm" />
-        <span class="awareness-bar__text">{{ t('app.awareness') }}</span>
+          <span class="snapshot-status-bar__live" aria-hidden="true">
+            <span
+              class="snapshot-status-bar__dot"
+              :class="{ 'snapshot-status-bar__dot--busy': snapshotRefreshing }"
+            />
+          </span>
+          <span class="snapshot-status-bar__text">{{ snapshotStatusText }}</span>
+          <button
+            type="button"
+            class="snapshot-status-bar__refresh"
+            :disabled="snapshotLoading || snapshotRefreshing"
+            :aria-label="t('snapshot.refreshAria')"
+            @click="onClickRefresh"
+          >
+            {{ t('snapshot.refresh') }}
+          </button>
+        </p>
+        <div class="awareness-bar" role="note">
+          <LittleBuggyMascot class="awareness-bar__mascot" pose="calm" size="sm" />
+          <span class="awareness-bar__text">{{ t('app.awareness') }}</span>
+        </div>
       </div>
-    </div>
-    <header class="site-header">
+      <header class="site-header">
       <div class="site-header__inner">
         <div class="site-header__row">
           <RouterLink to="/" class="brand">
@@ -155,12 +155,12 @@ const snapshotBarTitle = computed(() => {
           </RouterLink>
 
           <div class="site-header__controls">
-            <CitySwitcher />
             <LanguageSwitcher variant="compact" />
           </div>
         </div>
       </div>
     </header>
+    </div><!-- /.site-sticky-top -->
     <main class="site-main">
       <RouterView />
     </main>
@@ -182,10 +182,14 @@ const snapshotBarTitle = computed(() => {
   flex-direction: column;
 }
 
-.app-top-stack {
+.site-sticky-top {
   position: sticky;
   top: 0;
   z-index: 220;
+}
+
+.app-top-stack {
+  /* no longer needs sticky — parent handles it */
 }
 
 .snapshot-status-bar {
