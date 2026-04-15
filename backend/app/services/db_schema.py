@@ -17,6 +17,7 @@ _TREND_SNAPSHOT_COLUMNS = [
     ("sources_json", "TEXT"),
     ("data_quality_note", "TEXT"),
     ("weather_display_json", "TEXT"),
+    ("respiratory_ranking_json", "TEXT"),  # dynamic wastewater ranking (JSON array)
 ]
 
 
