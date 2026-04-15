@@ -243,6 +243,11 @@
     "tagShort": "Metro Vancouver"
   },
   "home": {
+    "a2hs": {
+      "title": "Add LittleBuggy to your home screen",
+      "body": "Save it like an app for faster daily check-ins.",
+      "steps": "In Safari, tap Share → Add to Home Screen."
+    },
     "provenance": {
       "title": "Where this snapshot comes from",
       "aboutHeading": "About this data",

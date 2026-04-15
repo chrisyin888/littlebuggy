@@ -19,6 +19,43 @@ const { snapshot, snapshotLoading, snapshotError, formatSnapshotUpdatePhrase } =
 const VISIT_SESSION_KEY = 'lb_visit_counted_session'
 const visitorsToday = ref(null)
 
+const A2HS_DISMISS_KEY = 'lb_a2hs_prompt_dismissed_v1'
+const showA2hsPrompt = ref(false)
+
+function isLikelyMobileSafari() {
+  if (typeof navigator === 'undefined') return false
+  const ua = String(navigator.userAgent || '').toLowerCase()
+  const isIOS = /iphone|ipad|ipod/.test(ua)
+  const isSafari = /safari/.test(ua) && !/crios|fxios|edgios|opios|mercury|gsa/.test(ua)
+  return isIOS && isSafari
+}
+
+function isStandaloneDisplayMode() {
+  if (typeof window === 'undefined') return false
+  const byMedia = !!window.matchMedia && window.matchMedia('(display-mode: standalone)').matches
+  const byIOS = typeof navigator !== 'undefined' && (navigator).standalone === true
+  return byMedia || byIOS
+}
+
+function initA2hsPrompt() {
+  try {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return
+    const dismissed = localStorage.getItem(A2HS_DISMISS_KEY) === '1'
+    showA2hsPrompt.value = !dismissed && isLikelyMobileSafari() && !isStandaloneDisplayMode()
+  } catch {
+    showA2hsPrompt.value = false
+  }
+}
+
+function dismissA2hsPrompt() {
+  showA2hsPrompt.value = false
+  try {
+    if (typeof localStorage !== 'undefined') localStorage.setItem(A2HS_DISMISS_KEY, '1')
+  } catch {
+    /* non-fatal */
+  }
+}
+
 async function loadVisitCount() {
   try {
     const r = await fetch(apiUrl('/api/visit-count'))
@@ -44,6 +81,7 @@ async function maybeTrackVisit() {
 }
 
 onMounted(() => {
+  initA2hsPrompt()
   void (async () => {
     await maybeTrackVisit()
     await loadVisitCount()
@@ -462,6 +500,20 @@ function onEnvCardKeydown(e, row) {
 <template>
   <div class="home">
     <CityPicker />
+
+    <section v-if="showA2hsPrompt" class="a2hs-banner" aria-label="Add to Home Screen">
+      <div class="a2hs-banner__card">
+        <div class="a2hs-banner__copy">
+          <p class="a2hs-banner__title">{{ $t('home.a2hs.title') }}</p>
+          <p class="a2hs-banner__body">{{ $t('home.a2hs.body') }}</p>
+          <p class="a2hs-banner__steps">{{ $t('home.a2hs.steps') }}</p>
+        </div>
+        <button type="button" class="a2hs-banner__close" @click="dismissA2hsPrompt">
+          {{ $t('modal.close') }}
+        </button>
+      </div>
+    </section>
+
     <section class="hero hero--product" aria-labelledby="hero-title">
       <div class="hero__shell">
         <div class="hero__grid-product">
@@ -877,6 +929,57 @@ function onEnvCardKeydown(e, row) {
   display: flex;
   flex-direction: column;
   gap: clamp(2rem, 5.5vw, 3.75rem);
+}
+
+
+.a2hs-banner {
+  padding: 0 clamp(1rem, 4vw, 2rem);
+  margin-top: -0.75rem;
+}
+
+.a2hs-banner__card {
+  max-width: min(56rem, 100%);
+  margin: 0 auto;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 0.85rem 0.95rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(196, 181, 253, 0.55);
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.96), rgba(243, 244, 255, 0.92));
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.08);
+}
+
+.a2hs-banner__title {
+  margin: 0 0 0.2rem;
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #4338ca;
+}
+
+.a2hs-banner__body,
+.a2hs-banner__steps {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #475569;
+}
+
+.a2hs-banner__steps {
+  margin-top: 0.2rem;
+  font-weight: 600;
+}
+
+.a2hs-banner__close {
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: rgba(255, 255, 255, 0.9);
+  color: #475569;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .section--warm-slab {

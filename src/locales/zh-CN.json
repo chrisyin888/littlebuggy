@@ -243,6 +243,11 @@
     "tagShort": "大温哥华"
   },
   "home": {
+    "a2hs": {
+      "title": "把 LittleBuggy 加到主屏幕",
+      "body": "像 App 一样保存，每天查看更快。",
+      "steps": "在 Safari 里点“分享”→“添加到主屏幕”。"
+    },
     "provenance": {
       "title": "这份快照的数据来源",
       "aboutHeading": "关于这些数据",
