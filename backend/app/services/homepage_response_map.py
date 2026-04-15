@@ -42,7 +42,7 @@ def _default_label_for_key(key: str) -> str:
 
 def _enrich_signal_with_symptoms(signal: HomepageSignal) -> HomepageSignal:
     """Inject reviewed symptom info from pathogen catalog into a HomepageSignal."""
-    info = get_symptom_display(signal.key)
+    info = get_symptom_display(signal.key, signal.label)
     return HomepageSignal(
         key=signal.key,
         label=signal.label,

@@ -317,7 +317,8 @@
     },
     "snapshotSection": {
       "title": "This week’s snapshot",
-      "deckShort": "Public data for Metro Vancouver — RSV, flu, COVID, weather, air.",
+      "deckShort": "Public data for {region} — RSV, flu, COVID, weather, air.",
+      "defaultRegion": "your area",
       "envEyebrow": "Weather & air",
       "dataInfoSummary": "About this data & updates",
       "deck": "Metro Vancouver respiratory signals, air quality, and weather — refreshed on a schedule from public sources, not live scraping.",

@@ -168,7 +168,7 @@ const liveHeroCards = computed(() => {
     // Prefer symptom info from API (already enriched by catalog on backend).
     // Fall back to local catalog lookup for static JSON / old API responses.
     const apiSymptoms = sig.symptoms ?? null
-    const localSymptoms = symptomsForPathogen(sig.key)
+    const localSymptoms = symptomsForPathogen(sig.key, sig.label)
     const symptoms = apiSymptoms ?? localSymptoms.symptoms
     const symptomDisclaimer = sig.symptomDisclaimer ?? localSymptoms.disclaimer
     const symptomFallback = sig.symptomFallback ?? localSymptoms.fallbackMessage
@@ -336,6 +336,11 @@ const envSnapshotCards = computed(() => {
       return severityScoreFromLabel(row.sortValue, 'weather')
     },
   )
+})
+
+const snapshotRegionLabel = computed(() => {
+  void locale.value
+  return String(snapshot.value?.region || t('home.snapshotSection.defaultRegion')).trim()
 })
 
 const formattedUpdatedAt = computed(() => {
@@ -620,7 +625,7 @@ function onEnvCardKeydown(e, row) {
           <h2 id="snapshot-section-title" class="snapshot-dashboard__title">
             {{ $t('home.snapshotSection.title') }}
           </h2>
-          <p class="snapshot-dashboard__subtitle">{{ $t('home.snapshotSection.deckShort') }}</p>
+          <p class="snapshot-dashboard__subtitle">{{ $t('home.snapshotSection.deckShort', { region: snapshotRegionLabel }) }}</p>
           <p
             v-if="!snapshotLoading && snapshotLooksOutdated && snapshot"
             class="snapshot-dashboard__stale-inline"

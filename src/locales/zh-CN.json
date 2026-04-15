@@ -317,7 +317,8 @@
     },
     "snapshotSection": {
       "title": "本周快照",
-      "deckShort": "大温公开数据：RSV、流感、新冠、天气、空气。",
+      "deckShort": "{region} 公开数据：RSV、流感、新冠、天气、空气。",
+      "defaultRegion": "本地",
       "envEyebrow": "天气与空气",
       "dataInfoSummary": "数据与更新说明",
       "deck": "大温呼吸道信号、空气质量与天气——按节奏从公开数据源整理，页面打开时不会实时抓取。",
