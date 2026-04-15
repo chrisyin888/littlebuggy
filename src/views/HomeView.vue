@@ -11,6 +11,7 @@ import { useHomepageSnapshot } from '../composables/useHomepageSnapshot.js'
 import { signalDisplayLine } from '../lib/homepageSummary.js'
 import { isTrendDetailKey, heroRowToDetailKey, envRowToDetailKey } from '../content/trendDetails.js'
 import { translateApiLevel } from '../utils/apiLabelMap.js'
+import { stickerForPathogen, symptomsForPathogen } from '../config/pathogenCatalog.js'
 
 const { t, tm, locale } = useI18n()
 const { snapshot, snapshotLoading, snapshotError, formatSnapshotUpdatePhrase } = useHomepageSnapshot()
@@ -148,11 +149,12 @@ function sortRowsBySeverity(rows, scoreFn) {
 /** Max respiratory signal rows in the hero mockup and primary snapshot grid; extras go in an expandable block. */
 const HERO_VIRUS_VISIBLE_MAX = 4
 
-const STICKER_BY_SIGNAL_KEY = { rsv: '🐞', flu: '🤒', covid: '😷' }
-
+/**
+ * Get sticker emoji for a pathogen key.
+ * Delegates to pathogenCatalog so new pathogens get 🦠 automatically.
+ */
 function stickerForSignalKey(key) {
-  const k = String(key || '').toLowerCase()
-  return STICKER_BY_SIGNAL_KEY[k] || '🦠'
+  return stickerForPathogen(key)
 }
 
 const liveHeroCards = computed(() => {
@@ -163,6 +165,13 @@ const liveHeroCards = computed(() => {
   if (!rows.length) return []
   return rows.map((sig) => {
     const display = signalDisplayLine(sig.level, sig.trend)
+    // Prefer symptom info from API (already enriched by catalog on backend).
+    // Fall back to local catalog lookup for static JSON / old API responses.
+    const apiSymptoms = sig.symptoms ?? null
+    const localSymptoms = symptomsForPathogen(sig.key)
+    const symptoms = apiSymptoms ?? localSymptoms.symptoms
+    const symptomDisclaimer = sig.symptomDisclaimer ?? localSymptoms.disclaimer
+    const symptomFallback = sig.symptomFallback ?? localSymptoms.fallbackMessage
     return {
       kind: sig.key,
       label: sig.label,
@@ -172,42 +181,41 @@ const liveHeroCards = computed(() => {
       severity: virusSeverityTierFromLabel(display),
       sticker: stickerForSignalKey(sig.key),
       sortValue: display,
+      // Symptom catalog — informational only, never diagnostic
+      symptoms,
+      symptomDisclaimer,
+      symptomFallback,
     }
   })
 })
 
-const fallbackHeroSummary = computed(() => [
-  {
-    kind: 'rsv',
-    label: t('home.hero.virusLabels.rsv'),
+/**
+ * Skeleton fallback cards shown while data is loading.
+ * Uses the i18n labels for rsv/flu/covid as placeholder names only.
+ * These are replaced by liveHeroCards as soon as the API responds.
+ * New pathogens do not need entries here — they appear automatically from live data.
+ */
+const fallbackHeroSummary = computed(() => {
+  void locale.value
+  const skeletons = [
+    { kind: 'rsv', labelKey: 'home.hero.virusLabels.rsv' },
+    { kind: 'flu', labelKey: 'home.hero.virusLabels.flu' },
+    { kind: 'covid', labelKey: 'home.hero.virusLabels.covid' },
+  ]
+  return skeletons.map(({ kind, labelKey }) => ({
+    kind,
+    label: t(labelKey),
     value: '—',
     blurb: '',
     tone: 'watch',
     severity: 'medium',
-    sticker: '🐞',
+    sticker: stickerForSignalKey(kind),
     sortValue: '—',
-  },
-  {
-    kind: 'flu',
-    label: t('home.hero.virusLabels.flu'),
-    value: '—',
-    blurb: '',
-    tone: 'watch',
-    severity: 'medium',
-    sticker: '🤒',
-    sortValue: '—',
-  },
-  {
-    kind: 'covid',
-    label: t('home.hero.virusLabels.covid'),
-    value: '—',
-    blurb: '',
-    tone: 'watch',
-    severity: 'medium',
-    sticker: '😷',
-    sortValue: '—',
-  },
-])
+    symptoms: null,
+    symptomDisclaimer: null,
+    symptomFallback: null,
+  }))
+})
 
 const heroCards = computed(() => {
   void locale.value
@@ -248,11 +256,14 @@ const trendPreviewRows = computed(() => {
       width: trendPreviewDecorativeWidth(i, capped.length),
     }))
   }
-  return [
-    { key: 'rsv', label: t('home.trendSection.rsv'), width: '68%' },
-    { key: 'flu', label: t('home.trendSection.flu'), width: '52%' },
-    { key: 'covid', label: t('home.trendSection.covid'), width: '38%' },
-  ]
+  // Skeleton rows while data loads — uses i18n labels for known pathogens as placeholders.
+  // Once live data arrives, liveHeroCards drives this computed and these rows are replaced.
+  const skeletonKeys = ['rsv', 'flu', 'covid']
+  return skeletonKeys.map((k, i) => ({
+    key: k,
+    label: t(`home.trendSection.${k}`, k),
+    width: TREND_PREVIEW_DECORATIVE_WIDTHS[i % TREND_PREVIEW_DECORATIVE_WIDTHS.length],
+  }))
 })
 
 function weatherWeekSummaryLine(s) {
@@ -365,6 +376,20 @@ const virusOverflowSummaryText = computed(() => {
     ? t('home.hero.signalsOverflowSummary_one', { count: n })
     : t('home.hero.signalsOverflowSummary_other', { count: n })
 })
+
+/** Full BC wastewater ranking from API (dynamic measures); hero cards stay curated. */
+const respiratoryRankingRows = computed(() => {
+  void locale.value
+  const r = snapshot.value?.respiratory_ranking
+  if (!Array.isArray(r) || !r.length) return []
+  return r
+})
+
+function formatRespiratoryRankingLabel(row) {
+  if (!row || typeof row !== 'object') return ''
+  const raw = row.severity_label != null ? String(row.severity_label) : ''
+  return translateApiLevel(raw, t)
+}
 
 const trendPreviewExtraNoteText = computed(() => {
   void locale.value
@@ -694,6 +719,28 @@ function onEnvCardKeydown(e, row) {
                   </div>
                 </li>
               </ul>
+            </details>
+
+            <details
+              v-if="respiratoryRankingRows.length"
+              class="snapshot-dash__respiratory-ranking"
+            >
+              <summary class="snapshot-dash__virus-overflow-summary">
+                {{ $t('home.hero.respiratoryRankingEyebrow') }}
+              </summary>
+              <p class="snapshot-dash__ranking-hint">{{ $t('home.hero.respiratoryRankingHint') }}</p>
+              <ol class="snapshot-dash__ranking-list" role="list">
+                <li
+                  v-for="(r, i) in respiratoryRankingRows"
+                  :key="`${r.key}-${i}`"
+                  class="snapshot-dash__ranking-row"
+                  role="listitem"
+                >
+                  <span class="snapshot-dash__ranking-rank" aria-hidden="true">{{ i + 1 }}</span>
+                  <span class="snapshot-dash__ranking-name">{{ r.display_name }}</span>
+                  <span class="snapshot-dash__ranking-level">{{ formatRespiratoryRankingLabel(r) }}</span>
+                </li>
+              </ol>
             </details>
 
             <template v-if="snapshot">
@@ -2848,6 +2895,63 @@ function onEnvCardKeydown(e, row) {
 .snapshot-dash__grid--virus-overflow {
   margin: 0.65rem 0.85rem 0.85rem;
   padding: 0;
+}
+
+.snapshot-dash__respiratory-ranking {
+  margin: 0 0 1.15rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  background: rgba(248, 250, 252, 0.72);
+  overflow: hidden;
+}
+
+.snapshot-dash__ranking-hint {
+  margin: 0;
+  padding: 0 0.9rem 0.55rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--color-ink-muted, #64748b);
+}
+
+.snapshot-dash__ranking-list {
+  margin: 0 0.85rem 0.85rem;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.snapshot-dash__ranking-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: 0.5rem 0.65rem;
+  padding: 0.45rem 0.35rem;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  font-size: 0.82rem;
+}
+
+.snapshot-dash__ranking-rank {
+  font-weight: 800;
+  font-size: 0.72rem;
+  color: var(--color-ink-soft);
+  min-width: 1.25rem;
+}
+
+.snapshot-dash__ranking-name {
+  font-weight: 700;
+  color: var(--color-ink, #0f172a);
+  min-width: 0;
+}
+
+.snapshot-dash__ranking-level {
+  font-weight: 600;
+  color: var(--color-ink-soft);
+  text-align: right;
+  white-space: nowrap;
 }
 
 .snapshot-dash__grid--skeleton {

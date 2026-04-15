@@ -1,5 +1,9 @@
 """
 Map homepage summary payloads / DB rows to ``HomepageSummaryResponse`` (single code path for GET /api/homepage-summary).
+
+Signals are derived from the dynamic ``respiratory_ranking`` array (severity-sorted).
+Legacy rsv/flu/covid fields are preserved for backward compatibility but are no longer
+the source of truth — ``signals[]`` is the preferred output.
 """
 
 from __future__ import annotations
@@ -9,23 +13,16 @@ import re
 from datetime import datetime, timezone
 from typing import Any
 
+from app.config.pathogen_catalog import get_display_label, get_symptom_display
 from app.models.trend_snapshot import TrendSnapshot
 from app.schemas.homepage import (
     HomepageSignal,
     HomepageSummaryResponse,
+    RespiratoryRankingEntry,
     SourceMeta,
     SourcesBundle,
     WeatherDisplayPayload,
 )
-
-# Stable ordering for known keys; unknown keys sort after, then alphabetically by key.
-_SIGNAL_ORDER = ("rsv", "flu", "covid")
-
-_DEFAULT_LABELS: dict[str, str] = {
-    "rsv": "RSV",
-    "flu": "Flu",
-    "covid": "COVID-19",
-}
 
 
 def _split_level_trend(raw: str) -> tuple[str, str | None]:
@@ -39,28 +36,47 @@ def _split_level_trend(raw: str) -> tuple[str, str | None]:
 
 
 def _default_label_for_key(key: str) -> str:
-    return _DEFAULT_LABELS.get(key, key.replace("_", " ").strip().title() or "Signal")
+    """Delegate to catalog (title-case fallback for unknown keys)."""
+    return get_display_label(key)
 
 
-def _label_for_triple(blob: dict[str, Any], key: str, field: str) -> str:
-    raw = blob.get(field)
-    if isinstance(raw, str) and raw.strip():
-        return raw.strip()
-    return _default_label_for_key(key)
+def _enrich_signal_with_symptoms(signal: HomepageSignal) -> HomepageSignal:
+    """Inject reviewed symptom info from pathogen catalog into a HomepageSignal."""
+    info = get_symptom_display(signal.key)
+    return HomepageSignal(
+        key=signal.key,
+        label=signal.label,
+        level=signal.level,
+        trend=signal.trend,
+        symptoms=info["symptoms"],
+        symptom_disclaimer=info["disclaimer"],
+        symptom_fallback_message=info["fallback_message"],
+    )
 
 
-def _sort_signals(signals: list[HomepageSignal]) -> list[HomepageSignal]:
-    def sort_key(s: HomepageSignal) -> tuple[int, str]:
-        try:
-            i = _SIGNAL_ORDER.index(s.key)
-        except ValueError:
-            i = len(_SIGNAL_ORDER)
-        return (i, s.key)
+def _signals_from_ranking(ranking: list[RespiratoryRankingEntry]) -> list[HomepageSignal]:
+    """
+    Build HomepageSignal list from the severity-sorted ranking.
 
-    return sorted(signals, key=sort_key)
+    Ranking is already ordered (highest severity first) so we preserve that order
+    rather than re-sorting by hardcoded key names. New pathogens from the PHAC feed
+    appear automatically without any code changes.
+    """
+    out: list[HomepageSignal] = []
+    for entry in ranking:
+        level, trend = _split_level_trend(entry.severity_label)
+        sig = HomepageSignal(
+            key=entry.key,
+            label=entry.display_name or _default_label_for_key(entry.key),
+            level=level,
+            trend=trend,
+        )
+        out.append(_enrich_signal_with_symptoms(sig))
+    return out
 
 
 def _signals_from_dynamic_list(raw_list: list[Any]) -> list[HomepageSignal] | None:
+    """Parse signals array from a blob (API payload / static JSON)."""
     out: list[HomepageSignal] = []
     for item in raw_list:
         if not isinstance(item, dict):
@@ -76,32 +92,99 @@ def _signals_from_dynamic_list(raw_list: list[Any]) -> list[HomepageSignal] | No
             level, _ = _split_level_trend(level_raw)
         else:
             level, trend = _split_level_trend(level_raw)
-        out.append(HomepageSignal(key=k, label=label, level=level, trend=trend))
+        sig = HomepageSignal(key=k, label=label, level=level, trend=trend)
+        out.append(_enrich_signal_with_symptoms(sig))
     return out if out else None
+
+
+def _parse_respiratory_ranking_list(raw: Any) -> list[RespiratoryRankingEntry]:
+    if not isinstance(raw, list):
+        return []
+    out: list[RespiratoryRankingEntry] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        try:
+            ua = item.get("updated_at")
+            if isinstance(ua, datetime):
+                uat = ua
+            elif isinstance(ua, str) and ua.strip():
+                uat = datetime.fromisoformat(ua.strip().replace("Z", "+00:00"))
+            else:
+                uat = datetime.now(timezone.utc)
+            val = item.get("value")
+            vf: float | None
+            if val is None:
+                vf = None
+            else:
+                try:
+                    vf = float(val)
+                except (TypeError, ValueError):
+                    vf = None
+            # Use catalog label if API omits display_name
+            key = str(item.get("key") or "").strip().lower() or "unknown"
+            display = str(item.get("display_name") or item.get("key") or "").strip()
+            if not display:
+                display = _default_label_for_key(key)
+            out.append(
+                RespiratoryRankingEntry(
+                    key=key,
+                    display_name=display,
+                    value=vf,
+                    severity_label=str(item.get("severity_label") or "Unknown"),
+                    severity_score=float(item.get("severity_score") or 0.0),
+                    updated_at=uat,
+                )
+            )
+        except Exception:
+            continue
+    return out
 
 
 def build_signals_from_blob(blob: dict[str, Any]) -> list[HomepageSignal]:
     """
-    Preferred ``signals`` array for the API. Uses ``blob['signals']`` when present and valid;
-    otherwise derives from legacy rsv/flu/covid (or *_level) fields.
+    Build the ``signals`` array for the API response.
+
+    Priority order:
+    1. ``blob['signals']`` — explicit signals array (pre-sorted by severity)
+    2. ``blob['respiratory_ranking']`` — derive signals from the ranking (preferred path)
+    3. Legacy ``rsv``/``flu``/``covid`` fields — backward-compat fallback only
+
+    Signals preserve the ranking's severity sort order; no hardcoded key ordering.
     """
+    # 1. Explicit signals array (e.g. from a cached blob that already has signals)
     raw = blob.get("signals")
     if isinstance(raw, list) and len(raw) > 0:
         parsed = _signals_from_dynamic_list(raw)
         if parsed is not None:
-            return _sort_signals(parsed)
+            return parsed
 
-    triples: list[tuple[str, str, Any]] = [
-        ("rsv", _label_for_triple(blob, "rsv", "rsv_label"), blob.get("rsv") or blob.get("rsv_level")),
-        ("flu", _label_for_triple(blob, "flu", "flu_label"), blob.get("flu") or blob.get("flu_level")),
-        ("covid", _label_for_triple(blob, "covid", "covid_label"), blob.get("covid") or blob.get("covid_level")),
+    # 2. Derive from respiratory_ranking (dynamic, severity-sorted)
+    rr = blob.get("respiratory_ranking")
+    if isinstance(rr, list) and len(rr) > 0:
+        ranking_entries = _parse_respiratory_ranking_list(rr)
+        if ranking_entries:
+            return _signals_from_ranking(ranking_entries)
+
+    # 3. Legacy fallback: rsv / flu / covid fixed triple
+    legacy_keys = [
+        ("rsv", blob.get("rsv") or blob.get("rsv_level")),
+        ("flu", blob.get("flu") or blob.get("flu_level")),
+        ("covid", blob.get("covid") or blob.get("covid_level")),
     ]
     built: list[HomepageSignal] = []
-    for key, label, raw_level in triples:
+    for key, raw_level in legacy_keys:
         level_s = str(raw_level or "").strip() or "Unknown"
         lev, trend = _split_level_trend(level_s)
-        built.append(HomepageSignal(key=key, label=label, level=lev, trend=trend))
-    return _sort_signals(built)
+        sig = HomepageSignal(
+            key=key,
+            label=_default_label_for_key(key),
+            level=lev,
+            trend=trend,
+        )
+        built.append(_enrich_signal_with_symptoms(sig))
+    return built
+
 
 _FALLBACK_SOURCES = SourcesBundle(
     respiratory=SourceMeta(
@@ -174,13 +257,15 @@ def homepage_summary_blob_to_response(blob: dict[str, Any]) -> HomepageSummaryRe
     One mapping from a normalized blob (DB row fields or live payload dict) to the API model.
 
     Expected keys overlap both shapes: city_id, region, rsv/flu/covid (or rsv_level-style via aliases below),
-    air_quality, weather, weather_display, outdoor_feel, summary/short_summary, updated_at, sources, data_quality_note.
+    air_quality, weather, weather_display, outdoor_feel, summary/short_summary, updated_at, sources,
+    data_quality_note, respiratory_ranking.
     """
     cid_raw = blob.get("city_id")
     cid = str(cid_raw or "vancouver").strip().lower() or "vancouver"
 
     region = str(blob.get("region") or "")
 
+    # Legacy fields — kept for backward compat; prefer signals[] for all new consumers
     rsv = str(blob.get("rsv") or blob.get("rsv_level") or "Unknown")
     flu = str(blob.get("flu") or blob.get("flu_level") or "Unknown")
     covid = str(blob.get("covid") or blob.get("covid_level") or "Unknown")
@@ -215,12 +300,14 @@ def homepage_summary_blob_to_response(blob: dict[str, Any]) -> HomepageSummaryRe
     dq = blob.get("data_quality_note")
     dq_out = dq.strip() if isinstance(dq, str) and dq.strip() else None
 
+    respiratory_ranking = _parse_respiratory_ranking_list(blob.get("respiratory_ranking"))
     signals = build_signals_from_blob(blob)
 
     return HomepageSummaryResponse(
         city_id=cid,
         region=region,
         signals=signals,
+        respiratory_ranking=respiratory_ranking,
         rsv=rsv,
         flu=flu,
         covid=covid,
@@ -238,6 +325,15 @@ def homepage_summary_blob_to_response(blob: dict[str, Any]) -> HomepageSummaryRe
 def trend_snapshot_row_to_response(row: TrendSnapshot) -> HomepageSummaryResponse:
     """Thin wrapper: ORM row → blob → response."""
     cid = (row.city_id or "vancouver").strip().lower() or "vancouver"
+    rr: list[Any] = []
+    raw_r = getattr(row, "respiratory_ranking_json", None)
+    if raw_r:
+        try:
+            loaded = json.loads(raw_r)
+            if isinstance(loaded, list):
+                rr = loaded
+        except Exception:
+            rr = []
     blob: dict[str, Any] = {
         "city_id": cid,
         "region": row.region,
@@ -252,5 +348,6 @@ def trend_snapshot_row_to_response(row: TrendSnapshot) -> HomepageSummaryRespons
         "updated_at": row.created_at,
         "sources_json": row.sources_json,
         "data_quality_note": row.data_quality_note,
+        "respiratory_ranking": rr,
     }
     return homepage_summary_blob_to_response(blob)

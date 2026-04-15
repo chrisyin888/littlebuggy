@@ -62,6 +62,11 @@ def persist_static_homepage_payload(db: Session, payload: dict[str, Any]) -> Tre
     wd = payload.get("weather_display")
     weather_display = wd if isinstance(wd, dict) else None
 
+    rr = payload.get("respiratory_ranking")
+    respiratory_ranking: list[dict[str, Any]] | None = None
+    if isinstance(rr, list):
+        respiratory_ranking = [x for x in rr if isinstance(x, dict)] or None
+
     return save_snapshot(
         db,
         city_id=city_id,
@@ -73,6 +78,7 @@ def persist_static_homepage_payload(db: Session, payload: dict[str, Any]) -> Tre
         sources=sources,
         data_quality_note=data_quality_note,
         weather_display=weather_display,
+        respiratory_ranking=respiratory_ranking,
     )
 
 

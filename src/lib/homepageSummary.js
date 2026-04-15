@@ -10,6 +10,7 @@
 
 import { CITIES, DEFAULT_CITY_ID, getCityById } from '../config/cities.js'
 import { apiUrl, resolvedApiBase } from './apiOrigin.js'
+import { labelForPathogen } from '../config/pathogenCatalog.js'
 
 /** Max wait for live API before using static fallback (cold starts / slow networks). */
 const LIVE_API_TIMEOUT_MS = 15_000
@@ -32,21 +33,10 @@ function isHomepageSummaryUrl(url) {
   return url.includes('homepage-summary.json')
 }
 
-/** Default English short names when API omits labels (matches backend). */
-const DEFAULT_SIGNAL_LABELS = /** @type {Record<string, string>} */ ({
-  rsv: 'RSV',
-  flu: 'Flu',
-  covid: 'COVID-19',
-})
-
+/** Default English short names when API omits labels. Delegates to pathogenCatalog for known keys. */
 /** @param {string} key */
 function defaultLabelForKey(key) {
-  const k = String(key || '').toLowerCase()
-  if (DEFAULT_SIGNAL_LABELS[k]) return DEFAULT_SIGNAL_LABELS[k]
-  if (!k) return 'Signal'
-  return k
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase())
+  return labelForPathogen(key)
 }
 
 /**
@@ -72,20 +62,16 @@ export function signalDisplayLine(level, trend) {
   return tr ? `${lv} (${tr})` : lv
 }
 
-const _SIGNAL_SORT_ORDER = ['rsv', 'flu', 'covid']
-
 /**
+ * Preserve the API's severity-sorted order.
+ * The backend already sorts by severity (highest first) so we pass through unchanged.
+ * A stable sort is applied only to handle duplicate-score ties deterministically.
  * @param {Array<{ key: string, label: string, level: string, trend: string | null }>} signals
  */
 function sortSignalsStable(signals) {
-  return [...signals].sort((a, b) => {
-    const ia = _SIGNAL_SORT_ORDER.indexOf(a.key)
-    const ib = _SIGNAL_SORT_ORDER.indexOf(b.key)
-    const sa = ia === -1 ? _SIGNAL_SORT_ORDER.length : ia
-    const sb = ib === -1 ? _SIGNAL_SORT_ORDER.length : ib
-    if (sa !== sb) return sa - sb
-    return a.key.localeCompare(b.key)
-  })
+  // No reordering by hardcoded key names — trust the ranking order from the API.
+  // This ensures future pathogens appear automatically in the correct position.
+  return [...signals]
 }
 
 /**
@@ -114,28 +100,69 @@ function normalizeSignalsFromPayload(o, str) {
         trend = sp.trend
       }
       const label = str(/** @type {Record<string, unknown>} */ (item).label, '') || defaultLabelForKey(key)
-      out.push({ key, label: label.trim() || defaultLabelForKey(key), level, trend })
+      // Preserve symptom catalog fields from API
+      const rec = /** @type {Record<string, unknown>} */ (item)
+      const symptoms = Array.isArray(rec.symptoms) ? rec.symptoms : null
+      const symptomDisclaimer = rec.symptom_disclaimer != null ? String(rec.symptom_disclaimer).trim() || null : null
+      const symptomFallback = rec.symptom_fallback_message != null ? String(rec.symptom_fallback_message).trim() || null : null
+      out.push({ key, label: label.trim() || defaultLabelForKey(key), level, trend, symptoms, symptomDisclaimer, symptomFallback })
     }
     if (out.length) return sortSignalsStable(out)
   }
 
+  // Legacy path: derive from rsv/flu/covid fields (only when signals[] is absent)
   const triples = [
-    ['rsv', 'rsv_label', o.rsv],
-    ['flu', 'flu_label', o.flu],
-    ['covid', 'covid_label', o.covid],
+    ['rsv', o.rsv],
+    ['flu', o.flu],
+    ['covid', o.covid],
   ]
   const built = []
-  for (const [key, labelField, rawLevel] of triples) {
+  for (const [key, rawLevel] of triples) {
     const lv = splitLevelTrend(str(rawLevel, 'Unknown'))
-    const lab = str(o[labelField], '') || defaultLabelForKey(key)
     built.push({
       key,
-      label: lab.trim() || defaultLabelForKey(key),
+      label: defaultLabelForKey(key),
       level: lv.level,
       trend: lv.trend,
     })
   }
   return sortSignalsStable(built)
+}
+
+/**
+ * @param {Record<string, unknown>} o
+ * @param {(v: unknown, fallback?: string) => string} str
+ */
+function normalizeRespiratoryRankingFromPayload(o, str) {
+  const raw = o.respiratory_ranking
+  if (!Array.isArray(raw) || !raw.length) return []
+  const out = []
+  for (const item of raw) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) continue
+    const rec = /** @type {Record<string, unknown>} */ (item)
+    const key = String(rec.key || '')
+      .trim()
+      .toLowerCase()
+    if (!key) continue
+    let value = rec.value
+    if (value != null && value !== '') {
+      const n = Number(value)
+      value = Number.isFinite(n) ? n : null
+    } else {
+      value = null
+    }
+    const ns = Number(rec.severity_score)
+    const severityScore = Number.isFinite(ns) ? ns : 0
+    out.push({
+      key,
+      display_name: str(rec.display_name, '') || key,
+      value,
+      severity_label: str(rec.severity_label, 'Unknown'),
+      severity_score: severityScore,
+      updated_at: str(rec.updated_at, ''),
+    })
+  }
+  return out
 }
 
 /** @param {unknown} input */
@@ -218,6 +245,7 @@ export function normalizeHomepageSummaryPayload(input) {
     o.data_quality_note = null
   }
   o.signals = normalizeSignalsFromPayload(o, str)
+  o.respiratory_ranking = normalizeRespiratoryRankingFromPayload(o, str)
   return o
 }
 

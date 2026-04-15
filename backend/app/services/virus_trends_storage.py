@@ -32,9 +32,22 @@ def vancouver_checked_at_iso() -> str:
 
 
 def _fingerprint(body: dict[str, Any]) -> tuple[Any, ...]:
+    rk = body.get("ranking")
+    if isinstance(rk, list) and rk:
+        rank_fp = tuple(
+            (
+                r.get("key"),
+                r.get("severity_label"),
+                r.get("severity_score"),
+            )
+            for r in rk
+            if isinstance(r, dict)
+        )
+    else:
+        rank_fp = tuple((v.get("key"), v.get("level")) for v in body.get("viruses") or [])
     return (
         body.get("source_report_date"),
-        tuple((v.get("key"), v.get("level")) for v in body.get("viruses") or []),
+        rank_fp,
         body.get("summary"),
         body.get("levels_method"),
     )

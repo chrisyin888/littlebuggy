@@ -36,6 +36,16 @@ def _virus_from_snapshot(row: TrendSnapshot | None) -> dict[str, str]:
     return {"rsv": row.rsv_level, "flu": row.flu_level, "covid": row.covid_level}
 
 
+def _ranking_from_snapshot(row: TrendSnapshot | None) -> list[dict[str, Any]]:
+    if row is None or not getattr(row, "respiratory_ranking_json", None):
+        return []
+    try:
+        d = json.loads(row.respiratory_ranking_json)
+        return d if isinstance(d, list) else []
+    except Exception:
+        return []
+
+
 def _env_from_snapshot(row: TrendSnapshot | None) -> dict[str, str]:
     if row is None:
         return {
@@ -150,9 +160,11 @@ def run_snapshot_job(
     if need_resp:
         assert resp is not None
         virus = resp.virus if resp.ok else _virus_from_snapshot(last)
+        ranking = resp.ranking if resp.ok else _ranking_from_snapshot(last)
     else:
         resp = _resp_bundle_from_sources_last(last)
         virus = _virus_from_snapshot(last)
+        ranking = _ranking_from_snapshot(last)
 
     if need_env:
         assert aqhi is not None and wx is not None
@@ -176,7 +188,7 @@ def run_snapshot_job(
             notes.append(f"Weather: {getattr(wx, 'error', 'fetch failed')}.")
     data_quality_note = " ".join(notes) if notes else None
 
-    built = build_summary(virus, env)
+    built = build_summary(virus, env, ranking=ranking)
     log.info("Pipeline city=%s mode=%s virus=%s env=%s", city.id, mode, virus, env)
 
     weather_display: dict[str, Any] | None
@@ -196,6 +208,7 @@ def run_snapshot_job(
         sources=sources,
         data_quality_note=data_quality_note,
         weather_display=weather_display,
+        respiratory_ranking=ranking,
     )
     log.info("Saved trend_snapshots id=%s city_id=%s", row.id, city.id)
     return row.id

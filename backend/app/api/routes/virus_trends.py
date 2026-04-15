@@ -25,14 +25,6 @@ _NO_STORE_HEADERS = {
     "Expires": "0",
 }
 
-_DEFAULT_VIRUSES: list[dict[str, str]] = [
-    {"key": "rsv", "name": "RSV", "level": "Unknown"},
-    {"key": "flu_a", "name": "Influenza A", "level": "Unknown"},
-    {"key": "flu_b", "name": "Influenza B", "level": "Unknown"},
-    {"key": "covid", "name": "COVID-19", "level": "Unknown"},
-]
-
-
 def _default_payload() -> dict[str, Any]:
     return {
         "checked_at": None,
@@ -42,7 +34,8 @@ def _default_payload() -> dict[str, Any]:
             "No successful automated refresh has been written yet. "
             "Levels appear after the scheduled job or admin refresh runs."
         ),
-        "viruses": [dict(v) for v in _DEFAULT_VIRUSES],
+        "viruses": [],
+        "ranking": [],
         "source_url": BCCDC_RESPIRATORY_URL,
     }
 
@@ -68,9 +61,10 @@ def get_virus_trends():
         body = _default_payload()
     else:
         body = raw
-        viruses = body.get("viruses")
-        if not isinstance(viruses, list) or len(viruses) == 0:
-            body = {**body, "viruses": [dict(v) for v in _DEFAULT_VIRUSES]}
+        if not isinstance(body.get("viruses"), list):
+            body = {**body, "viruses": []}
+        if not isinstance(body.get("ranking"), list):
+            body = {**body, "ranking": []}
     return JSONResponse(content=body, headers=_NO_STORE_HEADERS)
 
 

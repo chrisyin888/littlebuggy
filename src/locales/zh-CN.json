@@ -362,6 +362,8 @@
       "signalsOverflowSummary": "另有 {count} 项呼吸道信号",
       "signalsOverflowTrendNote": "下方「本周快照」中还有 {count} 项。",
       "dashboardRowViruses": "呼吸道相关信号",
+      "respiratoryRankingEyebrow": "BC 废水信号完整排行",
+      "respiratoryRankingHint": "公共数据中出现的指标按强度排序。上方卡片仍突出展示 RSV、流感和新冠，便于家长快速浏览。",
       "dashboardRowEnv": "天气、空气与户外感受",
       "dashboardFallbackHeadline": "当前为温和示例快照 —— 运行每周更新脚本即可显示实时公开数据。",
       "sourcesFooterLabel": "数据来源",

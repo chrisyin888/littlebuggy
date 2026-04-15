@@ -29,9 +29,11 @@ DEFAULT_WX_NAME = "Open-Meteo (forecast API, current)"
 
 
 def _failed_respiratory(exc: str) -> Any:
+    # virus dict stays minimal; callers use the ranking (empty here) for dynamic content
     return SimpleNamespace(
         ok=False,
         virus={"rsv": "Unknown", "flu": "Unknown", "covid": "Unknown"},
+        ranking=[],
         source_name=DEFAULT_RESP_NAME,
         source_url=PHAC_INFOBASE_API_LANDING,
         source_updated_label=None,
@@ -159,6 +161,7 @@ def build_emergency_payload(*, city: CityProfile | None = None) -> dict[str, Any
         "updated_at": now.isoformat().replace("+00:00", "Z"),
         "sources": build_sources_bundle(resp, aqhi, wx),
         "data_quality_note": "Snapshot build failed—re-run the weekly script when you can.",
+        "respiratory_ranking": [],
     }
 
 
@@ -195,13 +198,19 @@ def build_homepage_summary_dict(*, city: CityProfile | None = None) -> tuple[dic
     data_quality_note = " ".join(notes) if notes else None
 
     try:
-        built = build_summary(virus, env)
+        built = build_summary(virus, env, ranking=respiratory_ranking)
     except Exception as e:
         log.exception("build_summary failed: %s", e)
         warnings.append(f"build_summary: {e}")
         built = {"outdoor_feel": "Unavailable", "summary_text": "We couldn’t build a full summary this run."}
 
     now = datetime.now(timezone.utc).replace(microsecond=0)
+    respiratory_ranking: list[dict[str, Any]] = []
+    if resp is not None and getattr(resp, "ok", False):
+        rk = getattr(resp, "ranking", None)
+        if isinstance(rk, list):
+            respiratory_ranking = rk
+
     payload = {
         "city_id": city.id,
         "region": city.name,
@@ -216,6 +225,7 @@ def build_homepage_summary_dict(*, city: CityProfile | None = None) -> tuple[dic
         "updated_at": now.isoformat().replace("+00:00", "Z"),
         "sources": sources,
         "data_quality_note": data_quality_note,
+        "respiratory_ranking": respiratory_ranking,
     }
     return payload, warnings
 

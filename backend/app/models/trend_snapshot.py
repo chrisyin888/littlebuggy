@@ -34,6 +34,8 @@ class TrendSnapshot(Base):
 
     sources_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     data_quality_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # JSON array: wastewater ``ranking`` entries (dynamic measures); see ``RespiratoryRankingEntry``.
+    respiratory_ranking_json: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

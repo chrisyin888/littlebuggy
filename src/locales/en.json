@@ -364,6 +364,8 @@
       "signalsOverflowTrendNote_one": "Plus {count} more respiratory signal in the weekly snapshot below.",
       "signalsOverflowTrendNote_other": "Plus {count} more respiratory signals in the weekly snapshot below.",
       "dashboardRowViruses": "Respiratory activity",
+      "respiratoryRankingEyebrow": "Full BC wastewater ranking",
+      "respiratoryRankingHint": "All measures in the public BC feed, sorted strongest first. Hero cards above still highlight RSV, flu, and COVID for families.",
       "dashboardRowEnv": "Weather, air & outdoor comfort",
       "dashboardFallbackHeadline": "Friendly example snapshot — run the weekly update to show live public data here.",
       "sourcesFooterLabel": "Sources",
