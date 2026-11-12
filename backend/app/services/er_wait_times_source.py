@@ -3,6 +3,15 @@ Live BC Lower Mainland ER wait times from the public edwaittimes.ca dashboard.
 
 Primary source: JSON API (stable for parsing). Fallback: legacy HTML page (no-JS view).
 Adjust EDWAITTIMES_* constants if the upstream layout changes.
+
+Display policy: we ingest EVERY facility the source publishes (all ``ed`` rows as
+hospitals, all ``upcc`` rows as centres). Facilities the source is not currently
+publishing a wait for (``showWaitTimes`` false / no ``waitTimeMinutes``) are kept
+and flagged ``wait_status="not_published"`` with an empty ``wait_text`` — the
+frontend lists them with an honest "not published" label instead of hiding them.
+TARGET_* below are no longer whitelists: they only provide canonical keys,
+curated display names/cities, fallback coordinates, and a familiar sort order
+(canonical facilities first, then the rest in upstream order).
 """
 
 from __future__ import annotations
@@ -29,7 +38,9 @@ EDWAITTIMES_LEGACY_URL = "https://www.edwaittimes.ca/legacy"
 REQUEST_TIMEOUT_S = 18.0
 VANCOUVER_TZ = ZoneInfo("America/Vancouver")
 
-# Canonical keys and display metadata (order preserved in API responses).
+# Canonical keys and display metadata for our longest-tracked hospitals. NOT a
+# whitelist — every upstream ``ed`` row is returned; these only pin the key,
+# display name/city, and lead the ordering for facilities we already know.
 TARGET_HOSPITALS: tuple[dict[str, str], ...] = (
     {"key": "delta", "match_name": "Delta Hospital", "name": "Delta Hospital", "city": "Delta"},
     {"key": "richmond", "match_name": "Richmond Hospital", "name": "Richmond Hospital", "city": "Richmond"},
@@ -54,7 +65,8 @@ TARGET_HOSPITALS: tuple[dict[str, str], ...] = (
     },
 )
 
-# Urgent and Primary Care Centres (type ``upcc`` in the same JSON API).
+# Urgent and Primary Care Centres (type ``upcc`` in the same JSON API). Same role
+# as TARGET_HOSPITALS: canonical metadata + ordering, not a whitelist.
 # ``address`` lines are for parent-facing UI (VCH / Fraser Health public listings; verify if sites move).
 TARGET_UPCC_CENTRES: tuple[dict[str, str], ...] = (
     {
@@ -232,16 +244,37 @@ def _normalize_hospital_name(name: str) -> str:
     return " ".join(name.split())
 
 
-def _wait_text_is_missing(text: str | None) -> bool:
-    """True when upstream gave no usable wait (we still use 'Unavailable' internally until filtering)."""
-    if text is None:
-        return True
-    s = str(text).strip().lower()
-    return not s or s == "unavailable"
+def _city_from_address(address: str) -> str:
+    """
+    Best-effort city from a Canadian street address, e.g.
+    "920 West 10th Ave, Vancouver, BC, V5Z 1M9" -> "Vancouver";
+    "5800 Mountain View Blvd, Delta BC, V4K 3V6" -> "Delta".
+    Returns "" when the shape is not recognised.
+    """
+    if not address or not isinstance(address, str):
+        return ""
+    parts = [p.strip() for p in address.split(",") if p.strip()]
+    for i, part in enumerate(parts):
+        if re.match(r"BC\b", part, re.I):
+            # Province (+ postal) segment: city is the previous segment,
+            # unless that segment itself carries a trailing " BC".
+            if i == 0:
+                return ""
+            prev = parts[i - 1]
+            if re.search(r"\sBC$", prev, re.I):
+                return re.sub(r"\sBC$", "", prev, flags=re.I).strip()
+            return prev
+        if re.search(r"\sBC$", part, re.I):
+            return re.sub(r"\sBC$", "", part, flags=re.I).strip()
+    return ""
 
 
-def _filter_rows_with_waits(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    return [r for r in rows if not _wait_text_is_missing(r.get("wait_text"))]
+def _key_from_upstream(rec: dict[str, Any], name: str) -> str:
+    """Stable row key for a non-canonical facility: upstream slug, else slugified name."""
+    slug = rec.get("slug")
+    base = slug if isinstance(slug, str) and slug.strip() else name
+    key = re.sub(r"[^a-z0-9]+", "_", str(base).lower()).strip("_")
+    return key or "facility"
 
 
 def minutes_to_wait_text(total_minutes: int) -> str:
@@ -297,61 +330,117 @@ def _wait_minutes_from_api_entry(entry: dict[str, Any]) -> int | None:
     return n
 
 
-def _build_from_json_list(rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], datetime | None]:
-    by_name: dict[str, dict[str, Any]] = {}
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        n = row.get("name")
-        if isinstance(n, str) and n.strip():
-            by_name[_normalize_hospital_name(n)] = row
+def _build_rows_from_json_list(
+    rows: list[dict[str, Any]],
+    *,
+    kind: str,
+    targets: tuple[dict[str, str], ...],
+) -> tuple[list[dict[str, Any]], datetime | None]:
+    """
+    Ingest EVERY upstream row of one kind (``kind`` = "ed" hospitals or "upcc"
+    centres). Canonical targets (matched by name) keep their curated key, name
+    and city and sort first; all other published facilities follow in upstream
+    order with source name, address-parsed city, and source coordinates.
 
-    hospitals: list[dict[str, Any]] = []
+    Each row gets ``wait_status``: "live" when the source is publishing a wait
+    (``wait_text`` formatted from it), else "not_published" with an empty
+    ``wait_text`` — never a fabricated number.
+    """
+    meta_by_norm = {_normalize_hospital_name(m["match_name"]): m for m in targets}
+    canonical_rank = {m["key"]: i for i, m in enumerate(targets)}
+
+    picked: list[tuple[int, int, dict[str, Any]]] = []
+    seen_names: set[str] = set()
+    used_keys: set[str] = set()
     latest: datetime | None = None
 
-    for meta in TARGET_HOSPITALS:
-        match = meta["match_name"]
-        rec = by_name.get(_normalize_hospital_name(match))
-        wait_text = "Unavailable"
-        raw_before_format: Any = None
-        created_iso: str | None = None
-        slug: str | None = None
-        up_id: str | None = None
-        if rec is not None:
-            wt = rec.get("waitTime") if isinstance(rec.get("waitTime"), dict) else None
-            if wt:
-                created_iso = wt.get("createdAt") if isinstance(wt.get("createdAt"), str) else None
-                raw_before_format = wt.get("waitTimeMinutes")
-            mins = _wait_minutes_from_api_entry(rec)
-            if mins is not None:
-                wait_text = minutes_to_wait_text(mins)
-            slug = rec.get("slug") if isinstance(rec.get("slug"), str) else None
-            up_id = rec.get("id") if isinstance(rec.get("id"), str) else None
-            if wt:
-                parsed = _parse_iso_to_vancouver_naive(wt.get("createdAt"))
-                if parsed and (latest is None or parsed > latest):
-                    latest = parsed
+    for pos, rec in enumerate(rows):
+        if not isinstance(rec, dict):
+            continue
+        rtype = rec.get("type")
+        if kind == "upcc":
+            if rtype != "upcc":
+                continue
+        elif rtype == "upcc":
+            continue
+        status = rec.get("status")
+        if isinstance(status, str) and status and status != "published":
+            continue
+        name_raw = rec.get("name")
+        if not isinstance(name_raw, str) or not name_raw.strip():
+            continue
+        norm = _normalize_hospital_name(name_raw)
+        if norm in seen_names:
+            continue
+        seen_names.add(norm)
 
-        dbg: dict[str, Any] = {
-            "raw_before_format": raw_before_format,
-            "raw_before_format_kind": "waitTimeMinutes (JSON API)",
-            "source_timestamp_raw": created_iso,
-            "upstream_slug": slug,
-            "upstream_id": up_id,
-        }
+        meta = meta_by_norm.get(norm)
+        address = rec.get("address") if isinstance(rec.get("address"), str) else ""
+
+        wt = rec.get("waitTime") if isinstance(rec.get("waitTime"), dict) else None
+        created_iso = wt.get("createdAt") if wt and isinstance(wt.get("createdAt"), str) else None
+        if wt:
+            parsed = _parse_iso_to_vancouver_naive(wt.get("createdAt"))
+            if parsed and (latest is None or parsed > latest):
+                latest = parsed
+
+        mins = _wait_minutes_from_api_entry(rec)
+        if mins is not None:
+            wait_text = minutes_to_wait_text(mins)
+            wait_status = "live"
+        else:
+            wait_text = ""
+            wait_status = "not_published"
+
+        # Coordinates: source values win; canonical constant table is the fallback.
+        coords: dict[str, float] = {}
+        lat, lng = rec.get("latitude"), rec.get("longitude")
+        if isinstance(lat, (int, float)) and isinstance(lng, (int, float)):
+            coords = {"lat": float(lat), "lng": float(lng)}
+        elif meta is not None:
+            coords = _coords_for(meta["key"])
+
+        if meta is not None:
+            key = meta["key"]
+            bucket, rank = 0, canonical_rank[key]
+        else:
+            key = _key_from_upstream(rec, name_raw)
+            bucket, rank = 1, pos
+        base_key = key
+        suffix = 2
+        while key in used_keys:
+            key = f"{base_key}_{suffix}"
+            suffix += 1
+        used_keys.add(key)
 
         row_out: dict[str, Any] = {
-            "key": meta["key"],
-            "name": meta["name"],
-            "city": meta["city"],
+            "key": key,
+            "name": meta["name"] if meta is not None else name_raw.strip(),
+            "city": meta["city"] if meta is not None else _city_from_address(address),
+            "address": address or (meta.get("address", "") if meta is not None else ""),
             "wait_text": wait_text,
-            **_coords_for(meta["key"]),
+            "wait_status": wait_status,
+            "phone": rec.get("phone") if isinstance(rec.get("phone"), str) else "",
+            "website": rec.get("website") if isinstance(rec.get("website"), str) else "",
+            **coords,
         }
         if _WAIT_TIMES_DEBUG:
-            row_out["_debug"] = dbg
-        hospitals.append(row_out)
+            row_out["_debug"] = {
+                "raw_before_format": wt.get("waitTimeMinutes") if wt else None,
+                "raw_before_format_kind": f"waitTimeMinutes (JSON API, {kind})",
+                "source_timestamp_raw": created_iso,
+                "upstream_slug": rec.get("slug") if isinstance(rec.get("slug"), str) else None,
+                "upstream_id": rec.get("id") if isinstance(rec.get("id"), str) else None,
+            }
+        picked.append((bucket, rank, row_out))
 
-    return hospitals, latest
+    picked.sort(key=lambda t: (t[0], t[1]))
+    return [r for _, _, r in picked], latest
+
+
+def _build_from_json_list(rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], datetime | None]:
+    """All upstream emergency departments (type ``ed``), canonical six first."""
+    return _build_rows_from_json_list(rows, kind="ed", targets=TARGET_HOSPITALS)
 
 
 def _legacy_parse_card(h3: Any) -> tuple[str, str | None, str | None, str | None]:
@@ -428,7 +517,11 @@ def _build_from_legacy_html(html: str) -> tuple[list[dict[str, Any]], datetime |
             "key": meta["key"],
             "name": meta["name"],
             "city": meta["city"],
-            "wait_text": wait_text,
+            "address": "",
+            "wait_text": "" if wait_text == "Unavailable" else wait_text,
+            "wait_status": "not_published" if wait_text == "Unavailable" else "live",
+            "phone": "",
+            "website": "",
             **_coords_for(meta["key"]),
         }
         if _WAIT_TIMES_DEBUG:
@@ -439,64 +532,8 @@ def _build_from_legacy_html(html: str) -> tuple[list[dict[str, Any]], datetime |
 
 
 def _build_upcc_from_json_list(rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], datetime | None]:
-    """Match published UPCC rows from the same API list as emergency departments."""
-    by_name: dict[str, dict[str, Any]] = {}
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        if row.get("type") != "upcc":
-            continue
-        n = row.get("name")
-        if isinstance(n, str) and n.strip():
-            by_name[_normalize_hospital_name(n)] = row
-
-    centres: list[dict[str, Any]] = []
-    latest: datetime | None = None
-
-    for meta in TARGET_UPCC_CENTRES:
-        match = meta["match_name"]
-        rec = by_name.get(_normalize_hospital_name(match))
-        wait_text = "Unavailable"
-        raw_before_format: Any = None
-        created_iso: str | None = None
-        slug: str | None = None
-        up_id: str | None = None
-        if rec is not None:
-            wt = rec.get("waitTime") if isinstance(rec.get("waitTime"), dict) else None
-            if wt:
-                created_iso = wt.get("createdAt") if isinstance(wt.get("createdAt"), str) else None
-                raw_before_format = wt.get("waitTimeMinutes")
-            mins = _wait_minutes_from_api_entry(rec)
-            if mins is not None:
-                wait_text = minutes_to_wait_text(mins)
-            slug = rec.get("slug") if isinstance(rec.get("slug"), str) else None
-            up_id = rec.get("id") if isinstance(rec.get("id"), str) else None
-            if wt:
-                parsed = _parse_iso_to_vancouver_naive(wt.get("createdAt"))
-                if parsed and (latest is None or parsed > latest):
-                    latest = parsed
-
-        dbg: dict[str, Any] = {
-            "raw_before_format": raw_before_format,
-            "raw_before_format_kind": "waitTimeMinutes (JSON API, UPCC)",
-            "source_timestamp_raw": created_iso,
-            "upstream_slug": slug,
-            "upstream_id": up_id,
-        }
-
-        row_out: dict[str, Any] = {
-            "key": meta["key"],
-            "name": meta["name"],
-            "city": meta["city"],
-            "address": meta.get("address", ""),
-            "wait_text": wait_text,
-            **_coords_for(meta["key"]),
-        }
-        if _WAIT_TIMES_DEBUG:
-            row_out["_debug"] = dbg
-        centres.append(row_out)
-
-    return centres, latest
+    """All upstream Urgent and Primary Care Centres (type ``upcc``) from the same API list."""
+    return _build_rows_from_json_list(rows, kind="upcc", targets=TARGET_UPCC_CENTRES)
 
 
 def _latest_of(a: datetime | None, b: datetime | None) -> datetime | None:
@@ -513,9 +550,13 @@ def fetch_er_wait_times_payload() -> dict[str, Any]:
 
     Returns:
       checked_at: when this server finished reading the source (Vancouver local, naive ISO).
-      source_updated_at: newest timestamp from the upstream payload for our hospitals, or null.
-      hospitals: list of hospital rows.
-      upcc_centres: list of Urgent and Primary Care Centre rows (JSON mode only; empty when using legacy HTML).
+      source_updated_at: newest timestamp from the upstream payload, or null.
+      hospitals: EVERY emergency department the source lists. Rows carry
+        ``wait_status`` — "live" with a formatted ``wait_text``, or
+        "not_published" with an empty ``wait_text`` when the source is not
+        publishing a wait for that facility right now.
+      upcc_centres: same contract for Urgent and Primary Care Centres
+        (JSON mode only; empty when using the legacy HTML fallback).
     """
     headers = {
         "User-Agent": (
@@ -553,14 +594,18 @@ def fetch_er_wait_times_payload() -> dict[str, Any]:
             upcc_centres, upcc_latest = _build_upcc_from_json_list(data)
             del data  # provincial list can be large; release before optional legacy HTML fetch
             source_latest = _latest_of(source_latest, upcc_latest)
-            fetched_url_used = json_url
-            parse_mode = "json"
+            if hospitals:
+                # JSON is the source of truth even when it currently publishes
+                # few (or zero) live waits — rows say "not_published" honestly
+                # instead of us falling back or erroring.
+                fetched_url_used = json_url
+                parse_mode = "json"
+            else:
+                hospitals = None
 
-        any_real_wait = bool(
-            hospitals and any(h["wait_text"] != "Unavailable" for h in hospitals)
-        )
-
-        if not any_real_wait:
+        if not hospitals:
+            # JSON fetch failed or yielded no facilities: emergency fallback to
+            # the legacy no-JS page (canonical hospitals only, no UPCC rows).
             try:
                 lr = client.get(legacy_url)
                 lr.raise_for_status()
@@ -574,8 +619,14 @@ def fetch_er_wait_times_payload() -> dict[str, Any]:
         if not hospitals:
             raise RuntimeError("empty hospital list")
 
-        if not any(h["wait_text"] != "Unavailable" for h in hospitals):
-            raise RuntimeError("no wait times parsed")
+        live_count = sum(
+            1 for r in (*hospitals, *upcc_centres) if r.get("wait_status") == "live"
+        )
+        if live_count == 0:
+            logger.warning(
+                "wait-times: source lists %d facilities but publishes no live waits right now",
+                len(hospitals) + len(upcc_centres),
+            )
 
         checked = datetime.now(VANCOUVER_TZ).replace(tzinfo=None)
         checked_s = _format_ts_vancouver_naive(checked)
@@ -611,14 +662,11 @@ def fetch_er_wait_times_payload() -> dict[str, Any]:
                     d.get("source_timestamp_raw"),
                 )
 
-        hospitals_out = _filter_rows_with_waits(hospitals)
-        upcc_out = _filter_rows_with_waits(upcc_centres)
-
         return {
             "checked_at": checked_s,
             "source_updated_at": source_s,
-            "hospitals": hospitals_out,
-            "upcc_centres": upcc_out,
+            "hospitals": hospitals,
+            "upcc_centres": upcc_centres,
             "debug": {
                 "temporary": True,
                 "fetched_url": fetched_url_used,

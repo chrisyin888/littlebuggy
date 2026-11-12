@@ -1,7 +1,11 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useErWaitTimes, waitSeverityFromText } from '../composables/useErWaitTimes.js'
+import {
+  useErWaitTimes,
+  waitSeverityFromText,
+  hasPublishedWait,
+} from '../composables/useErWaitTimes.js'
 import { localeToDateLocale } from '../utils/localeDisplay.js'
 import FastestNearYou from './FastestNearYou.vue'
 
@@ -10,14 +14,16 @@ const { payload, loading, refreshing, userRefreshInFlight, error, loadWaitTimes 
 
 const showWaitDebug = import.meta.env.DEV
 
-function hasPostedWait(row) {
-  const s = String(row?.wait_text ?? '')
-    .trim()
-    .toLowerCase()
-  return s && s !== 'unavailable'
-}
+// Full display: every facility the source lists is shown. Rows whose wait the
+// source is not publishing right now render an honest "not published" state
+// (see hasPublishedWait) instead of being hidden.
+const hospitals = computed(() => payload.value?.hospitals ?? [])
 
-const hospitals = computed(() => (payload.value?.hospitals ?? []).filter(hasPostedWait))
+const isLive = (row) => hasPublishedWait(row)
+
+function telHref(phone) {
+  return `tel:${String(phone || '').replace(/[^0-9+]/g, '')}`
+}
 
 function formatTsLabel(raw) {
   if (!raw || typeof raw !== 'string') return ''
@@ -117,15 +123,28 @@ function severityClass(w) {
           >
             <div class="er-wait-card__top">
               <h3 class="er-wait-card__name">{{ h.name }}</h3>
-              <span class="er-wait-card__tag" :class="severityClass(h)">
+              <span v-if="isLive(h)" class="er-wait-card__tag" :class="severityClass(h)">
                 {{ t(`waitTimes.severity.${waitSeverityFromText(h.wait_text) || 'unknown'}`) }}
               </span>
             </div>
             <p class="er-wait-card__city">{{ h.city }}</p>
-            <p class="er-wait-card__wait" aria-live="polite">
+            <p v-if="isLive(h)" class="er-wait-card__wait" aria-live="polite">
               <span class="er-wait-card__wait-label">{{ t('waitTimes.estimatedWait') }}</span>
               <span class="er-wait-card__wait-value">{{ h.wait_text }}</span>
             </p>
+            <div v-else class="er-wait-card__not-published">
+              <p class="er-wait-card__not-published-text">{{ t('waitTimes.notPublished') }}</p>
+              <p v-if="h.phone || h.website" class="er-wait-card__contact">
+                <a v-if="h.phone" :href="telHref(h.phone)">{{ h.phone }}</a>
+                <a
+                  v-if="h.website"
+                  :href="h.website"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >{{ t('waitTimes.websiteLabel') }}</a
+                >
+              </p>
+            </div>
             <p v-if="showWaitDebug && h._debug" class="er-wait-card__debug" aria-label="Temporary debug">
               <span class="er-wait-card__debug-line">raw: {{ debugRawDisplay(h._debug) }}</span>
               <span class="er-wait-card__debug-line">source ts: {{ debugSourceTs(h._debug) }}</span>
@@ -378,6 +397,34 @@ function severityClass(w) {
   font-weight: 700;
   color: var(--color-teal-dark);
   line-height: 1.1;
+}
+
+.er-wait-card__not-published {
+  margin: 0.25rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.er-wait-card__not-published-text {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--color-ink-soft);
+}
+
+.er-wait-card__contact {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.er-wait-card__contact a {
+  color: var(--color-teal-dark);
 }
 
 .er-wait-card__debug {

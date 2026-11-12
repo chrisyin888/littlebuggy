@@ -1,7 +1,11 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useErWaitTimes, waitSeverityFromText } from '../composables/useErWaitTimes.js'
+import {
+  useErWaitTimes,
+  waitSeverityFromText,
+  hasPublishedWait,
+} from '../composables/useErWaitTimes.js'
 import { localeToDateLocale } from '../utils/localeDisplay.js'
 
 const { t, locale } = useI18n()
@@ -9,14 +13,15 @@ const { payload, loading, refreshing, userRefreshInFlight, error, loadWaitTimes 
 
 const showWaitDebug = import.meta.env.DEV
 
-function hasPostedWait(row) {
-  const s = String(row?.wait_text ?? '')
-    .trim()
-    .toLowerCase()
-  return s && s !== 'unavailable'
-}
+// Full display, same policy as the ER section: every centre the source lists
+// is shown; unpublished waits render an honest "not published" state.
+const centres = computed(() => payload.value?.upcc_centres ?? [])
 
-const centres = computed(() => (payload.value?.upcc_centres ?? []).filter(hasPostedWait))
+const isLive = (row) => hasPublishedWait(row)
+
+function telHref(phone) {
+  return `tel:${String(phone || '').replace(/[^0-9+]/g, '')}`
+}
 
 const legacyNoUpcc = computed(() => {
   const mode = payload.value?.debug?.parse_mode
@@ -123,16 +128,29 @@ function severityClass(w) {
           >
             <div class="upcc-wait-card__top">
               <h3 class="upcc-wait-card__name">{{ c.name }}</h3>
-              <span class="upcc-wait-card__tag" :class="severityClass(c)">
+              <span v-if="isLive(c)" class="upcc-wait-card__tag" :class="severityClass(c)">
                 {{ t(`waitTimes.severity.${waitSeverityFromText(c.wait_text) || 'unknown'}`) }}
               </span>
             </div>
             <p class="upcc-wait-card__city">{{ c.city }}</p>
             <p v-if="c.address" class="upcc-wait-card__address">{{ c.address }}</p>
-            <p class="upcc-wait-card__wait" aria-live="polite">
+            <p v-if="isLive(c)" class="upcc-wait-card__wait" aria-live="polite">
               <span class="upcc-wait-card__wait-label">{{ t('upccWaitTimes.estimatedWait') }}</span>
               <span class="upcc-wait-card__wait-value">{{ c.wait_text }}</span>
             </p>
+            <div v-else class="upcc-wait-card__not-published">
+              <p class="upcc-wait-card__not-published-text">{{ t('waitTimes.notPublished') }}</p>
+              <p v-if="c.phone || c.website" class="upcc-wait-card__contact">
+                <a v-if="c.phone" :href="telHref(c.phone)">{{ c.phone }}</a>
+                <a
+                  v-if="c.website"
+                  :href="c.website"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >{{ t('waitTimes.websiteLabel') }}</a
+                >
+              </p>
+            </div>
             <p v-if="showWaitDebug && c._debug" class="upcc-wait-card__debug" aria-label="Temporary debug">
               <span class="upcc-wait-card__debug-line">raw: {{ debugRawDisplay(c._debug) }}</span>
               <span class="upcc-wait-card__debug-line">source ts: {{ debugSourceTs(c._debug) }}</span>
@@ -402,6 +420,34 @@ function severityClass(w) {
   font-weight: 700;
   color: #0f766e;
   line-height: 1.1;
+}
+
+.upcc-wait-card__not-published {
+  margin: 0.25rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.upcc-wait-card__not-published-text {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--color-ink-soft);
+}
+
+.upcc-wait-card__contact {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.upcc-wait-card__contact a {
+  color: #0f766e;
 }
 
 .upcc-wait-card__debug {

@@ -1,7 +1,11 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useErWaitTimes, waitMinutesFromText } from '../composables/useErWaitTimes.js'
+import {
+  useErWaitTimes,
+  waitMinutesFromText,
+  hasPublishedWait,
+} from '../composables/useErWaitTimes.js'
 
 const { t } = useI18n()
 const { payload } = useErWaitTimes()
@@ -70,7 +74,37 @@ const ranked = computed(() => {
     .slice(0, 3)
 })
 
+// Facilities the source lists but is not publishing a wait for right now.
+// They can't join the total-time ranking, so once an origin is chosen they
+// are shown separately, nearest first — a parent may still prefer the
+// closest door and call ahead.
+const facilitiesWithoutWaits = computed(() => {
+  const rows = []
+  const push = (r, kind) => {
+    if (hasPublishedWait(r)) return
+    if (typeof r?.lat !== 'number' || typeof r?.lng !== 'number') return
+    rows.push({ ...r, kind })
+  }
+  for (const h of payload.value?.hospitals ?? []) push(h, 'er')
+  for (const c of payload.value?.upcc_centres ?? []) push(c, 'upcc')
+  return rows
+})
+
+const closestUnpublished = computed(() => {
+  if (!origin.value) return []
+  const o = origin.value
+  return facilitiesWithoutWaits.value
+    .map((f) => {
+      const roadKm = haversineKm(o.lat, o.lng, f.lat, f.lng) * ROAD_FACTOR
+      const driveMin = Math.round((roadKm / AVG_SPEED_KMH) * 60)
+      return { ...f, roadKm, driveMin }
+    })
+    .sort((a, b) => a.driveMin - b.driveMin)
+    .slice(0, 3)
+})
+
 const hasRankable = computed(() => facilitiesWithWaits.value.length > 0)
+const hasClosest = computed(() => facilitiesWithoutWaits.value.length > 0)
 
 function formatDuration(totalMin) {
   const m = Math.max(0, Math.round(totalMin))
@@ -114,7 +148,7 @@ function resetOrigin() {
 </script>
 
 <template>
-  <div v-if="hasRankable" class="fastest">
+  <div v-if="hasRankable || hasClosest" class="fastest">
     <div class="fastest__head">
       <h3 class="fastest__title">⚡ {{ t('waitTimes.fastest.title') }}</h3>
       <p class="fastest__lead">{{ t('waitTimes.fastest.lead') }}</p>
@@ -148,7 +182,7 @@ function resetOrigin() {
         </button>
       </p>
 
-      <ol class="fastest__list">
+      <ol v-if="ranked.length" class="fastest__list">
         <li
           v-for="(f, i) in ranked"
           :key="f.key"
@@ -170,6 +204,26 @@ function resetOrigin() {
           </p>
         </li>
       </ol>
+
+      <div v-if="closestUnpublished.length" class="fastest__closest">
+        <h4 class="fastest__closest-title">{{ t('waitTimes.fastest.closestHeading') }}</h4>
+        <ol class="fastest__list">
+          <li
+            v-for="f in closestUnpublished"
+            :key="`closest-${f.key}`"
+            class="fastest__card"
+          >
+            <div class="fastest__card-top">
+              <span class="fastest__name">{{ f.name }}</span>
+            </div>
+            <p class="fastest__meta">{{ f.city }}<span v-if="f.kind === 'upcc'"> · UPCC</span></p>
+            <p class="fastest__numbers">
+              <span>{{ t('waitTimes.fastest.driveApprox', { km: f.roadKm.toFixed(1), time: formatDuration(f.driveMin) }) }}</span>
+            </p>
+            <p class="fastest__closest-note">{{ t('waitTimes.fastest.waitNotPublished') }}</p>
+          </li>
+        </ol>
+      </div>
 
       <p class="fastest__estimate-note">{{ t('waitTimes.fastest.estimateNote') }}</p>
     </template>
@@ -363,6 +417,25 @@ function resetOrigin() {
   font-size: 1.15rem;
   font-weight: 700;
   color: var(--color-teal-dark);
+}
+
+.fastest__closest {
+  margin-top: 1rem;
+}
+
+.fastest__closest-title {
+  margin: 0 0 0.55rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.fastest__closest-note {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-ink-soft);
 }
 
 .fastest__estimate-note {

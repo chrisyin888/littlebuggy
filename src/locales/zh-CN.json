@@ -218,6 +218,8 @@
     "nearTimestampsNote": "若医院官方尚未发布新数据，数字可能与上次相同。",
     "refreshHonestyNote": "每次刷新都会重新拉取，但若来源尚未更新，等候分钟数也可能不变。",
     "nonePosted": "本次拉取里跟踪的医院都还没有新的等候数字——可稍后再试或点刷新。",
+    "notPublished": "目前未公布等候时间",
+    "websiteLabel": "官网",
     "notAvailableForCity": "该城市暂未提供实时急诊等候数据，我们正在努力接入更多城市。",
     "disclaimer": "等候时间仅为估算，可能随时变化。就诊顺序按病情紧急程度，而非先到先得。危及生命请拨打 911。",
     "sourceNote": "数据实时来自卑诗省公开的急诊等候时间网站（edwaittimes.ca），本站仅作展示。",
@@ -244,7 +246,9 @@
       "waitApprox": "等候 {time}",
       "totalApprox": "总计 ≈ {time}",
       "estimateNote": "开车时间只是粗略估算（按直线距离加绕路系数、约 35 公里/小时计算），实际以路况为准；等候时间为上方实时公布的估算。你的位置只在你的浏览器里使用，不会发送给我们。",
-      "locationUnavailable": "没能获取你的位置（位置只在你的浏览器里使用，不会发送给我们）——改选你的城市吧。"
+      "locationUnavailable": "没能获取你的位置（位置只在你的浏览器里使用，不会发送给我们）——改选你的城市吧。",
+      "closestHeading": "最近的选择 — 未公布等候时间",
+      "waitNotPublished": "未公布等候时间"
     }
   },
   "upccWaitTimes": {
@@ -355,6 +359,10 @@
       "lead": "打给 June（本站电话小助手），免费、24 小时。她可以告诉你这周在流行哪些病毒、一般有哪些症状，以及从你所在的位置去哪家急诊或紧急护理中心通常更合适。",
       "ctaLabel": "打给 June",
       "fineprint": "仅提供一般信息，不构成医疗建议。孩子健康方面的咨询请拨打 HealthLink BC 8-1-1；紧急情况请拨打 9-1-1。"
+    },
+    "board": {
+      "title": "家长留言板",
+      "notice": "仅提供一般信息，不构成医疗建议。如需健康咨询请拨打 HealthLink BC 8-1-1；紧急情况请拨打 9-1-1。"
     },
     "snapshotSection": {
       "title": "本周快照",

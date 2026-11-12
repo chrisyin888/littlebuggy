@@ -181,6 +181,19 @@ export function waitMinutesFromText(waitText) {
 }
 
 /**
+ * True when the source is currently publishing a wait for this facility.
+ * Vancouver rows carry an explicit `wait_status` from the backend
+ * ("live" | "not_published"); other cities' payloads predate that field,
+ * so fall back to whether wait_text parses to minutes.
+ */
+export function hasPublishedWait(row) {
+  if (row && typeof row.wait_status === 'string' && row.wait_status) {
+    return row.wait_status === 'live'
+  }
+  return waitMinutesFromText(row?.wait_text) !== null
+}
+
+/**
  * Map wait_text like "2h 45m" or "2h 15m–3h 51m" to severity for UI accent. "Unavailable" → null.
  */
 export function waitSeverityFromText(waitText) {

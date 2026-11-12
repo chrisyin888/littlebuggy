@@ -218,6 +218,8 @@
     "nearTimestampsNote": "Numbers may stay the same if the hospital source has not published a new update yet.",
     "refreshHonestyNote": "Wait times may not change on every refresh if the source has not posted a newer update — a fresh check can still show the same minutes.",
     "nonePosted": "No posted wait times for the hospitals we track in the latest pull—try refreshing in a moment.",
+    "notPublished": "Wait times not published right now",
+    "websiteLabel": "Website",
     "notAvailableForCity": "Live ER wait times are not yet available for this city. We're working on adding more cities.",
     "disclaimer": "Wait times are estimates only and may change quickly. Patients are seen based on urgency, not arrival order. Call 911 for life-threatening emergencies.",
     "sourceNote": "Data is fetched live from the public BC emergency wait times service (edwaittimes.ca) and shown here for convenience.",
@@ -244,7 +246,9 @@
       "waitApprox": "{time} wait",
       "totalApprox": "Total ≈ {time}",
       "estimateNote": "Drive times are rough estimates only (straight-line distance adjusted for roads at ~35 km/h) — traffic will differ. Waits are the live posted estimates above. Your location is used only in your browser and is never sent to us.",
-      "locationUnavailable": "We couldn't get your location (it's never sent to us, only used in your browser) — pick your city instead."
+      "locationUnavailable": "We couldn't get your location (it's never sent to us, only used in your browser) — pick your city instead.",
+      "closestHeading": "Closest options — wait not published",
+      "waitNotPublished": "Wait not published"
     }
   },
   "upccWaitTimes": {
@@ -355,6 +359,10 @@
       "lead": "Call June, our phone assistant — free, 24/7. She can tell you which viruses are circulating this week, common symptoms, and which ER or urgent care spot usually makes sense from where you are.",
       "ctaLabel": "Call June",
       "fineprint": "General information only — not medical advice. For health advice about your child, call HealthLink BC at 8-1-1; for emergencies call 9-1-1."
+    },
+    "board": {
+      "title": "Parents' board — ask, share, swap notes",
+      "notice": "General information only — not medical advice. For health advice call HealthLink BC 8-1-1; emergencies 9-1-1."
     },
     "snapshotSection": {
       "title": "This week’s snapshot",
