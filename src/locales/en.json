@@ -350,6 +350,12 @@
       "sourceLabel": "Source: {source}",
       "readSource": "Read at source"
     },
+    "callJune": {
+      "title": "Questions about what's going around?",
+      "lead": "Call June, our phone assistant — free, 24/7. She can tell you which viruses are circulating this week, common symptoms, and which ER or urgent care spot usually makes sense from where you are.",
+      "ctaLabel": "Call June",
+      "fineprint": "General information only — not medical advice. For health advice about your child, call HealthLink BC at 8-1-1; for emergencies call 9-1-1."
+    },
     "snapshotSection": {
       "title": "This week’s snapshot",
       "deckShort": "Public data for {region} — RSV, flu, COVID, weather, air.",

@@ -9,6 +9,7 @@ import { useI18n } from 'vue-i18n'
 import TrendDetailModal from '../components/TrendDetailModal.vue'
 import LittleBuggyMascot from '../components/LittleBuggyMascot.vue'
 import ErWaitTimesSection from '../components/ErWaitTimesSection.vue'
+import CallJuneCard from '../components/CallJuneCard.vue'
 import UpccWaitTimesSection from '../components/UpccWaitTimesSection.vue'
 import CityPicker from '../components/CityPicker.vue'
 import { useHomepageSnapshot } from '../composables/useHomepageSnapshot.js'
@@ -1125,6 +1126,8 @@ function onEnvCardKeydown(e, row) {
         </article>
       </div>
     </section>
+
+    <CallJuneCard />
 
     <ErWaitTimesSection />
 

@@ -350,6 +350,12 @@
       "sourceLabel": "来源：{source}",
       "readSource": "查看原文"
     },
+    "callJune": {
+      "title": "想问最近流行什么？",
+      "lead": "打给 June（本站电话小助手），免费、24 小时。她可以告诉你这周在流行哪些病毒、一般有哪些症状，以及从你所在的位置去哪家急诊或紧急护理中心通常更合适。",
+      "ctaLabel": "打给 June",
+      "fineprint": "仅提供一般信息，不构成医疗建议。孩子健康方面的咨询请拨打 HealthLink BC 8-1-1；紧急情况请拨打 9-1-1。"
+    },
     "snapshotSection": {
       "title": "本周快照",
       "deckShort": "{region} 公开数据：RSV、流感、新冠、天气、空气。",
