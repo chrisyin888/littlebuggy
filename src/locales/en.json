@@ -228,6 +228,23 @@
       "medium": "Moderate",
       "long": "Longer wait",
       "unknown": "N/A"
+    },
+    "fastest": {
+      "title": "Which is fastest for me?",
+      "lead": "A shorter wait across town isn't always faster. Tell us roughly where you are and we'll add the drive to each posted wait.",
+      "useLocation": "Use my location",
+      "locating": "Finding you…",
+      "orPickCity": "or pick your city",
+      "pickCityPlaceholder": "Choose a city…",
+      "badge": "Fastest right now",
+      "fromYou": "Ranked from your location",
+      "fromCity": "Ranked from {city} (city centre)",
+      "change": "Change",
+      "driveApprox": "~{km} km · ~{time} drive",
+      "waitApprox": "{time} wait",
+      "totalApprox": "Total ≈ {time}",
+      "estimateNote": "Drive times are rough estimates only (straight-line distance adjusted for roads at ~35 km/h) — traffic will differ. Waits are the live posted estimates above. Your location is used only in your browser and is never sent to us.",
+      "locationUnavailable": "We couldn't get your location (it's never sent to us, only used in your browser) — pick your city instead."
     }
   },
   "upccWaitTimes": {

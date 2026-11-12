@@ -173,6 +173,14 @@ function _waitTextToMinutes(s) {
 }
 
 /**
+ * Parse wait_text like "2h 45m" → total minutes. Returns null when no wait is posted.
+ * Exported for the "Fastest near you" ranking (drive estimate + posted wait).
+ */
+export function waitMinutesFromText(waitText) {
+  return _waitTextToMinutes(String(waitText || '').trim())
+}
+
+/**
  * Map wait_text like "2h 45m" or "2h 15m–3h 51m" to severity for UI accent. "Unavailable" → null.
  */
 export function waitSeverityFromText(waitText) {

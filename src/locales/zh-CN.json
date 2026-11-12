@@ -228,6 +228,23 @@
       "medium": "中等",
       "long": "较长",
       "unknown": "暂无"
+    },
+    "fastest": {
+      "title": "哪家对我最快？",
+      "lead": "等候短的医院不一定离你近。告诉我们你大概在哪，我们把开车时间也算进每家的等候里一起排。",
+      "useLocation": "用我的位置",
+      "locating": "正在定位…",
+      "orPickCity": "或选择你的城市",
+      "pickCityPlaceholder": "选择城市…",
+      "badge": "现在最快",
+      "fromYou": "按你的位置排序",
+      "fromCity": "按{city}（市中心）排序",
+      "change": "更换",
+      "driveApprox": "约 {km} 公里 · 开车约 {time}",
+      "waitApprox": "等候 {time}",
+      "totalApprox": "总计 ≈ {time}",
+      "estimateNote": "开车时间只是粗略估算（按直线距离加绕路系数、约 35 公里/小时计算），实际以路况为准；等候时间为上方实时公布的估算。你的位置只在你的浏览器里使用，不会发送给我们。",
+      "locationUnavailable": "没能获取你的位置（位置只在你的浏览器里使用，不会发送给我们）——改选你的城市吧。"
     }
   },
   "upccWaitTimes": {

@@ -186,6 +186,48 @@ TARGET_UPCC_CENTRES: tuple[dict[str, str], ...] = (
 )
 
 
+# Coordinates for every facility above, keyed by our canonical ``key``.
+# Source: each facility's public street address (VCH / Fraser Health public listings,
+# as also published on edwaittimes.ca) geocoded to the building. Used by the frontend
+# "Fastest near you" ranking to estimate drive time; coordinates only — no visitor
+# location ever leaves the visitor's browser.
+FACILITY_COORDS: dict[str, tuple[float, float]] = {
+    # Hospitals (public addresses in TARGET_HOSPITALS order)
+    "delta": (49.085866, -123.061768),  # 5800 Mountain View Blvd, Delta
+    "richmond": (49.168873, -123.146325),  # 7000 Westminster Hwy, Richmond
+    "burnaby": (49.248776, -123.016837),  # 3935 Kincaid St, Burnaby
+    "vgh": (49.262407, -123.124461),  # 920 W 10th Ave, Vancouver
+    "bc_children": (49.245417, -123.123578),  # 4480 Oak St, Vancouver
+    "royal_columbian": (49.226603, -122.892266),  # 330 E Columbia St, New Westminster
+    # UPCCs (public addresses in TARGET_UPCC_CENTRES above)
+    "van_city_centre_upcc": (49.275794, -123.118055),
+    "ubc_upcc": (49.2617, -123.24611),
+    "north_van_upcc": (49.31233, -123.083585),
+    "richmond_city_upcc": (49.182207, -123.136267),
+    "metrotown_upcc": (49.230061, -123.002786),
+    "edmonds_upcc": (49.218947, -122.951261),
+    "port_moody_upcc": (49.278416, -122.840097),
+    "richmond_east_upcc": (49.187095, -123.107718),
+    "surrey_whalley_upcc": (49.177995, -122.842549),
+    "surrey_newton_upcc": (49.126539, -122.845132),
+    "northeast_upcc": (49.281145, -123.047057),
+    "southeast_upcc": (49.230575, -123.06518),
+    "reach_upcc": (49.274416, -123.069684),
+    "langley_upcc": (49.105003, -122.652244),
+    "ridge_meadows_upcc": (49.21798, -122.599999),
+    "abbotsford_upcc": (49.050858, -122.337022),
+    "mission_upcc": (49.130221, -122.318125),
+    "chilliwack_upcc": (49.146009, -121.98077),
+}
+
+
+def _coords_for(key: str) -> dict[str, float]:
+    lat_lng = FACILITY_COORDS.get(key)
+    if lat_lng is None:
+        return {}
+    return {"lat": lat_lng[0], "lng": lat_lng[1]}
+
+
 def _normalize_hospital_name(name: str) -> str:
     return " ".join(name.split())
 
@@ -303,6 +345,7 @@ def _build_from_json_list(rows: list[dict[str, Any]]) -> tuple[list[dict[str, An
             "name": meta["name"],
             "city": meta["city"],
             "wait_text": wait_text,
+            **_coords_for(meta["key"]),
         }
         if _WAIT_TIMES_DEBUG:
             row_out["_debug"] = dbg
@@ -386,6 +429,7 @@ def _build_from_legacy_html(html: str) -> tuple[list[dict[str, Any]], datetime |
             "name": meta["name"],
             "city": meta["city"],
             "wait_text": wait_text,
+            **_coords_for(meta["key"]),
         }
         if _WAIT_TIMES_DEBUG:
             row_out["_debug"] = dbg
@@ -446,6 +490,7 @@ def _build_upcc_from_json_list(rows: list[dict[str, Any]]) -> tuple[list[dict[st
             "city": meta["city"],
             "address": meta.get("address", ""),
             "wait_text": wait_text,
+            **_coords_for(meta["key"]),
         }
         if _WAIT_TIMES_DEBUG:
             row_out["_debug"] = dbg

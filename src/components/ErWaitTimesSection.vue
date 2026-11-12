@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useErWaitTimes, waitSeverityFromText } from '../composables/useErWaitTimes.js'
 import { localeToDateLocale } from '../utils/localeDisplay.js'
+import FastestNearYou from './FastestNearYou.vue'
 
 const { t, locale } = useI18n()
 const { payload, loading, refreshing, userRefreshInFlight, error, loadWaitTimes } = useErWaitTimes()
@@ -90,6 +91,8 @@ function severityClass(w) {
       </p>
 
       <template v-else>
+        <FastestNearYou />
+
         <p v-if="error" class="er-waits-section__warn" role="status">
           {{ error }}
         </p>
