@@ -170,6 +170,11 @@ const snapshotBarTitle = computed(() => {
         <p class="site-footer__copy">
           {{ t('app.footer', { brand: t('app.brandName') }) }}
         </p>
+        <p class="site-footer__family">
+          <a href="https://gnjacob.com" target="_blank" rel="noopener noreferrer">{{
+            t('app.familyGnjacob')
+          }}</a>
+        </p>
       </div>
     </footer>
   </div>
@@ -464,6 +469,24 @@ const snapshotBarTitle = computed(() => {
   font-weight: 600;
   color: var(--color-ink-soft);
   text-align: center;
+}
+
+.site-footer__family {
+  margin: 0.35rem 0 0;
+  font-size: 0.86rem;
+  line-height: 1.65;
+  font-weight: 600;
+  text-align: center;
+}
+
+.site-footer__family a {
+  color: var(--color-ink-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-footer__family a:hover {
+  color: var(--color-ink);
 }
 
 .site-footer__copy strong {

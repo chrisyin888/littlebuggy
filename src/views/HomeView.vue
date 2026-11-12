@@ -122,6 +122,27 @@ const trendHistoryDays = computed(() => {
   return d.filter((x) => x && Array.isArray(x.signals) && x.signals.length)
 })
 
+/** Daily points for one pathogen key from the loaded trend history. */
+function historyPointsForKey(key) {
+  return trendHistoryDays.value
+    .map((day) => {
+      const s = day.signals.find((x) => String(x.key || '') === key)
+      if (!s) return null
+      const full = s.trend ? `${s.level} (${s.trend})` : String(s.level || '')
+      const score = Number.isFinite(s.severity_score)
+        ? s.severity_score
+        : severityScoreFromLabel(full, 'virus')
+      return {
+        date: day.date,
+        height: `${Math.max(16, Math.min(100, (score / 4.4) * 100)).toFixed(0)}%`,
+        tier: virusSeverityTierFromLabel(full),
+        title: `${formatTrendDate(day.date)}: ${translateApiLevel(full, t)}`,
+        trendWord: s.trend ? String(s.trend) : null,
+      }
+    })
+    .filter(Boolean)
+}
+
 /**
  * Per-pathogen daily bars for the trend strip: one bar per snapshot day,
  * height from the pipeline's own severity score, colour from the level tier.
@@ -140,25 +161,40 @@ const trendHistoryRows = computed(() => {
     .slice(0, HERO_VIRUS_VISIBLE_MAX)
     .map((sig) => {
       const key = String(sig.key || '')
-      const points = days
-        .map((day) => {
-          const s = day.signals.find((x) => String(x.key || '') === key)
-          if (!s) return null
-          const full = s.trend ? `${s.level} (${s.trend})` : String(s.level || '')
-          const score = Number.isFinite(s.severity_score)
-            ? s.severity_score
-            : severityScoreFromLabel(full, 'virus')
-          return {
-            date: day.date,
-            height: `${Math.max(16, Math.min(100, (score / 4.4) * 100)).toFixed(0)}%`,
-            tier: virusSeverityTierFromLabel(full),
-            title: `${formatTrendDate(day.date)}: ${translateApiLevel(full, t)}`,
-          }
-        })
-        .filter(Boolean)
-      return { key, label: labelByKey[key] || sig.label || key, points }
+      return { key, label: labelByKey[key] || sig.label || key, points: historyPointsForKey(key) }
     })
     .filter((r) => r.points.length >= 2)
+})
+
+/**
+ * Hero "This week" preview rows enriched with history: a 7-day spark strip
+ * plus a direction arrow from the latest day's trend word. When history is
+ * unavailable the rows render exactly as before (dot + label + level).
+ */
+const heroPreviewDynamicRows = computed(() => {
+  void locale.value
+  const hasHistory = trendHistoryDays.value.length >= 2
+  return virusHeroPreviewRows.value.map((row) => {
+    const spark = hasHistory ? historyPointsForKey(String(row.kind)) : []
+    let arrow = null
+    if (spark.length >= 2) {
+      const w = (spark[spark.length - 1].trendWord || '').toLowerCase()
+      if (/rising|spiking|increasing|climbing/.test(w)) arrow = 'up'
+      else if (/falling|declining|decreasing|easing/.test(w)) arrow = 'down'
+      else arrow = 'flat'
+    }
+    return { ...row, spark, arrow }
+  })
+})
+
+/** "Latest sample: <date>" line for the hero preview card (history's newest day). */
+const heroPreviewUpdatedLine = computed(() => {
+  void locale.value
+  const days = trendHistoryDays.value
+  if (days.length) {
+    return t('home.hero.latestSample', { date: formatTrendDate(days[days.length - 1].date) })
+  }
+  return formattedUpdatedAt.value || ''
 })
 
 const trendHistoryFirstDate = computed(() => {
@@ -715,7 +751,7 @@ function onEnvCardKeydown(e, row) {
                   </template>
                   <template v-else>
                     <li
-                      v-for="(row, vIdx) in virusHeroPreviewRows"
+                      v-for="(row, vIdx) in heroPreviewDynamicRows"
                       :key="`${row.kind}-${vIdx}`"
                       class="hero-preview__metric"
                       :class="[`hero-preview__metric--sev-${row.severity}`]"
@@ -730,10 +766,32 @@ function onEnvCardKeydown(e, row) {
                         />
                         <span class="hero-preview__metric-label">{{ row.label }}</span>
                       </span>
-                      <span class="hero-preview__metric-value">{{ row.value }}</span>
+                      <span v-if="row.spark.length" class="hero-preview__spark" aria-hidden="true">
+                        <span
+                          v-for="pt in row.spark"
+                          :key="pt.date"
+                          class="hero-preview__spark-bar"
+                          :data-sev="pt.tier"
+                          :style="{ height: pt.height }"
+                          :title="pt.title"
+                        />
+                      </span>
+                      <span class="hero-preview__metric-value">
+                        {{ row.value }}
+                        <span
+                          v-if="row.arrow"
+                          class="hero-preview__arrow"
+                          :data-dir="row.arrow"
+                          aria-hidden="true"
+                          >{{ row.arrow === 'up' ? '↑' : row.arrow === 'down' ? '↓' : '→' }}</span
+                        >
+                      </span>
                     </li>
                   </template>
                 </ul>
+                <p v-if="!snapshotLoading && heroPreviewUpdatedLine" class="hero-preview__updated">
+                  {{ heroPreviewUpdatedLine }}
+                </p>
               </div>
             </div>
           </div>
@@ -2008,6 +2066,61 @@ function onEnvCardKeydown(e, row) {
   font-weight: 700;
   line-height: 1.2;
   color: var(--color-ink);
+}
+
+.hero-preview__spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 18px;
+  margin-left: auto;
+  margin-right: 0.55rem;
+  flex-shrink: 0;
+}
+
+.hero-preview__spark-bar {
+  width: 4px;
+  min-height: 20%;
+  border-radius: 2px;
+  background: #cbd5e1;
+}
+
+.hero-preview__spark-bar[data-sev='low'] {
+  background: #22c55e;
+}
+
+.hero-preview__spark-bar[data-sev='medium'] {
+  background: #eab308;
+}
+
+.hero-preview__spark-bar[data-sev='high'] {
+  background: #ef4444;
+}
+
+.hero-preview__arrow {
+  margin-left: 0.3rem;
+  font-weight: 800;
+}
+
+.hero-preview__arrow[data-dir='up'] {
+  color: #ef4444;
+}
+
+.hero-preview__arrow[data-dir='down'] {
+  color: #22c55e;
+}
+
+.hero-preview__arrow[data-dir='flat'] {
+  color: #94a3b8;
+}
+
+.hero-preview__updated {
+  margin: 0.65rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #94a3b8;
+  text-align: right;
 }
 
 @media (prefers-reduced-motion: reduce) {

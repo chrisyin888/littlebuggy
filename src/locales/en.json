@@ -190,6 +190,7 @@
     "awareness": "LittleBuggy feels like a chat with a thoughtful neighbour — not a replacement for your nurse line or doctor, but a faster way to read local health chatter ✨",
     "footer": "{brand} is built for multilingual families in Canada — friendly local health context in a language you can scan quickly. Not medical advice; your care team knows your child best.",
     "brandName": "LittleBuggy",
+    "familyGnjacob": "GNJacob — for dads, after bedtime: a short read for the hour after the kids fall asleep",
     "langSticker": "Your language",
     "citySwitcher": "Region",
     "langSwitcher": "Language",
@@ -356,6 +357,7 @@
       "btnSeeWeek": "Open snapshot",
       "linkHowItWorks": "How this works",
       "previewKicker": "This week",
+      "latestSample": "Latest sample: {date}",
       "langHint": "Supports Chinese, English, and more languages families use at home.",
       "btnHowRead": "How to read the snapshot",
       "virusLabels": {
