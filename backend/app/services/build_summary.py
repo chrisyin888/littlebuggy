@@ -59,9 +59,10 @@ def _respiratory_sentence_from_ranking(ranking: list[dict[str, Any]]) -> str:
         extra = f" ({n} additional pathogen{'s' if n > 1 else ''} also tracked)"
 
     return (
-        f"BC wastewater surveillance (a population-level signal, not a clinic test) is showing "
+        f"BC surveillance (PHAC wastewater plus lab detections — population-level signals, "
+        f"not a test result for your child) is showing "
         f"{signal_summary}{extra}. "
-        f"Clinical trends are summarized separately by BCCDC in their weekly respiratory updates."
+        f"BCCDC summarizes clinical trends in their weekly respiratory updates."
     )
 
 

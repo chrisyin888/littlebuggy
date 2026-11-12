@@ -211,4 +211,16 @@ def run_snapshot_job(
         respiratory_ranking=ranking,
     )
     log.info("Saved trend_snapshots id=%s city_id=%s", row.id, city.id)
+
+    # Keep /virus-trends populated from this (provably scheduled) pipeline too:
+    # the dedicated virus-trends cron has never successfully written on the host,
+    # so piggyback the same merged ranking into virus_trends_latest. Non-fatal.
+    if ranking:
+        try:
+            from app.services.virus_trends_fetch import payload_from_ranking
+            from app.services.virus_trends_storage import merge_and_save_after_fetch
+
+            merge_and_save_after_fetch(payload_from_ranking(ranking))
+        except Exception as e:
+            log.warning("virus-trends piggyback write failed (non-fatal): %s", e)
     return row.id

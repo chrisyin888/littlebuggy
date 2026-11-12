@@ -22,6 +22,12 @@ export const PATHOGEN_ALIASES = {
   flub: 'flu_b',
   metapneumovirus: 'hmpv',
   human_metapneumovirus: 'hmpv',
+  enterovirus_rhinovirus: 'rhinovirus',
+  ev_rv: 'rhinovirus',
+  hpiv: 'parainfluenza',
+  human_parainfluenza: 'parainfluenza',
+  adv: 'adenovirus',
+  hcov: 'seasonal_coronavirus',
 }
 
 function normToken(v) {
@@ -42,6 +48,9 @@ export function normalizePathogenKey(key, label = '') {
   const candidates = [normToken(key), normToken(label)].filter(Boolean)
   for (const c of candidates) {
     if (PATHOGEN_ALIASES[c]) return PATHOGEN_ALIASES[c]
+    // Exact catalog keys win before fuzzy matching — e.g. 'parainfluenza'
+    // contains 'influenza' but is NOT flu.
+    if (PATHOGEN_LABELS[c] || PATHOGEN_SYMPTOMS[c]) return c
     if (c.startsWith('flu') || c.includes('influenza')) return c === 'flu_a' || c === 'flu_b' ? c : 'flu'
     if (c.includes('covid') || c.startsWith('sars_cov')) return 'covid'
     if (c.includes('rsv')) return 'rsv'
@@ -64,6 +73,10 @@ export const PATHOGEN_STICKERS = {
   norovirus: '🦠',
   entero: '🤧',
   mpox: '🔬',
+  rhinovirus: '🤧',
+  parainfluenza: '💨',
+  adenovirus: '🦠',
+  seasonal_coronavirus: '❄️',
 }
 
 export function stickerForPathogen(key, label = '') {
@@ -85,6 +98,10 @@ export const PATHOGEN_LABELS = {
   norovirus: 'Norovirus',
   entero: 'Enterovirus',
   mpox: 'Mpox',
+  rhinovirus: 'Enterovirus / Rhinovirus',
+  parainfluenza: 'Parainfluenza',
+  adenovirus: 'Adenovirus',
+  seasonal_coronavirus: 'Seasonal coronavirus',
 }
 
 export function labelForPathogen(key, apiLabel) {
@@ -108,6 +125,10 @@ export const PATHOGEN_SYMPTOMS = {
   hmpv: ['Cough', 'Fever', 'Nasal congestion', 'Shortness of breath'],
   norovirus: ['Nausea', 'Vomiting', 'Diarrhea', 'Stomach cramps'],
   entero: ['Fever', 'Runny nose', 'Skin rash', 'Mouth sores'],
+  rhinovirus: ['Runny or stuffy nose', 'Sore throat', 'Cough', 'Sneezing'],
+  parainfluenza: ['Barking (croup-like) cough', 'Hoarse voice', 'Runny nose', 'Fever'],
+  adenovirus: ['Fever', 'Sore throat', 'Pink eye (conjunctivitis)', 'Cough', 'Runny nose'],
+  seasonal_coronavirus: ['Runny nose', 'Cough', 'Sore throat', 'Fever'],
 }
 
 export const PATHOGEN_FAMILIES = {

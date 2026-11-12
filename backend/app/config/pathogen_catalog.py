@@ -27,6 +27,10 @@ DISPLAY_LABELS: dict[str, str] = {
     "norovirus": "Norovirus",
     "entero": "Enterovirus",
     "mpox": "Mpox",
+    "rhinovirus": "Enterovirus / Rhinovirus",
+    "parainfluenza": "Parainfluenza",
+    "adenovirus": "Adenovirus",
+    "seasonal_coronavirus": "Seasonal coronavirus",
 }
 
 # Key/measure aliases to canonical keys.
@@ -45,6 +49,12 @@ PATHOGEN_ALIASES: dict[str, str] = {
     "human_metapneumovirus": "hmpv",
     "rhino": "rhinovirus",
     "rhinovirus_enterovirus": "rhinovirus",
+    "enterovirus_rhinovirus": "rhinovirus",
+    "ev_rv": "rhinovirus",
+    "hpiv": "parainfluenza",
+    "human_parainfluenza": "parainfluenza",
+    "adv": "adenovirus",
+    "hcov": "seasonal_coronavirus",
 }
 
 
@@ -120,6 +130,31 @@ SYMPTOM_CATALOG: dict[str, list[str]] = {
         "Runny nose",
         "Skin rash",
         "Mouth sores",
+    ],
+    "rhinovirus": [
+        "Runny or stuffy nose",
+        "Sore throat",
+        "Cough",
+        "Sneezing",
+    ],
+    "parainfluenza": [
+        "Barking (croup-like) cough",
+        "Hoarse voice",
+        "Runny nose",
+        "Fever",
+    ],
+    "adenovirus": [
+        "Fever",
+        "Sore throat",
+        "Pink eye (conjunctivitis)",
+        "Cough",
+        "Runny nose",
+    ],
+    "seasonal_coronavirus": [
+        "Runny nose",
+        "Cough",
+        "Sore throat",
+        "Fever",
     ],
 }
 

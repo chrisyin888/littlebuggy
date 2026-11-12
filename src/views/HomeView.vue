@@ -329,8 +329,11 @@ function sortRowsBySeverity(rows, scoreFn) {
   }))
 }
 
-/** Max respiratory signal rows in the hero mockup and primary snapshot grid; extras go in an expandable block. */
-const HERO_VIRUS_VISIBLE_MAX = 4
+/** Max respiratory signal rows in the hero mockup and primary snapshot grid; extras go in an expandable block.
+ * Raised 4 → 6 when the ranking merged RVDSS clinical detections (9 series) with wastewater —
+ * with only 4 visible, the card looked frozen on the wastewater four even when other
+ * viruses (e.g. entero/rhinovirus) were circulating more. */
+const HERO_VIRUS_VISIBLE_MAX = 6
 
 /**
  * Get sticker emoji for a pathogen key.

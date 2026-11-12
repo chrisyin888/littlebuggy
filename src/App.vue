@@ -8,6 +8,7 @@ import LanguageSwitcher from './components/LanguageSwitcher.vue'
 import { selectedCityId } from './composables/useSelectedCity.js'
 import LittleBuggyMascot from './components/LittleBuggyMascot.vue'
 import EmergencyHelpCard from './components/EmergencyHelpCard.vue'
+import InstallPrompt from './components/InstallPrompt.vue'
 import { localeToDateLocale } from './utils/localeDisplay.js'
 import { formatRelativeTimePast } from './utils/relativeTime.js'
 
@@ -155,6 +156,16 @@ const snapshotBarTitle = computed(() => {
           </RouterLink>
 
           <div class="site-header__controls">
+            <a
+              class="gnjacob-pill"
+              href="https://gnjacob.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span class="gnjacob-pill__moon" aria-hidden="true">🌙</span>
+              <span class="gnjacob-pill__text">{{ t('app.familyGnjacob') }}</span>
+              <span class="gnjacob-pill__arrow" aria-hidden="true">→</span>
+            </a>
             <LanguageSwitcher variant="compact" />
           </div>
         </div>
@@ -177,6 +188,7 @@ const snapshotBarTitle = computed(() => {
         </p>
       </div>
     </footer>
+    <InstallPrompt />
   </div>
 </template>
 
@@ -379,6 +391,57 @@ const snapshotBarTitle = computed(() => {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem 0.65rem;
+}
+
+/* Cross-link pill: GNJacob sister site, prominent in the header (per Chris —
+   the link must sit up top, not only in the footer). */
+.gnjacob-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: min(30rem, 100%);
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+  color: #fff7ed;
+  background: linear-gradient(115deg, #312e81 0%, #6d28d9 55%, #7c3aed 100%);
+  border: 2px solid rgba(255, 207, 107, 0.65);
+  box-shadow: 0 4px 14px rgba(76, 29, 149, 0.28);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.gnjacob-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(76, 29, 149, 0.36);
+}
+
+.gnjacob-pill__moon {
+  flex-shrink: 0;
+  font-size: 0.95rem;
+}
+
+.gnjacob-pill__text {
+  min-width: 0;
+}
+
+.gnjacob-pill__arrow {
+  flex-shrink: 0;
+  font-weight: 900;
+}
+
+@media (max-width: 640px) {
+  .gnjacob-pill {
+    order: 3;
+    flex: 1 1 100%;
+    justify-content: center;
+    text-align: center;
+  }
 }
 
 .brand {

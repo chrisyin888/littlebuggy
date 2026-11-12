@@ -18,12 +18,9 @@ from typing import Any
 
 from bs4 import BeautifulSoup
 
+from app.services.fetch_bccdc_real import fetch_respiratory_bc_signals
 from app.services.http_util import http_client
-from app.services.wastewater_signals import (
-    PHAC_INFOBASE_API_LANDING,
-    compute_bc_wastewater,
-    fetch_bc_wastewater_rows,
-)
+from app.services.wastewater_signals import PHAC_INFOBASE_API_LANDING
 
 log = logging.getLogger(__name__)
 
@@ -49,7 +46,7 @@ def _build_summary_from_ranking(ranking: list[dict[str, Any]]) -> str:
     if not ranking:
         return "No BC wastewater measures were available from the public feed this run."
     parts = [f"{e.get('display_name', 'Signal')}: {e.get('severity_label', 'Unknown')}" for e in ranking]
-    return "Latest public BC wastewater signal (relative to this feed’s history): " + "; ".join(parts) + "."
+    return "Latest BC respiratory signals (PHAC wastewater + lab detections, stronger signal shown): " + "; ".join(parts) + "."
 
 
 def _viruses_legacy_shape(ranking: list[dict[str, Any]]) -> list[dict[str, str]]:
@@ -96,9 +93,11 @@ def fetch_virus_trends() -> VirusTrendsFetchResult:
     except Exception as e:
         log.warning("BCCDC page fetch/metadata failed (non-fatal): %s", e)
 
-    rows, err = fetch_bc_wastewater_rows()
-    if err:
-        log.warning("PHAC wastewater fetch failed: %s", err)
+    # Merged ranking: PHAC BC wastewater (4 pathogens) + PHAC RVDSS BC lab
+    # detections (9 series) — see respiratory_merge for the merge口径.
+    bundle = fetch_respiratory_bc_signals()
+    if not bundle.ok:
+        log.warning("Respiratory bundle fetch failed: %s", bundle.error)
         return VirusTrendsFetchResult(
             ok=False,
             source_report_date=source_report_date,
@@ -106,30 +105,17 @@ def fetch_virus_trends() -> VirusTrendsFetchResult:
             viruses=viruses_unknown,
             ranking=[],
             source_url=BCCDC_RESPIRATORY_URL,
-            levels_detail="Levels normally come from PHAC Health Infobase BC wastewater API.",
-            error=str(err),
+            levels_detail="Levels normally come from PHAC Health Infobase (BC wastewater + RVDSS lab data).",
+            error=str(bundle.error),
         )
 
-    comp = compute_bc_wastewater(rows)
-    if not comp.ok:
-        return VirusTrendsFetchResult(
-            ok=False,
-            source_report_date=source_report_date,
-            summary="Public wastewater feed returned no usable BC rows.",
-            viruses=viruses_unknown,
-            ranking=[],
-            source_url=BCCDC_RESPIRATORY_URL,
-            levels_detail=comp.error or "compute_failed",
-            error=comp.error,
-        )
-
-    ranking = comp.ranking
+    ranking = bundle.ranking
     viruses = _viruses_legacy_shape(ranking)
-    latest_d = comp.latest_aggregate_date or ""
     summary = _build_summary_from_ranking(ranking)
     detail = (
-        f"BC wastewater 7-day rolling average, latest sample date in feed: {latest_d}. "
-        "Not a clinical test. BCCDC publishes weekly clinical surveillance separately."
+        "Levels merge PHAC BC wastewater (7-day rolling average, percentile vs history) with "
+        "PHAC RVDSS lab percent-positive for BC; per pathogen the stronger signal is shown. "
+        f"{bundle.source_updated_label or ''}".strip()
     )
 
     return VirusTrendsFetchResult(
@@ -142,6 +128,32 @@ def fetch_virus_trends() -> VirusTrendsFetchResult:
         levels_detail=detail,
         error=None,
     )
+
+
+def payload_from_ranking(
+    ranking: list[dict[str, Any]],
+    source_report_date: str | None = None,
+) -> dict[str, Any]:
+    """
+    Build a virus-trends payload dict from an already-computed merged ranking.
+
+    Used by the snapshot pipeline (a cron that provably runs daily) to keep
+    ``virus_trends_latest`` populated even if the dedicated virus-trends cron
+    is missing or failing on the host.
+    """
+    return {
+        "source_report_date": source_report_date,
+        "source_name": "BCCDC",
+        "summary": _build_summary_from_ranking(ranking),
+        "viruses": _viruses_legacy_shape(ranking),
+        "ranking": ranking,
+        "source_url": BCCDC_RESPIRATORY_URL,
+        "levels_method": (
+            "Levels merge PHAC BC wastewater (percentile vs history) with PHAC RVDSS "
+            "lab percent-positive for BC; per pathogen the stronger signal is shown."
+        ),
+        "phac_reference_url": PHAC_LANDING,
+    }
 
 
 def fetch_result_to_payload_dict(result: VirusTrendsFetchResult) -> dict[str, Any]:

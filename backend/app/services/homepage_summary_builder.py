@@ -197,6 +197,14 @@ def build_homepage_summary_dict(*, city: CityProfile | None = None) -> tuple[dic
         notes.append(f"Weather: {getattr(wx, 'error', 'fetch failed')}.")
     data_quality_note = " ".join(notes) if notes else None
 
+    # Extract the ranking BEFORE build_summary uses it (previously referenced
+    # before assignment, which silently forced the fallback summary text).
+    respiratory_ranking: list[dict[str, Any]] = []
+    if resp is not None and getattr(resp, "ok", False):
+        rk = getattr(resp, "ranking", None)
+        if isinstance(rk, list):
+            respiratory_ranking = rk
+
     try:
         built = build_summary(virus, env, ranking=respiratory_ranking)
     except Exception as e:
@@ -205,11 +213,6 @@ def build_homepage_summary_dict(*, city: CityProfile | None = None) -> tuple[dic
         built = {"outdoor_feel": "Unavailable", "summary_text": "We couldn’t build a full summary this run."}
 
     now = datetime.now(timezone.utc).replace(microsecond=0)
-    respiratory_ranking: list[dict[str, Any]] = []
-    if resp is not None and getattr(resp, "ok", False):
-        rk = getattr(resp, "ranking", None)
-        if isinstance(rk, list):
-            respiratory_ranking = rk
 
     payload = {
         "city_id": city.id,
