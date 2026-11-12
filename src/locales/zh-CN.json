@@ -315,10 +315,17 @@
     },
     "trendSection": {
       "title": "7 日趋势",
-      "placeholder": "示意预览 —— 详细图表即将推出。",
+      "historyHint": "来自每日快照的真实等级 —— 每根柱代表一天，从旧到新。把指针放上去（或点一下）可看当天的等级。",
+      "historyUnavailable": "逐日等级历史暂不可用。",
       "rsv": "RSV",
       "flu": "流感",
       "covid": "新冠"
+    },
+    "newsSection": {
+      "title": "每日最新动态",
+      "latestBadge": "最新",
+      "sourceLabel": "来源：{source}",
+      "readSource": "查看原文"
     },
     "snapshotSection": {
       "title": "本周快照",

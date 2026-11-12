@@ -315,10 +315,17 @@
     },
     "trendSection": {
       "title": "7-day trend",
-      "placeholder": "Illustrative preview — detailed charts coming soon.",
+      "historyHint": "Real daily levels from our saved snapshots — one bar per day, oldest to newest. Hover or tap a bar to see that day's level.",
+      "historyUnavailable": "Daily level history is not available yet.",
       "rsv": "RSV",
       "flu": "Flu",
       "covid": "COVID"
+    },
+    "newsSection": {
+      "title": "Daily update for local families",
+      "latestBadge": "Latest",
+      "sourceLabel": "Source: {source}",
+      "readSource": "Read at source"
     },
     "snapshotSection": {
       "title": "This week’s snapshot",

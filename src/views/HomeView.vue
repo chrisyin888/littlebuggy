@@ -1,6 +1,10 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { apiUrl } from '../lib/apiOrigin.js'
+import { fetchTrendHistory } from '../lib/trendHistory.js'
+import { fetchNewsItems } from '../lib/news.js'
+import { selectedCityId } from '../composables/useSelectedCity.js'
+import { localeToDateLocale } from '../utils/localeDisplay.js'
 import { useI18n } from 'vue-i18n'
 import TrendDetailModal from '../components/TrendDetailModal.vue'
 import LittleBuggyMascot from '../components/LittleBuggyMascot.vue'
@@ -86,7 +90,112 @@ onMounted(() => {
     await maybeTrackVisit()
     await loadVisitCount()
   })()
+  void loadTrendHistory()
+  void loadNews()
 })
+
+/* ---- 7-day trend history (real saved snapshot levels via /api/homepage-trend-history) ---- */
+const trendHistory = ref(null)
+const trendHistoryLoaded = ref(false)
+
+async function loadTrendHistory() {
+  trendHistory.value = await fetchTrendHistory(selectedCityId.value)
+  trendHistoryLoaded.value = true
+}
+
+watch(selectedCityId, () => {
+  void loadTrendHistory()
+})
+
+function formatTrendDate(iso) {
+  const d = new Date(`${iso}T12:00:00`)
+  if (Number.isNaN(d.getTime())) return String(iso || '')
+  return new Intl.DateTimeFormat(localeToDateLocale(locale.value), {
+    month: 'short',
+    day: 'numeric',
+  }).format(d)
+}
+
+const trendHistoryDays = computed(() => {
+  const d = trendHistory.value?.days
+  if (!Array.isArray(d)) return []
+  return d.filter((x) => x && Array.isArray(x.signals) && x.signals.length)
+})
+
+/**
+ * Per-pathogen daily bars for the trend strip: one bar per snapshot day,
+ * height from the pipeline's own severity score, colour from the level tier.
+ * Rows/order mirror the latest day (same cap as the hero cards).
+ */
+const trendHistoryRows = computed(() => {
+  void locale.value
+  const days = trendHistoryDays.value
+  if (days.length < 2) return []
+  const labelByKey = {}
+  for (const row of liveHeroCards.value || []) {
+    if (row && row.kind) labelByKey[String(row.kind)] = row.label
+  }
+  const latest = days[days.length - 1]
+  return latest.signals
+    .slice(0, HERO_VIRUS_VISIBLE_MAX)
+    .map((sig) => {
+      const key = String(sig.key || '')
+      const points = days
+        .map((day) => {
+          const s = day.signals.find((x) => String(x.key || '') === key)
+          if (!s) return null
+          const full = s.trend ? `${s.level} (${s.trend})` : String(s.level || '')
+          const score = Number.isFinite(s.severity_score)
+            ? s.severity_score
+            : severityScoreFromLabel(full, 'virus')
+          return {
+            date: day.date,
+            height: `${Math.max(16, Math.min(100, (score / 4.4) * 100)).toFixed(0)}%`,
+            tier: virusSeverityTierFromLabel(full),
+            title: `${formatTrendDate(day.date)}: ${translateApiLevel(full, t)}`,
+          }
+        })
+        .filter(Boolean)
+      return { key, label: labelByKey[key] || sig.label || key, points }
+    })
+    .filter((r) => r.points.length >= 2)
+})
+
+const trendHistoryFirstDate = computed(() => {
+  const days = trendHistoryDays.value
+  return days.length ? formatTrendDate(days[0].date) : ''
+})
+
+const trendHistoryLastDate = computed(() => {
+  const days = trendHistoryDays.value
+  return days.length ? formatTrendDate(days[days.length - 1].date) : ''
+})
+
+/* ---- Daily update news (public/data/news.json) ---- */
+const newsItems = ref([])
+
+async function loadNews() {
+  newsItems.value = await fetchNewsItems()
+}
+
+const latestNews = computed(() => newsItems.value.slice(0, 3))
+
+function newsParagraphs(item) {
+  return String(item?.body || '')
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+}
+
+function formatNewsDate(iso) {
+  const d = new Date(`${iso}T12:00:00`)
+  if (Number.isNaN(d.getTime())) return String(iso || '')
+  return new Intl.DateTimeFormat(localeToDateLocale(locale.value), {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  }).format(d)
+}
 
 const provenanceRows = computed(() => {
   void locale.value
@@ -632,14 +741,50 @@ function onEnvCardKeydown(e, row) {
       </div>
     </section>
 
-    <!-- Trend preview: decorative bars + copy; labels from snapshot.signals when loaded (see trendPreviewRows). -->
+    <!-- Trend preview: real per-day levels from saved snapshots (trendHistoryRows);
+         decorative bars remain only as a fallback while history is unavailable. -->
     <section class="home-trend-preview" aria-labelledby="home-trend-preview-title">
       <div class="home-trend-preview__inner">
         <h2 id="home-trend-preview-title" class="home-trend-preview__title">
           {{ $t('home.trendSection.title') }}
         </h2>
-        <p class="home-trend-preview__hint">{{ $t('home.trendSection.placeholder') }}</p>
-        <div class="home-trend-preview__bars" role="presentation">
+        <p class="home-trend-preview__hint">
+          {{
+            trendHistoryRows.length || !trendHistoryLoaded
+              ? $t('home.trendSection.historyHint')
+              : $t('home.trendSection.historyUnavailable')
+          }}
+        </p>
+        <div v-if="trendHistoryRows.length" class="home-trend-preview__chart">
+          <div
+            v-for="(row, tIdx) in trendHistoryRows"
+            :key="row.key"
+            class="home-trend-preview__row"
+            :style="{ animationDelay: `${0.06 + tIdx * 0.1}s` }"
+          >
+            <span class="home-trend-preview__label">{{ row.label }}</span>
+            <div class="home-trend-preview__days">
+              <span
+                v-for="pt in row.points"
+                :key="pt.date"
+                class="home-trend-preview__day"
+                :data-sev="pt.tier"
+                :style="{ height: pt.height }"
+                :title="pt.title"
+                role="img"
+                :aria-label="pt.title"
+              />
+            </div>
+          </div>
+          <div class="home-trend-preview__dates" aria-hidden="true">
+            <span />
+            <span class="home-trend-preview__dates-range">
+              <span>{{ trendHistoryFirstDate }}</span>
+              <span>{{ trendHistoryLastDate }}</span>
+            </span>
+          </div>
+        </div>
+        <div v-else class="home-trend-preview__bars" role="presentation">
           <div
             v-for="(row, tIdx) in trendPreviewRows"
             :key="`${row.key}-${tIdx}`"
@@ -886,6 +1031,37 @@ function onEnvCardKeydown(e, row) {
             </nav>
           </template>
         </div>
+      </div>
+    </section>
+
+    <!-- Daily update news: latest 3 items from public/data/news.json, newest highlighted. -->
+    <section v-if="latestNews.length" class="home-news" aria-labelledby="home-news-title">
+      <div class="home-news__inner">
+        <h2 id="home-news-title" class="home-news__title">{{ $t('home.newsSection.title') }}</h2>
+        <article
+          v-for="(item, nIdx) in latestNews"
+          :key="`${item.date}-${nIdx}`"
+          class="home-news__item"
+          :class="{ 'home-news__item--featured': nIdx === 0 }"
+        >
+          <p class="home-news__meta">
+            <span class="home-news__date">{{ formatNewsDate(item.date) }}</span>
+            <span v-if="nIdx === 0" class="home-news__badge">{{ $t('home.newsSection.latestBadge') }}</span>
+          </p>
+          <h3 class="home-news__headline">{{ item.title }}</h3>
+          <p v-for="(para, pIdx) in newsParagraphs(item)" :key="pIdx" class="home-news__body">
+            {{ para }}
+          </p>
+          <p class="home-news__source">
+            {{ $t('home.newsSection.sourceLabel', { source: item.source })
+            }}<template v-if="item.url">
+              ·
+              <a :href="item.url" target="_blank" rel="noopener noreferrer">{{
+                $t('home.newsSection.readSource')
+              }}</a>
+            </template>
+          </p>
+        </article>
       </div>
     </section>
 
@@ -1930,6 +2106,154 @@ function onEnvCardKeydown(e, row) {
   background: linear-gradient(90deg, #a78bfa 0%, #e879f9 55%, #f472b6 100%);
   opacity: 0.88;
   transition: width 0.35s ease;
+}
+
+.home-trend-preview__chart {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.home-trend-preview__days {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 44px;
+}
+
+.home-trend-preview__day {
+  flex: 1 1 0;
+  min-height: 16%;
+  border-radius: 4px 4px 2px 2px;
+  background: #cbd5e1;
+}
+
+.home-trend-preview__day[data-sev='low'] {
+  background: #22c55e;
+}
+
+.home-trend-preview__day[data-sev='medium'] {
+  background: #eab308;
+}
+
+.home-trend-preview__day[data-sev='high'] {
+  background: #ef4444;
+}
+
+.home-trend-preview__dates {
+  display: grid;
+  grid-template-columns: minmax(4rem, 5.5rem) 1fr;
+  gap: 0.75rem 1rem;
+  margin-top: -0.35rem;
+}
+
+.home-trend-preview__dates-range {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+@media (max-width: 480px) {
+  .home-trend-preview__dates {
+    grid-template-columns: 1fr;
+  }
+}
+
+.home-news {
+  padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1rem, 4vw, 2rem);
+  margin: 0;
+}
+
+.home-news__inner {
+  max-width: min(1120px, 100%);
+  margin: 0 auto;
+  padding: clamp(1.25rem, 3vw, 1.75rem) clamp(1rem, 3vw, 1.5rem);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.06);
+}
+
+.home-news__title {
+  margin: 0 0 1rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2.4vw, 1.35rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #334155;
+}
+
+.home-news__item {
+  padding: 1rem 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.home-news__item:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.home-news__item--featured {
+  padding: 1rem 1.1rem;
+  border-top: none;
+  border-radius: 14px;
+  background: rgba(238, 242, 255, 0.65);
+  border-left: 4px solid #818cf8;
+}
+
+.home-news__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.home-news__badge {
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  background: #6366f1;
+  color: #fff;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+}
+
+.home-news__headline {
+  margin: 0 0 0.55rem;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.35;
+  color: #1e293b;
+}
+
+.home-news__item--featured .home-news__headline {
+  font-size: 1.15rem;
+}
+
+.home-news__body {
+  margin: 0 0 0.6rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #475569;
+}
+
+.home-news__source {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.home-news__source a {
+  color: #6366f1;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 @media (max-width: 480px) {
