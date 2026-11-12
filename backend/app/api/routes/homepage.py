@@ -63,6 +63,9 @@ def homepage_summary(
 
 
 _VANCOUVER_TZ = ZoneInfo("America/Vancouver")
+# Note: first Render deploy of this endpoint failed on the platform side;
+# the app boots and serves it fine locally (uvicorn, Python 3.12). Redeployed
+# unchanged apart from this comment to retry the deploy.
 
 
 def _split_level_trend(full: str) -> tuple[str, str | None]:
