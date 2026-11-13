@@ -75,11 +75,40 @@ async function loadVisitCount() {
   }
 }
 
+function classifyReferrerSource() {
+  try {
+    const ref = typeof document !== 'undefined' ? String(document.referrer || '') : ''
+    if (!ref) return 'direct'
+    const r = ref.toLowerCase()
+    if (r.includes('gnjacob.com')) return 'gnjacob'
+    if (r.includes('google.')) return 'google'
+    if (r.includes('bing.')) return 'bing'
+    if (
+      r.includes('facebook.') ||
+      r.includes('instagram.') ||
+      r.includes('threads.') ||
+      r.includes('x.com') ||
+      r.includes('twitter.') ||
+      r.includes('tiktok.') ||
+      r.includes('youtube.')
+    ) {
+      return 'social'
+    }
+    return 'other'
+  } catch {
+    return 'other'
+  }
+}
+
 async function maybeTrackVisit() {
   try {
     if (typeof sessionStorage === 'undefined') return
     if (sessionStorage.getItem(VISIT_SESSION_KEY) === '1') return
-    const r = await fetch(apiUrl('/api/track-visit'), { method: 'POST' })
+    const r = await fetch(apiUrl('/api/track-visit'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category: classifyReferrerSource() }),
+    })
     if (r.ok) sessionStorage.setItem(VISIT_SESSION_KEY, '1')
   } catch {
     /* non-fatal */
