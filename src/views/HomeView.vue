@@ -649,6 +649,8 @@ function onEnvCardKeydown(e, row) {
 </script>
 <template>
   <div class="home">
+    <CallJuneCard />
+
     <CityPicker />
 
     <section v-if="showA2hsPrompt" class="a2hs-banner" aria-label="Add to Home Screen">
@@ -1127,8 +1129,6 @@ function onEnvCardKeydown(e, row) {
         </article>
       </div>
     </section>
-
-    <CallJuneCard />
 
     <ParentsBoard />
 
