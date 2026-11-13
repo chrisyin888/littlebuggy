@@ -4,8 +4,8 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
 // June — LittleBuggy's Alebex phone assistant. Number provisioned 2026-11-12.
-const JUNE_TEL_HREF = 'tel:+17787438889'
-const JUNE_NUMBER_DISPLAY = '(778) 743-8889'
+const JUNE_TEL_HREF = 'tel:+17789108884'
+const JUNE_NUMBER_DISPLAY = '(778) 910-8884'
 </script>
 
 <template>
