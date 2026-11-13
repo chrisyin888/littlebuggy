@@ -11,7 +11,7 @@ const JUNE_NUMBER_DISPLAY = '(778) 743-8889'
 <template>
   <section class="call-june" aria-labelledby="call-june-title">
     <div class="call-june__inner">
-      <div class="call-june__icon" aria-hidden="true">📞</div>
+      <img class="call-june__avatar" src="/images/june.jpg" alt="June, LittleBuggy's phone assistant" width="72" height="72" />
       <div class="call-june__body">
         <h2 id="call-june-title" class="call-june__title">{{ t('home.callJune.title') }}</h2>
         <p class="call-june__lead">{{ t('home.callJune.lead') }}</p>
@@ -45,10 +45,14 @@ const JUNE_NUMBER_DISPLAY = '(778) 743-8889'
   flex-wrap: wrap;
 }
 
-.call-june__icon {
-  font-size: 2rem;
-  line-height: 1;
+.call-june__avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
   flex-shrink: 0;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(21, 128, 61, 0.25);
 }
 
 .call-june__body {
