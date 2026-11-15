@@ -9,6 +9,8 @@ import { useI18n } from 'vue-i18n'
 import TrendDetailModal from '../components/TrendDetailModal.vue'
 import LittleBuggyMascot from '../components/LittleBuggyMascot.vue'
 import ErWaitTimesSection from '../components/ErWaitTimesSection.vue'
+import EmergencyBanner from '../components/EmergencyBanner.vue'
+import WhereToGoCard from '../components/WhereToGoCard.vue'
 import CallJuneCard from '../components/CallJuneCard.vue'
 import ParentsBoard from '../components/ParentsBoard.vue'
 import UpccWaitTimesSection from '../components/UpccWaitTimesSection.vue'
@@ -246,6 +248,24 @@ async function loadNews() {
 }
 
 const latestNews = computed(() => newsItems.value.slice(0, 3))
+
+/**
+ * "Today in one line" — a plain-language takeaway above the virus ranking.
+ * Data-driven: names the top live signals from the snapshot (label + level +
+ * trend, exactly as the pipeline reports them). Falls back to the newest
+ * news headline while the snapshot is unavailable. Never invents numbers.
+ */
+const todayLine = computed(() => {
+  void locale.value
+  const top = virusDashboardRowsOrdered.value.filter((r) => r && r.label && r.value && r.value !== '—')
+  if (top.length) {
+    const parts = top.slice(0, 2).map((r) => `${r.label} — ${r.value}`)
+    return `${t('home.todayLine.prefix')}${parts.join('; ')}.`
+  }
+  const n = latestNews.value[0]
+  if (n?.title) return `${t('home.todayLine.prefix')}${n.title}`
+  return ''
+})
 
 function newsParagraphs(item) {
   return String(item?.body || '')
@@ -680,6 +700,10 @@ function onEnvCardKeydown(e, row) {
   <div class="home">
     <CallJuneCard />
 
+    <EmergencyBanner />
+
+    <WhereToGoCard />
+
     <CityPicker />
 
     <section v-if="showA2hsPrompt" class="a2hs-banner" aria-label="Add to Home Screen">
@@ -945,6 +969,7 @@ function onEnvCardKeydown(e, row) {
             </ul>
           </template>
           <template v-else>
+            <p v-if="todayLine" class="snapshot-dash__today-line" role="status">{{ todayLine }}</p>
             <p class="snapshot-dash__row-eyebrow">{{ $t('home.hero.dashboardRowViruses') }}</p>
             <ul class="snapshot-dash__grid snapshot-dash__grid--virus" role="list">
               <li
@@ -3419,6 +3444,18 @@ function onEnvCardKeydown(e, row) {
   font-weight: 600;
   line-height: 1.55;
   color: var(--color-ink-muted);
+}
+
+.snapshot-dash__today-line {
+  margin: 0 0 0.9rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(120deg, #fff7ed, #fef3c7);
+  border: 2px solid rgba(245, 158, 11, 0.45);
+  font-size: clamp(0.98rem, 2.6vw, 1.12rem);
+  font-weight: 800;
+  line-height: 1.5;
+  color: #78350f;
 }
 
 .snapshot-dash__row-eyebrow {

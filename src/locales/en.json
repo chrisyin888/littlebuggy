@@ -364,6 +364,32 @@
       "title": "Parents' board — ask, share, swap notes",
       "notice": "General information only — not medical advice. For health advice call HealthLink BC 8-1-1; emergencies 9-1-1."
     },
+    "todayLine": {
+      "prefix": "Today in one line: "
+    },
+    "whereToGo": {
+      "title": "Where should we go?",
+      "lead": "A quick general guide — every child is different, and how your child looks and acts matters more than any single symptom.",
+      "erTitle": "Emergency (ER) or 911 — go now",
+      "erLines": [
+        "Trouble breathing, blue lips, or severe wheezing",
+        "Life-threatening illness or injury, or heavy bleeding",
+        "Hard to wake, confused, or a seizure",
+        "Signs of dehydration: very dry mouth, no tears, hardly peeing",
+        "Any fever in a baby under 3 months old"
+      ],
+      "upccTitle": "Urgent care (UPCC) — or call 8-1-1 first",
+      "upccLines": [
+        "Fever in a child over 3 months who is drinking and acting mostly themselves",
+        "Minor injuries: sprains, small cuts, mild burns",
+        "Ear pain, sore throat, or a suspected infection",
+        "Vomiting or diarrhea that is settling, and your child is still drinking",
+        "Not sure? Call 8-1-1 — a nurse can help you decide, free, 24/7"
+      ],
+      "waitsCta": "Check current ER & urgent care wait times ↓",
+      "feverGuide": "Read: Fever in children — what to do by age →",
+      "fineprint": "General information only — not medical advice and not a judgement about your child. If you are worried, call 8-1-1 or go in; trust your gut."
+    },
     "snapshotSection": {
       "title": "This week’s snapshot",
       "deckShort": "Public data for {region} — RSV, flu, COVID, weather, air.",

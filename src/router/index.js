@@ -15,6 +15,11 @@ const router = createRouter({
       component: () => import('../views/WaitTimesView.vue'),
     },
     {
+      path: '/guides/fever',
+      name: 'feverGuide',
+      component: () => import('../views/FeverGuideView.vue'),
+    },
+    {
       path: '/admin/update',
       name: 'adminHomepageUpdate',
       component: () => import('../views/AdminHomepageUpdateView.vue'),
