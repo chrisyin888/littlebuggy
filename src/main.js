@@ -11,7 +11,7 @@ createApp(App).use(router).use(i18n).mount('#app')
 // with ?go=<key> and we route client-side to the real page.
 try {
   const go = new URLSearchParams(window.location.search).get('go')
-  const GO_ROUTES = { fever: '/guides/fever' }
+  const GO_ROUTES = { fever: '/guides/fever', 'wait-times': '/wait-times' }
   if (go && GO_ROUTES[go]) {
     router.replace(GO_ROUTES[go])
   }
