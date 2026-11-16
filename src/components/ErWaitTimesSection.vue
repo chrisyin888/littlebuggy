@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   useErWaitTimes,
@@ -31,6 +31,33 @@ const fraserPaused = computed(() => {
   const fraser = hospitals.value.filter((h) => FRASER_KEYS.has(h.key))
   return fraser.length > 0 && fraser.every((h) => !hasPublishedWait(h))
 })
+
+// Facility deep links: landing pages under /wait-times/<slug>/ bounce through
+// /?go=wait-times&facility=<key>; main.js stashes the key and we consume it
+// once here — highlight that hospital's card and scroll it into view. Only on
+// the dedicated wait-times page, not when this section is embedded on Home.
+const highlightKey = ref('')
+watch(
+  hospitals,
+  async (rows) => {
+    if (!rows.length || highlightKey.value) return
+    if (window.location.pathname !== '/wait-times') return
+    let key = ''
+    try {
+      key = sessionStorage.getItem('lb_facility') || ''
+      if (key) sessionStorage.removeItem('lb_facility')
+    } catch {
+      key = ''
+    }
+    if (!key || !rows.some((h) => h.key === key)) return
+    highlightKey.value = key
+    await nextTick()
+    document
+      .getElementById(`facility-${key}`)
+      ?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  },
+  { immediate: true },
+)
 
 const isLive = (row) => hasPublishedWait(row)
 
@@ -136,7 +163,9 @@ function severityClass(w) {
           <article
             v-for="h in hospitals"
             :key="h.key"
+            :id="`facility-${h.key}`"
             class="er-wait-card"
+            :class="{ 'er-wait-card--highlight': h.key === highlightKey }"
           >
             <div class="er-wait-card__top">
               <h3 class="er-wait-card__name">{{ h.name }}</h3>
@@ -342,6 +371,11 @@ function severityClass(w) {
   flex-direction: column;
   gap: 0.3rem;
   min-height: 7.75rem;
+}
+
+.er-wait-card--highlight {
+  border-color: rgba(245, 158, 11, 0.85);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3), var(--shadow-soft);
 }
 
 .er-wait-card__top {

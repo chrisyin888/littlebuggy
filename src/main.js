@@ -10,9 +10,21 @@ createApp(App).use(router).use(i18n).mount('#app')
 // so standalone landing pages under public/ (e.g. /guides/fever/) bounce here
 // with ?go=<key> and we route client-side to the real page.
 try {
-  const go = new URLSearchParams(window.location.search).get('go')
+  const params = new URLSearchParams(window.location.search)
+  const go = params.get('go')
   const GO_ROUTES = { fever: '/guides/fever', 'wait-times': '/wait-times' }
   if (go && GO_ROUTES[go]) {
+    // Facility landing pages (public/wait-times/<slug>/) bounce here with
+    // &facility=<key>; the wait-times list consumes it once to highlight and
+    // scroll to that hospital's card.
+    const facility = params.get('facility')
+    if (facility) {
+      try {
+        sessionStorage.setItem('lb_facility', facility)
+      } catch {
+        /* storage unavailable — landing still works, just no highlight */
+      }
+    }
     router.replace(GO_ROUTES[go])
   }
 } catch {
