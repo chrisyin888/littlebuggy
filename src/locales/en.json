@@ -219,6 +219,7 @@
     "refreshHonestyNote": "Wait times may not change on every refresh if the source has not posted a newer update — a fresh check can still show the same minutes.",
     "nonePosted": "No posted wait times for the hospitals we track in the latest pull—try refreshing in a moment.",
     "notPublished": "Wait times not published right now",
+    "fraserPaused": "Fraser Health has paused publishing ER wait times since Aug 17, 2026, while it works to enhance the information it provides. Hospitals in Burnaby, Surrey, Langley, Delta, Abbotsford, Chilliwack, Maple Ridge, New Westminster, White Rock and the Tri-Cities therefore show no live wait right now — their times will appear here again as soon as Fraser Health resumes publishing.",
     "websiteLabel": "Website",
     "notAvailableForCity": "Live ER wait times are not yet available for this city. We're working on adding more cities.",
     "disclaimer": "Wait times are estimates only and may change quickly. Patients are seen based on urgency, not arrival order. Call 911 for life-threatening emergencies.",
@@ -481,9 +482,21 @@
         }
       },
       "fallbackHero": {
-        "active": { "label": "Showing up a lot", "value": "RSV", "blurb": "Tiny coughs and “is that a wheeze?” — lots of playground chat" },
-        "rising": { "label": "On the rise", "value": "Flu chatter", "blurb": "Fevers and wipeouts are trending up in local group texts" },
-        "watch": { "label": "Keep an eye out", "value": "Fever + long cough", "blurb": "A combo that keeps popping up in group texts" }
+        "active": {
+          "label": "Showing up a lot",
+          "value": "RSV",
+          "blurb": "Tiny coughs and “is that a wheeze?” — lots of playground chat"
+        },
+        "rising": {
+          "label": "On the rise",
+          "value": "Flu chatter",
+          "blurb": "Fevers and wipeouts are trending up in local group texts"
+        },
+        "watch": {
+          "label": "Keep an eye out",
+          "value": "Fever + long cough",
+          "blurb": "A combo that keeps popping up in group texts"
+        }
       },
       "weekSummary": {
         "title": "This week, in plain language",
@@ -515,9 +528,18 @@
       "title": "Stories from the neighbourhood",
       "editorialKicker": "Editorial — friendly seasonal stories, not a live epidemiology feed.",
       "deck": "Three warm headlines from playgrounds, pickup lines, and “same here” group chats.",
-      "tc1": { "title": "RSV is still the big conversation", "text": "Tiny coughs, noisy breathing, and “should we worry?” — especially with the littlest kids." },
-      "tc2": { "title": "Air quality swings with the season", "text": "Smoke, dust, and weather shifts can change how comfy outside play feels — worth a glance at the AQHI card." },
-      "tc3": { "title": "Coughs that stick around", "text": "Many families say the cough outlasts the fever — totally worth a check-in if your gut says so." }
+      "tc1": {
+        "title": "RSV is still the big conversation",
+        "text": "Tiny coughs, noisy breathing, and “should we worry?” — especially with the littlest kids."
+      },
+      "tc2": {
+        "title": "Air quality swings with the season",
+        "text": "Smoke, dust, and weather shifts can change how comfy outside play feels — worth a glance at the AQHI card."
+      },
+      "tc3": {
+        "title": "Coughs that stick around",
+        "text": "Many families say the cough outlasts the fever — totally worth a check-in if your gut says so."
+      }
     },
     "active": {
       "title": "This week’s gentle buzz",
@@ -536,22 +558,52 @@
         "trendingNearby": "Trending nearby"
       },
       "cards": {
-        "rsv": { "title": "RSV", "symptoms": "Wheezy breathing, coughs, and tricky feeds for babies." },
-        "flu": { "title": "Flu", "symptoms": "Bam — fever, achy body, zero energy." },
-        "covid": { "title": "COVID", "symptoms": "Cough, fever, sore throat — or sometimes just an off tummy day." },
-        "cold": { "title": "Common Cold", "symptoms": "Stuffy snoot, sneezes, and a mild cough." },
-        "stomach": { "title": "Stomach Bug", "symptoms": "Tummy rumbles, upset hugs, and urgent bathroom trips." }
+        "rsv": {
+          "title": "RSV",
+          "symptoms": "Wheezy breathing, coughs, and tricky feeds for babies."
+        },
+        "flu": {
+          "title": "Flu",
+          "symptoms": "Bam — fever, achy body, zero energy."
+        },
+        "covid": {
+          "title": "COVID",
+          "symptoms": "Cough, fever, sore throat — or sometimes just an off tummy day."
+        },
+        "cold": {
+          "title": "Common Cold",
+          "symptoms": "Stuffy snoot, sneezes, and a mild cough."
+        },
+        "stomach": {
+          "title": "Stomach Bug",
+          "symptoms": "Tummy rumbles, upset hugs, and urgent bathroom trips."
+        }
       }
     },
     "compare": {
       "title": "Symptoms families ask about",
       "deck": "Gentle patterns when a seasonal bug is going around — not a diagnosis.",
       "rows": {
-        "runny": { "symptom": "Runny nose", "tip": "Thicker mucus plus feeling blah, sore throat, or fever often tags along with a virus that’s doing the rounds." },
-        "fever": { "symptom": "Fever", "tip": "Pretty common when a bug is circulating — watch how your child drinks, rests, and bounces back between spikes." },
-        "sneeze": { "symptom": "Sneezing", "tip": "Sneezes show up with lots of bugs; if they’re miserable in other ways too, think whole-picture care and fluids." },
-        "night": { "symptom": "Night cough", "tip": "Lying down can make mucus pool or tickle more — humidifier, fluids, and your nurse line if breathing looks hard." },
-        "energy": { "symptom": "Low energy", "tip": "Viruses often bring “couch magnet” days. If they’re hard to wake or not drinking, get help sooner." }
+        "runny": {
+          "symptom": "Runny nose",
+          "tip": "Thicker mucus plus feeling blah, sore throat, or fever often tags along with a virus that’s doing the rounds."
+        },
+        "fever": {
+          "symptom": "Fever",
+          "tip": "Pretty common when a bug is circulating — watch how your child drinks, rests, and bounces back between spikes."
+        },
+        "sneeze": {
+          "symptom": "Sneezing",
+          "tip": "Sneezes show up with lots of bugs; if they’re miserable in other ways too, think whole-picture care and fluids."
+        },
+        "night": {
+          "symptom": "Night cough",
+          "tip": "Lying down can make mucus pool or tickle more — humidifier, fluids, and your nurse line if breathing looks hard."
+        },
+        "energy": {
+          "symptom": "Low energy",
+          "tip": "Viruses often bring “couch magnet” days. If they’re hard to wake or not drinking, get help sooner."
+        }
       }
     },
     "noticing": {
@@ -566,10 +618,22 @@
     "asking": {
       "title": "Questions parents are asking",
       "deck": "Tap for a warm, plain-language nudge — your doctor or nurse still knows your kid best.",
-      "q1": { "q": "How do I know if it’s “just a cold”?", "a": "Colds usually bring a bundle: tired kiddo, sore throat, runny nose, sometimes fever. How fast it came on and what else is going around in daycare or school matters too. When you’re unsure, your nurse line or doctor is the best shortcut." },
-      "q2": { "q": "Why is my child coughing more at night?", "a": "Gravity! Mucus can pool or tickle more when they lie down. Dry bedroom air or irritated airways can pile on. Humidifier + fluids help lots of homes sleep better — reach out if breathing ever looks scary or sleep is a mess night after night." },
-      "q3": { "q": "Why did the fever come back?", "a": "Sometimes a second bug hops in before the first story is over, or their body is still sorting things out. Sips, snuggles, and watching how they act between spikes is the parent playbook. If they seem really off or you’re uneasy, your team is happy to hear from you." },
-      "q4": { "q": "When is a cough too long?", "a": "A drifty cough can hang around even after energy bounces back — that’s pretty normal. Trust your gut if breathing is tough, lips look blue, they’re not drinking, or the cough keeps ramping up instead of slowly fading. A quick call always beats worrying alone." }
+      "q1": {
+        "q": "How do I know if it’s “just a cold”?",
+        "a": "Colds usually bring a bundle: tired kiddo, sore throat, runny nose, sometimes fever. How fast it came on and what else is going around in daycare or school matters too. When you’re unsure, your nurse line or doctor is the best shortcut."
+      },
+      "q2": {
+        "q": "Why is my child coughing more at night?",
+        "a": "Gravity! Mucus can pool or tickle more when they lie down. Dry bedroom air or irritated airways can pile on. Humidifier + fluids help lots of homes sleep better — reach out if breathing ever looks scary or sleep is a mess night after night."
+      },
+      "q3": {
+        "q": "Why did the fever come back?",
+        "a": "Sometimes a second bug hops in before the first story is over, or their body is still sorting things out. Sips, snuggles, and watching how they act between spikes is the parent playbook. If they seem really off or you’re uneasy, your team is happy to hear from you."
+      },
+      "q4": {
+        "q": "When is a cough too long?",
+        "a": "A drifty cough can hang around even after energy bounces back — that’s pretty normal. Trust your gut if breathing is tough, lips look blue, they’re not drinking, or the cough keeps ramping up instead of slowly fading. A quick call always beats worrying alone."
+      }
     },
     "symptom": {
       "title": "What are you seeing at home?",
@@ -577,11 +641,26 @@
       "groupLabel": "Symptoms you might be seeing",
       "panelKicker": "What neighbours often mention",
       "hint": "Tap a bubble (or a few!) to explore — it’s just for curiosity and “same here” moments.",
-      "cough": { "label": "A cough that won’t quit", "tip": "Sound familiar? Many local families say coughs stick around a week or two while their kid perks up — ping someone if breathing sounds rough or sleep is a struggle." },
-      "fever": { "label": "Warm forehead moments", "tip": "Fevers that pop up, vanish, then say hi again are a hot playground topic. Fluids, rest, and how they’re acting between spikes are your best friends." },
-      "sneeze": { "label": "Lots of sneezing", "tip": "Sneezing shows up in many colds and flus — pair it with how they’re eating, sleeping, and acting overall." },
-      "stomach": { "label": "Tummy troubles", "tip": "Yucky tummies love to visit every sibling in the house. Tiny sips and plain foods usually step in once the worst wave passes." },
-      "nose": { "label": "Runny or stuffy nose", "tip": "Daycare season’s background soundtrack! Thicker mucus plus feeling crummy often tracks with whatever virus is visiting that week." }
+      "cough": {
+        "label": "A cough that won’t quit",
+        "tip": "Sound familiar? Many local families say coughs stick around a week or two while their kid perks up — ping someone if breathing sounds rough or sleep is a struggle."
+      },
+      "fever": {
+        "label": "Warm forehead moments",
+        "tip": "Fevers that pop up, vanish, then say hi again are a hot playground topic. Fluids, rest, and how they’re acting between spikes are your best friends."
+      },
+      "sneeze": {
+        "label": "Lots of sneezing",
+        "tip": "Sneezing shows up in many colds and flus — pair it with how they’re eating, sleeping, and acting overall."
+      },
+      "stomach": {
+        "label": "Tummy troubles",
+        "tip": "Yucky tummies love to visit every sibling in the house. Tiny sips and plain foods usually step in once the worst wave passes."
+      },
+      "nose": {
+        "label": "Runny or stuffy nose",
+        "tip": "Daycare season’s background soundtrack! Thicker mucus plus feeling crummy often tracks with whatever virus is visiting that week."
+      }
     },
     "seek": {
       "title": "When to seek more help",

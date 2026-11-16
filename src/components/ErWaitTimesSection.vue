@@ -19,6 +19,19 @@ const showWaitDebug = import.meta.env.DEV
 // (see hasPublishedWait) instead of being hidden.
 const hospitals = computed(() => payload.value?.hospitals ?? [])
 
+// Fraser Health paused publishing ER wait times on 2026-08-17 ("while we work
+// to enhance the information we provide" — its notice on edwaittimes.ca).
+// While every Fraser ED below shows not_published, explain the gap once at
+// the top instead of leaving eleven unexplained blanks.
+const FRASER_KEYS = new Set([
+  'delta', 'burnaby', 'royal_columbian', 'erh', 'pah', 'rmh',
+  'arh', 'cgh', 'lmh', 'smh_a', 'smh_p',
+])
+const fraserPaused = computed(() => {
+  const fraser = hospitals.value.filter((h) => FRASER_KEYS.has(h.key))
+  return fraser.length > 0 && fraser.every((h) => !hasPublishedWait(h))
+})
+
 const isLive = (row) => hasPublishedWait(row)
 
 function telHref(phone) {
@@ -98,6 +111,10 @@ function severityClass(w) {
 
       <template v-else>
         <FastestNearYou />
+
+        <p v-if="fraserPaused" class="er-waits-section__fraser-note" role="note">
+          {{ t('waitTimes.fraserPaused') }}
+        </p>
 
         <p v-if="error" class="er-waits-section__warn" role="status">
           {{ error }}
@@ -264,6 +281,17 @@ function severityClass(w) {
   color: var(--color-ink-muted);
   font-size: 0.9rem;
   font-weight: 600;
+}
+
+.er-waits-section__fraser-note {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1.05rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--color-ink);
+  border-radius: var(--radius-md);
+  background: rgba(224, 242, 254, 0.75);
+  border: 1px solid rgba(56, 189, 248, 0.45);
 }
 
 .er-waits-section__empty {
