@@ -5,8 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ER &amp; UPCC Wait Times in Metro Vancouver — LittleBuggy</title>
 <meta name="description" content="Live emergency department and urgent care (UPCC) wait times for Metro Vancouver families: BC Children's, Vancouver General, Richmond, Surrey Memorial and more — plus which local viruses are going around this week.">
-<meta http-equiv="refresh" content="0; url=/?go=wait-times">
-<script>location.replace('/?go=wait-times');</script>
+<link rel="alternate" type="text/plain" title="Live wait times (plain text, updated per request)" href="https://littlebuggy-api.onrender.com/wait-times.txt">
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 0; color: #1f2430; background: #faf9fc; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.6rem; line-height: 1.25; }
+  h2 { font-size: 1.15rem; margin-top: 2rem; }
+  .updated { color: #555; font-size: 0.92rem; }
+  .wait-now { font-size: 2rem; font-weight: 700; color: #7c3aed; margin: 0.5rem 0; }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e7e4ee; font-size: 0.95rem; }
+  th { background: #f1edfa; }
+  td.wait { font-weight: 600; white-space: nowrap; }
+  .note { background: #fff7e6; border: 1px solid #f0dfae; border-radius: 8px; padding: 10px 14px; }
+  a { color: #6d28d9; }
+</style>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -58,6 +71,61 @@
 </script>
 </head>
 <body>
-<p>Opening ER &amp; UPCC wait times… <a href="/?go=wait-times">Tap here if nothing happens</a>.</p>
+<main>
+<h1>ER &amp; UPCC wait times in Metro Vancouver</h1>
+<p class="updated">Data snapshot: 2026-11-19 15:45 Pacific Time · source data updated 2026-11-19 15:44 Pacific Time. Wait times change through the day — for the newest numbers use the <a href="https://littlebuggy-api.onrender.com/wait-times.txt">live text feed</a> or <a href="/?go=wait-times">open the live LittleBuggy app</a>.</p>
+<p>LittleBuggy tracks the published emergency department and urgent &amp; primary care centre (UPCC) wait times for Metro Vancouver families, drawn from the official provincial feed. Times are estimates and change through the day. In an emergency, call <strong>911</strong>. For health advice, call HealthLink BC at <strong>8-1-1</strong>.</p>
+<h2>Emergency departments</h2>
+<table>
+<tr><th>Hospital</th><th>City</th><th>Wait</th></tr>
+<tr><td>Delta Hospital</td><td>Delta</td><td class="wait">Not currently published</td></tr>
+<tr><td>Richmond Hospital</td><td>Richmond</td><td class="wait">5h 30m</td></tr>
+<tr><td>Burnaby Hospital</td><td>Burnaby</td><td class="wait">Not currently published</td></tr>
+<tr><td>Vancouver General Hospital</td><td>Vancouver</td><td class="wait">4h 00m</td></tr>
+<tr><td>BC Children&#x27;s Hospital</td><td>Vancouver</td><td class="wait">7h 00m</td></tr>
+<tr><td>Royal Columbian Hospital</td><td>New Westminster</td><td class="wait">Not currently published</td></tr>
+<tr><td>St. Paul&#x27;s Hospital</td><td>Vancouver</td><td class="wait">1h 45m</td></tr>
+<tr><td>Lions Gate Hospital</td><td>North Vancouver</td><td class="wait">3h 30m</td></tr>
+<tr><td>Mount Saint Joseph Hospital</td><td>Vancouver</td><td class="wait">2h 00m</td></tr>
+<tr><td>UBC Hospital</td><td>Vancouver</td><td class="wait">1h 15m</td></tr>
+<tr><td>Squamish General Hospital</td><td>Squamish</td><td class="wait">1h 30m</td></tr>
+<tr><td>Whistler Health Care Centre</td><td>Whistler</td><td class="wait">0h 30m</td></tr>
+<tr><td>Pemberton Health Centre</td><td>Pemberton</td><td class="wait">1h 30m</td></tr>
+<tr><td>Eagle Ridge Hospital</td><td>Port Moody</td><td class="wait">Not currently published</td></tr>
+<tr><td>Peace Arch Hospital</td><td>White Rock</td><td class="wait">Not currently published</td></tr>
+<tr><td>Ridge Meadows Hospital</td><td>Maple Ridge</td><td class="wait">Not currently published</td></tr>
+<tr><td>Sechelt Hospital</td><td>Sechelt</td><td class="wait">2h 45m</td></tr>
+<tr><td>qathet General Hospital</td><td>Powell River</td><td class="wait">2h 15m</td></tr>
+<tr><td>Abbotsford Regional Hospital</td><td>Abbotsford</td><td class="wait">Not currently published</td></tr>
+<tr><td>Chilliwack General Hospital</td><td>Chilliwack</td><td class="wait">Not currently published</td></tr>
+<tr><td>Langley Memorial Hospital</td><td>Langley</td><td class="wait">Not currently published</td></tr>
+<tr><td>Surrey Memorial Hospital Adult</td><td>Surrey</td><td class="wait">Not currently published</td></tr>
+<tr><td>Surrey Memorial Hospital Pediatrics</td><td>Surrey</td><td class="wait">Not currently published</td></tr>
+</table>
+<h2>Urgent &amp; primary care centres (UPCC)</h2>
+<table>
+<tr><th>Centre</th><th>City</th><th>Wait</th></tr>
+<tr><td>Vancouver City Centre Urgent and Primary Care Centre</td><td>Vancouver</td><td class="wait">Not currently published</td></tr>
+<tr><td>UBC Urgent and Primary Care Centre</td><td>Vancouver</td><td class="wait">Not currently published</td></tr>
+<tr><td>North Vancouver Centre Urgent and Primary Care Centre</td><td>North Vancouver</td><td class="wait">Not currently published</td></tr>
+<tr><td>Richmond City Centre Urgent and Primary Care Centre</td><td>Richmond</td><td class="wait">Not currently published</td></tr>
+<tr><td>Metrotown UPCC</td><td>Burnaby</td><td class="wait">Not currently published</td></tr>
+<tr><td>Edmonds UPCC</td><td>Burnaby</td><td class="wait">Not currently published</td></tr>
+<tr><td>Port Moody UPCC</td><td>Port Moody</td><td class="wait">Not currently published</td></tr>
+<tr><td>Richmond East Urgent and Primary Care Centre</td><td>Richmond</td><td class="wait">Not currently published</td></tr>
+<tr><td>Surrey Whalley UPCC</td><td>Surrey</td><td class="wait">Not currently published</td></tr>
+<tr><td>Surrey Newton UPCC</td><td>Surrey</td><td class="wait">Not currently published</td></tr>
+<tr><td>Northeast Urgent and Primary Care Centre</td><td>Vancouver</td><td class="wait">Not currently published</td></tr>
+<tr><td>Southeast Urgent and Primary Care Centre</td><td>Vancouver</td><td class="wait">Not currently published</td></tr>
+<tr><td>REACH Urgent and Primary Care Centre</td><td>Vancouver</td><td class="wait">Not currently published</td></tr>
+<tr><td>Langley UPCC</td><td>Langley</td><td class="wait">Not currently published</td></tr>
+<tr><td>Ridge Meadows UPCC</td><td>Maple Ridge</td><td class="wait">Not currently published</td></tr>
+<tr><td>Abbotsford UPCC</td><td>Abbotsford</td><td class="wait">Not currently published</td></tr>
+<tr><td>Mission UPCC</td><td>Mission</td><td class="wait">Not currently published</td></tr>
+<tr><td>Chilliwack UPCC</td><td>Chilliwack</td><td class="wait">Not currently published</td></tr>
+</table>
+<p class="note">Some hospitals show “Not currently published”: Fraser Health paused publishing ER wait times on August 17, 2026. LittleBuggy shows that honestly rather than an old number, and their times will reappear as soon as publishing resumes.</p>
+<p>See also: <a href="https://littlebuggy.ca/data/homepage-summary.json">which viruses are going around Metro Vancouver this week</a> · <a href="/llms.txt">About LittleBuggy's data (llms.txt)</a></p>
+</main>
 </body>
 </html>

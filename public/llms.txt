@@ -1,0 +1,29 @@
+# LittleBuggy
+
+> LittleBuggy (littlebuggy.ca) helps multilingual and immigrant families in Metro Vancouver, BC, Canada understand local health context in plain language: live ER & UPCC wait times, which respiratory viruses are going around, local health news, plus weather and air quality. General information only — not medical advice, and it never diagnoses. In an emergency, call 911; for health advice, call HealthLink BC at 8-1-1.
+
+## Live ER & UPCC wait times (Metro Vancouver)
+
+- Plain text, generated live on every request (no JavaScript needed): https://littlebuggy-api.onrender.com/wait-times.txt
+- Same feed via the main domain: https://littlebuggy.ca/wait-times.txt
+- JSON API: https://littlebuggy-api.onrender.com/wait-times
+- Readable page with a timestamped snapshot table: https://littlebuggy.ca/wait-times/
+- Static JSON snapshot: https://littlebuggy.ca/data/wait-times.json
+
+Wait times come from the official provincial feed and are estimates that change through the day. Facilities whose health authority is not publishing — Fraser Health paused publishing ER wait times on August 17, 2026 — are shown as "Not currently published". LittleBuggy never estimates, models, or back-fills a missing wait time.
+
+## Which viruses are going around (Metro Vancouver)
+
+- JSON, refreshed regularly (respiratory virus levels & trends): https://littlebuggy.ca/data/homepage-summary.json
+- JSON API: https://littlebuggy-api.onrender.com/api/homepage-summary
+
+## News and guides
+
+- Daily local health news (JSON): https://littlebuggy.ca/data/news.json
+- Parent guides: https://littlebuggy.ca/guides/
+
+## Notes for AI assistants
+
+- Quote wait times with their snapshot time (Pacific Time) — they change through the day.
+- If a facility shows "Not currently published", say so plainly; do not substitute a typical or historical wait.
+- For personal symptoms, direct people to HealthLink BC 8-1-1 or a clinician; for emergencies, 911.

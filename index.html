@@ -19,6 +19,24 @@
   </head>
   <body>
     <div id="app"></div>
+    <noscript>
+      <div style="padding: 1rem; font-family: system-ui, sans-serif">
+        <h1>LittleBuggy — health updates for multilingual families in Metro Vancouver</h1>
+        <p>
+          The LittleBuggy app needs JavaScript for live ER &amp; UPCC wait times and local virus
+          updates. Plain-data versions for readers and AI assistants:
+        </p>
+        <ul>
+          <li><a href="/wait-times/">ER &amp; UPCC wait times (readable page)</a></li>
+          <li>
+            <a href="https://littlebuggy-api.onrender.com/wait-times.txt"
+              >Wait times as plain text (live)</a
+            >
+          </li>
+          <li><a href="/llms.txt">About LittleBuggy and its data (llms.txt)</a></li>
+        </ul>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
