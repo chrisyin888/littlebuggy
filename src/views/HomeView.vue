@@ -12,6 +12,7 @@ import ErWaitTimesSection from '../components/ErWaitTimesSection.vue'
 import EmergencyBanner from '../components/EmergencyBanner.vue'
 import WhereToGoCard from '../components/WhereToGoCard.vue'
 import CallJuneCard from '../components/CallJuneCard.vue'
+import HolidayRibbon from '../components/HolidayRibbon.vue'
 import ParentsBoard from '../components/ParentsBoard.vue'
 import UpccWaitTimesSection from '../components/UpccWaitTimesSection.vue'
 import CityPicker from '../components/CityPicker.vue'
@@ -723,6 +724,7 @@ function onEnvCardKeydown(e, row) {
       <div class="hero__shell">
         <div class="hero__grid-product">
           <div class="hero__column hero__column--copy">
+            <HolidayRibbon variant="pill" />
             <h1 id="hero-title" class="hero__headline">{{ $t('home.hero.title') }}</h1>
             <div
               v-if="visitorsToday != null"

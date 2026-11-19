@@ -9,6 +9,7 @@ import { selectedCityId } from './composables/useSelectedCity.js'
 import LittleBuggyMascot from './components/LittleBuggyMascot.vue'
 import EmergencyHelpCard from './components/EmergencyHelpCard.vue'
 import InstallPrompt from './components/InstallPrompt.vue'
+import HolidayRibbon from './components/HolidayRibbon.vue'
 import { localeToDateLocale } from './utils/localeDisplay.js'
 import { formatRelativeTimePast } from './utils/relativeTime.js'
 
@@ -104,6 +105,7 @@ const snapshotBarTitle = computed(() => {
   <div class="app">
     <div class="site-sticky-top">
       <div class="app-top-stack">
+        <HolidayRibbon />
         <p
           class="snapshot-status-bar"
           role="status"
