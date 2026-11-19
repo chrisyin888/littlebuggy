@@ -14,6 +14,7 @@ import WhereToGoCard from '../components/WhereToGoCard.vue'
 import CallJuneCard from '../components/CallJuneCard.vue'
 import HolidayRibbon from '../components/HolidayRibbon.vue'
 import ParentsBoard from '../components/ParentsBoard.vue'
+import SiteFeedback from '../components/SiteFeedback.vue'
 import UpccWaitTimesSection from '../components/UpccWaitTimesSection.vue'
 import CityPicker from '../components/CityPicker.vue'
 import { useHomepageSnapshot } from '../composables/useHomepageSnapshot.js'
@@ -1187,6 +1188,8 @@ function onEnvCardKeydown(e, row) {
     </section>
 
     <ParentsBoard />
+
+    <SiteFeedback />
 
     <ErWaitTimesSection />
 
