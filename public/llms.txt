@@ -5,7 +5,7 @@
 ## Live ER & UPCC wait times (Metro Vancouver)
 
 - Plain text, generated live on every request (no JavaScript needed): https://littlebuggy-api.onrender.com/wait-times.txt
-- Same feed via the main domain: https://littlebuggy.ca/wait-times.txt
+- Plain-text snapshot on the main domain (timestamped; the API feed above is the live one): https://littlebuggy.ca/wait-times.txt
 - JSON API: https://littlebuggy-api.onrender.com/wait-times
 - Readable page with a timestamped snapshot table: https://littlebuggy.ca/wait-times/
 - Static JSON snapshot: https://littlebuggy.ca/data/wait-times.json

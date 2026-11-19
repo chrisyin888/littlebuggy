@@ -1,6 +1,6 @@
 {
-  "checked_at": "2026-11-19T15:45:14",
-  "source_updated_at": "2026-11-19T15:44:21",
+  "checked_at": "2026-11-19T15:48:21",
+  "source_updated_at": "2026-11-19T15:47:23",
   "hospitals": [
     {
       "key": "delta",
@@ -19,7 +19,7 @@
       "name": "Richmond Hospital",
       "city": "Richmond",
       "address": "7000 Westminster Highway, Richmond, BC, V6X 1A2",
-      "wait_text": "5h 30m",
+      "wait_text": "5h 15m",
       "wait_status": "live",
       "phone": "(604) 278-9711",
       "website": "https://www.vch.ca/en/location-service/emergency-department-richmond-hospital",
@@ -91,7 +91,7 @@
       "name": "Lions Gate Hospital",
       "city": "North Vancouver",
       "address": "231 East 15th St, North Vancouver, BC, V7L 2L7",
-      "wait_text": "3h 30m",
+      "wait_text": "3h 45m",
       "wait_status": "live",
       "phone": "(604) 988-3131",
       "website": "https://www.vch.ca/en/location-service/emergency-department-lions-gate-hospital",
@@ -103,7 +103,7 @@
       "name": "Mount Saint Joseph Hospital",
       "city": "Vancouver",
       "address": "3080 Prince Edward St, Vancouver, BC, V5T 3N4",
-      "wait_text": "2h 00m",
+      "wait_text": "1h 45m",
       "wait_status": "live",
       "phone": "(604) 874-1141",
       "website": "https://www.providencehealthcare.org/hospitals-residences/mount-saint-joseph-hospital",
@@ -139,7 +139,7 @@
       "name": "Whistler Health Care Centre",
       "city": "Whistler",
       "address": "4380 Lorimer Road, Whistler, BC, V0N 18B",
-      "wait_text": "0h 30m",
+      "wait_text": "0h 15m",
       "wait_status": "live",
       "phone": "(604) 932-4911",
       "website": "https://www.vch.ca/en/location/whistler-health-care-centre",
@@ -199,7 +199,7 @@
       "name": "Sechelt Hospital",
       "city": "Sechelt",
       "address": "5544 Sunshine Coast Highway, Sechelt, BC V0N 3A0",
-      "wait_text": "2h 45m",
+      "wait_text": "2h 30m",
       "wait_status": "live",
       "phone": "(604) 885-2224",
       "website": "https://www.vch.ca/en/location-service/emergency-department-sechelt-shishalh-hospital",
@@ -499,7 +499,7 @@
   ],
   "debug": {
     "temporary": true,
-    "fetched_url": "https://www.edwaittimes.ca/api/wait-times?_=1795128313881",
+    "fetched_url": "https://www.edwaittimes.ca/api/wait-times?_=1795128501435",
     "parse_mode": "json"
   },
   "city_id": "vancouver",

@@ -146,6 +146,52 @@ def snapshot_line(payload: dict) -> str:
     )
 
 
+def render_text(payload: dict) -> str:
+    """Same format as the API's live /wait-times.txt — a timestamped snapshot.
+
+    The API version is generated fresh per request; this static copy carries
+    the same snapshot timestamp as the HTML pages and points to the live feed.
+    """
+    region = payload.get("region") or "Metro Vancouver"
+    lines = [
+        f"LittleBuggy — ER & UPCC wait times for {region}",
+        "",
+        f"Snapshot generated: {fmt_ts(payload.get('checked_at'))} Pacific Time (America/Vancouver)",
+        f"Source data last updated: {fmt_ts(payload.get('source_updated_at'))} Pacific Time",
+        "Source: official provincial wait-times feed, fetched live by LittleBuggy.",
+        "Wait times are estimates and change through the day. In an emergency, call 911. "
+        "For health advice, call HealthLink BC at 8-1-1.",
+        "For the newest numbers, use the live feed: https://littlebuggy-api.onrender.com/wait-times.txt",
+        "",
+    ]
+    hospitals = payload.get("hospitals") or []
+    lines.append(f"EMERGENCY DEPARTMENTS ({len(hospitals)})")
+    for h in hospitals:
+        city = (h.get("city") or "").strip()
+        suffix = f" ({city})" if city else ""
+        lines.append(f"- {h.get('name', '')}{suffix}: {wait_display(h)}")
+    lines.append("")
+    upccs = payload.get("upcc_centres") or []
+    lines.append(f"URGENT & PRIMARY CARE CENTRES — UPCC ({len(upccs)})")
+    for u in upccs:
+        city = (u.get("city") or "").strip()
+        suffix = f" ({city})" if city else ""
+        lines.append(f"- {u.get('name', '')}{suffix}: {wait_display(u)}")
+    lines += [
+        "",
+        "Note: facilities marked \"Not currently published\" are not publishing a wait time "
+        "right now. Fraser Health paused publishing ER wait times on August 17, 2026; "
+        "LittleBuggy shows that honestly instead of an old number, and times reappear here "
+        "as soon as publishing resumes.",
+        "",
+        "Live page: https://littlebuggy.ca/wait-times/",
+        "JSON API: https://littlebuggy-api.onrender.com/wait-times",
+        "About LittleBuggy and its data: https://littlebuggy.ca/llms.txt",
+        "",
+    ]
+    return "\n".join(lines)
+
+
 def table_html(rows: list[dict], kind: str) -> str:
     out = ["<table>", f"<tr><th>{kind}</th><th>City</th><th>Wait</th></tr>"]
     for r in rows:
@@ -246,6 +292,11 @@ def main() -> int:
     out_json = ROOT / "public" / "data" / "wait-times.json"
     out_json.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"wrote {out_json.relative_to(ROOT)}")
+
+    # Plain-text snapshot, same origin (live version is the API feed above)
+    out_txt = ROOT / "public" / "wait-times.txt"
+    out_txt.write_text(render_text(payload), encoding="utf-8")
+    print(f"wrote {out_txt.relative_to(ROOT)}")
 
     # Index page
     out_index = ROOT / "public" / "wait-times" / "index.html"

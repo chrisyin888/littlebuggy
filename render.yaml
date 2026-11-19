@@ -55,11 +55,10 @@ services:
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
     routes:
-      # Plain-text live wait-times feed lives on the API (rendered per request);
-      # expose it under the main domain so crawlers find it from littlebuggy.ca.
-      - type: redirect
-        source: /wait-times.txt
-        destination: https://littlebuggy-api.onrender.com/wait-times.txt
+      # NOTE: /wait-times.txt is a committed static snapshot (see
+      # scripts/update_wait_times_pages.py). A redirect route to the API's
+      # live text feed was tried on 2026-11-19 but route changes in this file
+      # do not apply without a manual Blueprint sync in the Render dashboard.
       - type: rewrite
         source: /*
         destination: /index.html

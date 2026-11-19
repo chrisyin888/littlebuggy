@@ -1,0 +1,58 @@
+LittleBuggy — ER & UPCC wait times for Metro Vancouver
+
+Snapshot generated: 2026-11-19 15:48 Pacific Time (America/Vancouver)
+Source data last updated: 2026-11-19 15:47 Pacific Time
+Source: official provincial wait-times feed, fetched live by LittleBuggy.
+Wait times are estimates and change through the day. In an emergency, call 911. For health advice, call HealthLink BC at 8-1-1.
+For the newest numbers, use the live feed: https://littlebuggy-api.onrender.com/wait-times.txt
+
+EMERGENCY DEPARTMENTS (23)
+- Delta Hospital (Delta): Not currently published
+- Richmond Hospital (Richmond): 5h 15m
+- Burnaby Hospital (Burnaby): Not currently published
+- Vancouver General Hospital (Vancouver): 4h 00m
+- BC Children's Hospital (Vancouver): 7h 00m
+- Royal Columbian Hospital (New Westminster): Not currently published
+- St. Paul's Hospital (Vancouver): 1h 45m
+- Lions Gate Hospital (North Vancouver): 3h 45m
+- Mount Saint Joseph Hospital (Vancouver): 1h 45m
+- UBC Hospital (Vancouver): 1h 15m
+- Squamish General Hospital (Squamish): 1h 30m
+- Whistler Health Care Centre (Whistler): 0h 15m
+- Pemberton Health Centre (Pemberton): 1h 30m
+- Eagle Ridge Hospital (Port Moody): Not currently published
+- Peace Arch Hospital (White Rock): Not currently published
+- Ridge Meadows Hospital (Maple Ridge): Not currently published
+- Sechelt Hospital (Sechelt): 2h 30m
+- qathet General Hospital (Powell River): 2h 15m
+- Abbotsford Regional Hospital (Abbotsford): Not currently published
+- Chilliwack General Hospital (Chilliwack): Not currently published
+- Langley Memorial Hospital (Langley): Not currently published
+- Surrey Memorial Hospital Adult (Surrey): Not currently published
+- Surrey Memorial Hospital Pediatrics (Surrey): Not currently published
+
+URGENT & PRIMARY CARE CENTRES — UPCC (18)
+- Vancouver City Centre Urgent and Primary Care Centre (Vancouver): Not currently published
+- UBC Urgent and Primary Care Centre (Vancouver): Not currently published
+- North Vancouver Centre Urgent and Primary Care Centre (North Vancouver): Not currently published
+- Richmond City Centre Urgent and Primary Care Centre (Richmond): Not currently published
+- Metrotown UPCC (Burnaby): Not currently published
+- Edmonds UPCC (Burnaby): Not currently published
+- Port Moody UPCC (Port Moody): Not currently published
+- Richmond East Urgent and Primary Care Centre (Richmond): Not currently published
+- Surrey Whalley UPCC (Surrey): Not currently published
+- Surrey Newton UPCC (Surrey): Not currently published
+- Northeast Urgent and Primary Care Centre (Vancouver): Not currently published
+- Southeast Urgent and Primary Care Centre (Vancouver): Not currently published
+- REACH Urgent and Primary Care Centre (Vancouver): Not currently published
+- Langley UPCC (Langley): Not currently published
+- Ridge Meadows UPCC (Maple Ridge): Not currently published
+- Abbotsford UPCC (Abbotsford): Not currently published
+- Mission UPCC (Mission): Not currently published
+- Chilliwack UPCC (Chilliwack): Not currently published
+
+Note: facilities marked "Not currently published" are not publishing a wait time right now. Fraser Health paused publishing ER wait times on August 17, 2026; LittleBuggy shows that honestly instead of an old number, and times reappear here as soon as publishing resumes.
+
+Live page: https://littlebuggy.ca/wait-times/
+JSON API: https://littlebuggy-api.onrender.com/wait-times
+About LittleBuggy and its data: https://littlebuggy.ca/llms.txt
