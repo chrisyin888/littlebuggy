@@ -1,23 +1,17 @@
 <script setup>
 /**
  * Red-line safety banner — sits above all data sections on the home page.
- * Deliberately bilingual (EN + 中文) regardless of UI locale: this is the one
- * message every family must be able to read before looking at any numbers.
- * (Bilingual exception approved for this banner; the rest of the site follows
- * the selected locale.)
+ * English only, regardless of UI locale (owner order 2026-11-22: no Chinese
+ * copy in this banner — the 8-1-1 line itself offers interpreters).
  */
 </script>
 
 <template>
-  <section class="emergency-banner" role="alert" aria-label="Emergency help / 紧急求助">
+  <section class="emergency-banner" role="alert" aria-label="Emergency help">
     <p class="emergency-banner__line">
       <strong>Emergency? Call <a href="tel:911">911</a>.</strong>
       Not sure where to go? Call
       <a href="tel:811">8-1-1 (HealthLink BC)</a> — free nurse advice, interpreters available.
-    </p>
-    <p class="emergency-banner__line emergency-banner__line--zh" lang="zh-CN">
-      <strong>紧急情况请拨打 <a href="tel:911">911</a>。</strong>
-      不确定该去哪？拨打 <a href="tel:811">8-1-1（HealthLink BC）</a>——免费护士咨询，可提供多语言口译服务。
     </p>
   </section>
 </template>
@@ -40,10 +34,6 @@
   font-weight: 700;
   line-height: 1.5;
   color: #7f1d1d;
-}
-
-.emergency-banner__line--zh {
-  margin-top: 0.3rem;
 }
 
 .emergency-banner a {

@@ -14,7 +14,7 @@ defineProps({
 
 <template>
   <div v-if="variant === 'bar'" class="holiday-ribbon" role="note">
-    <span class="holiday-ribbon__text">🎄 Merry Christmas · 圣诞快乐 — from LittleBuggy</span>
+    <span class="holiday-ribbon__text">🎄 Merry Christmas — from LittleBuggy</span>
   </div>
   <p v-else class="holiday-pill">
     <span class="holiday-pill__flake" aria-hidden="true">❄</span>

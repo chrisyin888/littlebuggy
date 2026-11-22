@@ -23,6 +23,17 @@
   ul.tips li { margin-bottom: 0.25rem; }
   a { color: #6d28d9; }
   li, p { line-height: 1.55; }
+  @media (max-width: 700px) {
+    th, td { font-size: 0.95rem; padding: 7px 8px; }
+    td.city { white-space: normal; }
+    td.when { white-space: normal; }
+    table.wide thead { display: none; }
+    table.wide, table.wide tbody, table.wide tr, table.wide td { display: block; width: auto; }
+    table.wide tr { border: 1px solid #d9e2f2; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; background: #fff; }
+    table.wide td { border-bottom: none; padding: 3px 0; }
+    table.wide td.city { font-size: 1.08rem; padding-bottom: 5px; }
+    table.wide td a { display: inline-flex; align-items: center; min-height: 40px; }
+  }
 </style>
 </head>
 <body>
@@ -53,7 +64,7 @@
 
   <h2>All 15 cities — one table</h2>
   <div class="wrap">
-  <table>
+  <table class="wide">
     <tr><th>City</th><th>Next registration</th><th>Pools</th><th>Status</th><th>Good to know</th><th></th></tr>
       <tr><td class="city">Delta</td><td>Residents · aquatics — Wed, Nov 25, 2026, 9:00 am<br>Residents · other programs — Thu, Nov 26, 9:00 am<br>Non-residents — Wed, Dec 9, 9:00 am</td><td>Ladner Leisure Centre · Sungod Recreation Centre · Winskill Aquatic &amp; Fitness Centre<span class="sub">Outdoor pools (summer only): Ladner Outdoor Pool, North Delta Outdoor Pool.</span></td><td>Date set</td><td><ul class="tips"><li>Account required before registering</li><li>Residents get a two-week head start on aquatics</li><li>Questions: 604-952-3000</li></ul></td><td><a href="https://cityofdelta.perfectmind.com">Register</a></td></tr>
       <tr><td class="city">Surrey</td><td>Residents · swim lessons — Sun, Dec 13, 2026, 9:00 pm<br>Residents · most programs — Sun, Nov 29, 9:00 pm<br>Non-residents · all programs — Sun, Dec 20, 9:00 pm</td><td>Surrey Sport &amp; Leisure Complex (Fleetwood) · Guildford Recreation Centre · Grandview Heights Aquatic Centre · South Surrey Indoor Pool · Newton Recreation Centre<span class="sub">Eight outdoor pools run in summer only.</span></td><td>Date set</td><td><ul class="tips"><li>Verify resident address in person (government ID); photo on file for each family member</li><li>Waiting room: log in 8:45–8:59 pm — spots assigned randomly at 9:00 pm</li><li>Waitlist offers by email expire in 24 hours</li><li>Residents ages 3–12: entry-level lessons $0</li><li>Phone: 604-501-5100</li></ul></td><td><a href="https://cityofsurrey.perfectmind.com">Register</a></td></tr>

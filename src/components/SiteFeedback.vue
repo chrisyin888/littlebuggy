@@ -26,7 +26,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="site-feedback" aria-label="Site feedback · 网站意见">
+  <section id="site-feedback" class="site-feedback" aria-label="Site feedback">
     <div class="family-feedback" data-site="littlebuggy" data-theme="light"></div>
   </section>
 </template>

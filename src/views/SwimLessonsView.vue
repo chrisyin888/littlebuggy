@@ -88,18 +88,18 @@ const STATUS_LABELS = {
         <tbody>
           <tr v-for="city in SWIM_CITIES" :id="city.id" :key="city.id">
             <td class="tbl__city">{{ city.name }}</td>
-            <td>
+            <td data-label="Next registration">
               <span v-for="line in SWIM_TABLE[city.id].dates" :key="line" class="tbl__line">{{ line }}</span>
               <span v-if="SWIM_TABLE[city.id].note" class="tbl__note">{{ SWIM_TABLE[city.id].note }}</span>
             </td>
-            <td>
+            <td data-label="Pools">
               {{ city.pools.length ? city.pools.join(' · ') : '—' }}
               <span v-if="city.poolsNote" class="tbl__note">{{ city.poolsNote }}</span>
             </td>
-            <td>
+            <td data-label="Status">
               <span class="badge" :data-status="city.status">{{ STATUS_LABELS[city.status] }}</span>
             </td>
-            <td>
+            <td data-label="Good to know">
               <ul class="tbl__tips">
                 <li v-for="tip in SWIM_TABLE[city.id].tips" :key="tip">{{ tip }}</li>
               </ul>
@@ -378,5 +378,79 @@ const STATUS_LABELS = {
   font-weight: 600;
   line-height: 1.6;
   color: var(--color-ink-muted);
+}
+
+/* ——— Mobile (≤700px): wide tables become stacked cards ———
+   One card per city, every cell labelled, no sideways scrolling and
+   nothing to pinch-zoom. The "next registrations" table keeps its
+   3-column shape but lets the date wrap and gives the button room. */
+@media (max-width: 700px) {
+  .tbl {
+    font-size: 0.92rem;
+  }
+
+  .tbl__btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0.45rem 1rem;
+    font-size: 0.88rem;
+  }
+
+  .tbl__when {
+    white-space: normal;
+  }
+
+  .tbl--cities {
+    min-width: 0;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .tbl--cities thead {
+    display: none;
+  }
+
+  .tbl--cities tbody,
+  .tbl--cities tr,
+  .tbl--cities td {
+    display: block;
+    width: auto;
+  }
+
+  .tbl--cities tr {
+    background: rgba(255, 255, 255, 0.95);
+    border: 3px solid rgba(186, 230, 253, 0.55);
+    border-radius: 12px;
+    box-shadow: var(--shadow-soft);
+    padding: 0.7rem 0.85rem 0.85rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .tbl--cities td {
+    border-bottom: none;
+    padding: 0.28rem 0;
+  }
+
+  .tbl--cities td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-soft);
+    margin-bottom: 0.12rem;
+  }
+
+  .tbl--cities .tbl__city {
+    font-size: 1.12rem;
+    padding-bottom: 0.35rem;
+  }
+
+  .tbl--cities .tbl__btn-cell {
+    padding-top: 0.55rem;
+  }
 }
 </style>

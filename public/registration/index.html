@@ -23,6 +23,17 @@
   ul.tips li { margin-bottom: 0.25rem; }
   a { color: #6d28d9; }
   li, p { line-height: 1.55; }
+  @media (max-width: 700px) {
+    th, td { font-size: 0.95rem; padding: 7px 8px; }
+    td.city { white-space: normal; }
+    td.when { white-space: normal; }
+    table.wide thead { display: none; }
+    table.wide, table.wide tbody, table.wide tr, table.wide td { display: block; width: auto; }
+    table.wide tr { border: 1px solid #d9e2f2; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; background: #fff; }
+    table.wide td { border-bottom: none; padding: 3px 0; }
+    table.wide td.city { font-size: 1.08rem; padding-bottom: 5px; }
+    table.wide td a { display: inline-flex; align-items: center; min-height: 40px; }
+  }
 </style>
 </head>
 <body>
@@ -84,7 +95,7 @@
   <h2>Holiday &amp; day camps</h2>
   <p>Key thing to know: winter break camps (Dec 21–31) mostly registered back in the FALL guide in most cities — many are full with waitlists, but spots do open up, so check the system and join waitlists now. The late-November "Winter 2027" registration rounds below are for January–March programs, Pro-D and spring break camps. Only Vancouver has posted a Summer 2027 camp date so far.</p>
   <div class="wrap">
-  <table>
+  <table class="wide">
     <tr><th>City</th><th>Registration</th><th>Status</th><th>Where</th><th>Good to know</th><th></th></tr>
       <tr><td class="city">Vancouver</td><td>Winter break: open now · Summer 2027: Wed, Apr 14, 2027, 7:00 pm</td><td>Open now</td><td>Community centres across the city</td><td>Summer by phone Apr 15, 10:00 am; openings change daily (Mount Pleasant had spots, Killarney full at check)</td><td><a href="https://vanrec.ca">Register</a></td></tr>
       <tr><td class="city">Burnaby</td><td>Winter break camps opened Aug 10 (residents)</td><td>Open now</td><td>Bonsor, Edmonds, Shadbolt Centre, Rosemary Brown</td><td>Most full — waitlists open, some 30–55 people deep · Summer 2027 not posted</td><td><a href="https://www.burnaby.ca/WebReg">Register</a></td></tr>
@@ -107,7 +118,7 @@
   <h2>Skating lessons</h2>
   <p>Winter is peak skating season. Some cities bundle skating with general programs, some give it its own day (Township of Langley, Port Moody ice sports, NVRC), and Burnaby runs it on the same rolling system as swimming.</p>
   <div class="wrap">
-  <table>
+  <table class="wide">
     <tr><th>City</th><th>Registration</th><th>Status</th><th>Where</th><th>Good to know</th><th></th></tr>
       <tr><td class="city">Vancouver</td><td>Winter 2027 date not posted (fall set opened Nov 5)</td><td>Not posted yet</td><td>Britannia, Hillcrest, Kerrisdale (Cyclone Taylor), Killarney, Kitsilano, Sunset, Trout Lake, West End rinks</td><td>Check vanrec and your community centre</td><td><a href="https://vanrec.ca">Register</a></td></tr>
       <tr><td class="city">Burnaby</td><td>Rolling — residents 30 days before class start · non-residents 27 days, 10:00 am</td><td>Rolling</td><td>Bill Copeland Sports Centre, Kensington Complex, Rosemary Brown Recreation Centre</td><td>One lesson set per child at a time</td><td><a href="https://www.burnaby.ca/WebReg">Register</a></td></tr>
@@ -130,7 +141,7 @@
   <h2>Gymnastics</h2>
   <p>Only about half the cities run their own gymnastics — in Richmond, Surrey, Delta, Langley City, Maple Ridge and White Rock it is run by clubs, not the city, so there is no municipal registration day. Where the city runs it, gymnastics follows the general-programs date.</p>
   <div class="wrap">
-  <table>
+  <table class="wide">
     <tr><th>City</th><th>Registration</th><th>Status</th><th>Where</th><th>Good to know</th><th></th></tr>
       <tr><td class="city">Vancouver</td><td>By centre — e.g. Thunderbird Sat, Nov 28, 9:00 am · Marpole-Oakridge Dec 7, 7:00 pm</td><td>Date set</td><td>Britannia and other community centres</td><td>Run by community centre associations, so dates vary</td><td><a href="https://vanrec.ca">Register</a></td></tr>
       <tr><td class="city">Burnaby</td><td>Residents Mon, Nov 30 · General public Fri, Dec 4, 10:00 am</td><td>Date set</td><td>Bonsor, Christine Sinclair, Cameron and other centres</td><td>City-run classes incl. Kinder-gymnastics</td><td><a href="https://www.burnaby.ca/WebReg">Register</a></td></tr>
@@ -153,7 +164,7 @@
   <h2>Preschool &amp; parent-and-tot</h2>
   <p>Two different things share this shelf: licensed, school-year preschools (apply / enrol separately, often open now) and seasonal early-years classes (parent &amp; tot, Busy Bees, Kinder prep) that register on the general-programs date for each city.</p>
   <div class="wrap">
-  <table>
+  <table class="wide">
     <tr><th>City</th><th>Registration</th><th>Status</th><th>Where</th><th>Good to know</th><th></th></tr>
       <tr><td class="city">Vancouver</td><td>By centre — e.g. Thunderbird Nov 28, 9:00 am · Roundhouse Dec 8, 7:00 pm</td><td>Date set</td><td>Community centres across the city</td><td>Licensed preschools enrol through each centre</td><td><a href="https://vanrec.ca">Register</a></td></tr>
       <tr><td class="city">Burnaby</td><td>Residents Nov 30 · General public Dec 4, 10:00 am</td><td>Date set</td><td>Community centres across Burnaby</td><td>Busy Bees, Kinder classes and more (January starts)</td><td><a href="https://www.burnaby.ca/WebReg">Register</a></td></tr>
@@ -176,7 +187,7 @@
   <h2>Lifeguard ladder: Bronze Medallion, Bronze Cross &amp; beyond</h2>
   <p>The path to a lifeguarding job runs Bronze Star → Bronze Medallion → Bronze Cross → National Lifeguard. These are aquatic programs, so in almost every city they register on the same day and system as swim lessons — the swim dates are repeated here so teens and parents see them in one place.</p>
   <div class="wrap">
-  <table>
+  <table class="wide">
     <tr><th>City</th><th>Registration</th><th>Status</th><th>Where</th><th>Good to know</th><th></th></tr>
       <tr><td class="city">Vancouver</td><td>Winter 2027 date not posted</td><td>Not posted yet</td><td>Hillcrest, Templeton, Killarney and other indoor pools</td><td>Full ladder runs year-round at Park Board pools — watch vanrec</td><td><a href="https://vanrec.ca">Register</a></td></tr>
       <tr><td class="city">Burnaby</td><td>Rolling — check each class in WebReg</td><td>Rolling</td><td>City pools (see guide)</td><td>Bronze Star and Bronze Medallion are in the Winter guide (January classes)</td><td><a href="https://www.burnaby.ca/WebReg">Register</a></td></tr>

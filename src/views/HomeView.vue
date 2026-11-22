@@ -16,6 +16,7 @@ import ParentsBoard from '../components/ParentsBoard.vue'
 import SiteFeedback from '../components/SiteFeedback.vue'
 import UpccWaitTimesSection from '../components/UpccWaitTimesSection.vue'
 import CourseRegistrationGlance from '../components/CourseRegistrationGlance.vue'
+import SiteIndex from '../components/SiteIndex.vue'
 import CityPicker from '../components/CityPicker.vue'
 import { useHomepageSnapshot } from '../composables/useHomepageSnapshot.js'
 import { signalDisplayLine } from '../lib/homepageSummary.js'
@@ -862,6 +863,8 @@ function onEnvCardKeydown(e, row) {
 
     <!-- Trend preview: real per-day levels from saved snapshots (trendHistoryRows);
          decorative bars remain only as a fallback while history is unavailable. -->
+    <SiteIndex />
+
     <section class="home-trend-preview" aria-labelledby="home-trend-preview-title">
       <div class="home-trend-preview__inner">
         <h2 id="home-trend-preview-title" class="home-trend-preview__title">
@@ -1069,7 +1072,7 @@ function onEnvCardKeydown(e, row) {
             </details>
 
             <template v-if="snapshot">
-              <p class="snapshot-dash__row-eyebrow">{{ $t('home.snapshotSection.envEyebrow') }}</p>
+              <p id="weather-air" class="snapshot-dash__row-eyebrow">{{ $t('home.snapshotSection.envEyebrow') }}</p>
               <ul class="snapshot-dash__grid snapshot-dash__grid--env" role="list">
                 <li
                   v-for="row in envDashboardRowsOrdered"
@@ -1158,7 +1161,7 @@ function onEnvCardKeydown(e, row) {
     </section>
 
     <!-- Daily update news: latest 3 items from public/data/news.json, newest highlighted. -->
-    <section v-if="latestNews.length" class="home-news" aria-labelledby="home-news-title">
+    <section v-if="latestNews.length" id="daily-news" class="home-news" aria-labelledby="home-news-title">
       <div class="home-news__inner">
         <h2 id="home-news-title" class="home-news__title">{{ $t('home.newsSection.title') }}</h2>
         <article

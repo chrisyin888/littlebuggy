@@ -49,6 +49,17 @@ const STYLE = `
   ul.tips li { margin-bottom: 0.25rem; }
   a { color: #6d28d9; }
   li, p { line-height: 1.55; }
+  @media (max-width: 700px) {
+    th, td { font-size: 0.95rem; padding: 7px 8px; }
+    td.city { white-space: normal; }
+    td.when { white-space: normal; }
+    table.wide thead { display: none; }
+    table.wide, table.wide tbody, table.wide tr, table.wide td { display: block; width: auto; }
+    table.wide tr { border: 1px solid #d9e2f2; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; background: #fff; }
+    table.wide td { border-bottom: none; padding: 3px 0; }
+    table.wide td.city { font-size: 1.08rem; padding-bottom: 5px; }
+    table.wide td a { display: inline-flex; align-items: center; min-height: 40px; }
+  }
 `
 
 // ————————————————— Swim lessons —————————————————
@@ -101,7 +112,7 @@ ${upcomingRows}
 
   <h2>All 15 cities — one table</h2>
   <div class="wrap">
-  <table>
+  <table class="wide">
     <tr><th>City</th><th>Next registration</th><th>Pools</th><th>Status</th><th>Good to know</th><th></th></tr>
 ${cityRows}
   </table>
@@ -150,7 +161,7 @@ const sectionHtml = REG_SECTIONS.map((sec) => {
   <h2>${esc(sec.title)}</h2>
   <p>${esc(sec.blurb)}</p>
   <div class="wrap">
-  <table>
+  <table class="wide">
     <tr><th>City</th><th>Registration</th><th>Status</th><th>Where</th><th>Good to know</th><th></th></tr>
 ${rows}
   </table>

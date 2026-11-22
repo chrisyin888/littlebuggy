@@ -59,7 +59,7 @@ const soonRows = REG_CALENDAR.slice(0, 8)
 </script>
 
 <template>
-  <section class="course-glance" aria-labelledby="course-glance-title">
+  <section id="course-registration" class="course-glance" aria-labelledby="course-glance-title">
     <div class="course-glance__inner">
       <h2 id="course-glance-title" class="course-glance__title">
         🏊 City swim lessons &amp; program registration
@@ -71,7 +71,7 @@ const soonRows = REG_CALENDAR.slice(0, 8)
 
       <h3 class="course-glance__subhead">Swim lessons — all 15 cities, soonest first</h3>
       <div class="course-glance__tbl-wrap">
-        <table class="course-glance__tbl">
+        <table class="course-glance__tbl course-glance__tbl--swim">
           <thead>
             <tr>
               <th scope="col">City</th>
@@ -84,10 +84,10 @@ const soonRows = REG_CALENDAR.slice(0, 8)
           <tbody>
             <tr v-for="row in swimRows" :key="row.id">
               <td class="course-glance__city">{{ row.city }}</td>
-              <td>Swim lessons</td>
-              <td>{{ row.when }}</td>
-              <td>{{ row.where }}</td>
-              <td>
+              <td data-label="Course">Swim lessons</td>
+              <td data-label="Registration opens">{{ row.when }}</td>
+              <td data-label="Where">{{ row.where }}</td>
+              <td data-label="Status">
                 <span class="course-glance__badge" :data-status="row.status">
                   {{ STATUS_LABELS[row.status] }}
                 </span>
@@ -239,5 +239,63 @@ const soonRows = REG_CALENDAR.slice(0, 8)
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+/* ——— Mobile (≤700px): the 15-city table becomes stacked cards ———
+   The swim table is the first thing parents scan on the homepage; on a
+   phone it reads as one labelled card per city, no sideways scrolling.
+   The 2-column "also opening soon" table just gets bigger type. */
+@media (max-width: 700px) {
+  .course-glance__tbl {
+    font-size: 0.92rem;
+  }
+
+  .course-glance__when {
+    white-space: normal;
+  }
+
+  .course-glance__tbl--swim {
+    background: transparent;
+  }
+
+  .course-glance__tbl--swim thead {
+    display: none;
+  }
+
+  .course-glance__tbl--swim tbody,
+  .course-glance__tbl--swim tr,
+  .course-glance__tbl--swim td {
+    display: block;
+    width: auto;
+  }
+
+  .course-glance__tbl--swim tr {
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid rgba(147, 197, 253, 0.55);
+    border-radius: 12px;
+    padding: 0.65rem 0.8rem 0.75rem;
+    margin-bottom: 0.7rem;
+  }
+
+  .course-glance__tbl--swim td {
+    border-bottom: none;
+    padding: 0.24rem 0;
+  }
+
+  .course-glance__tbl--swim td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-soft);
+    margin-bottom: 0.1rem;
+  }
+
+  .course-glance__tbl--swim .course-glance__city {
+    font-size: 1.1rem;
+    padding-bottom: 0.3rem;
+  }
 }
 </style>

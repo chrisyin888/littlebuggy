@@ -115,14 +115,14 @@ onMounted(() => {
           <tbody>
             <tr v-for="entry in section.entries" :key="section.id + entry.city">
               <td class="reg-table__city">{{ entry.city }}</td>
-              <td>{{ regRow(section, entry).when }}</td>
-              <td>
+              <td data-label="Registration">{{ regRow(section, entry).when }}</td>
+              <td data-label="Status">
                 <span class="badge" :data-status="regRow(section, entry).status">
                   {{ REG_STATUS_LABELS[regRow(section, entry).status] }}
                 </span>
               </td>
-              <td>{{ entry.venue }}</td>
-              <td>{{ regRow(section, entry).note }}</td>
+              <td data-label="Where">{{ entry.venue }}</td>
+              <td data-label="Good to know">{{ regRow(section, entry).note }}</td>
               <td class="reg-table__btn-cell">
                 <a
                   class="reg-table__btn"
@@ -376,5 +376,78 @@ onMounted(() => {
   font-weight: 600;
   line-height: 1.6;
   color: var(--color-ink-muted);
+}
+
+/* ——— Mobile (≤700px): section tables become stacked cards ———
+   One card per city with labelled cells; the 3-column calendar table
+   stays a table but lets dates wrap instead of forcing sideways scroll. */
+@media (max-width: 700px) {
+  .reg-table {
+    font-size: 0.92rem;
+  }
+
+  .reg-table__when {
+    white-space: normal;
+  }
+
+  .reg-table__btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0.45rem 1rem;
+    font-size: 0.88rem;
+  }
+
+  .reg-table--section {
+    min-width: 0;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .reg-table--section thead {
+    display: none;
+  }
+
+  .reg-table--section tbody,
+  .reg-table--section tr,
+  .reg-table--section td {
+    display: block;
+    width: auto;
+  }
+
+  .reg-table--section tr {
+    background: rgba(255, 255, 255, 0.95);
+    border: 3px solid rgba(186, 230, 253, 0.55);
+    border-radius: 12px;
+    box-shadow: var(--shadow-soft);
+    padding: 0.7rem 0.85rem 0.85rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .reg-table--section td {
+    border-bottom: none;
+    padding: 0.28rem 0;
+  }
+
+  .reg-table--section td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-soft);
+    margin-bottom: 0.12rem;
+  }
+
+  .reg-table--section .reg-table__city {
+    font-size: 1.12rem;
+    padding-bottom: 0.35rem;
+  }
+
+  .reg-table--section .reg-table__btn-cell {
+    padding-top: 0.55rem;
+  }
 }
 </style>
