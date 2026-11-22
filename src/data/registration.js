@@ -1,0 +1,197 @@
+/**
+ * Recreation registration calendar — skating, camps, gymnastics, preschool
+ * and lifeguard courses across Metro Vancouver municipalities.
+ * Verified from city / recreation commission websites on November 22, 2026.
+ * Never invent a date: where a city has not posted one, the entry says so.
+ */
+
+export const REG_CHECKED_DATE = 'November 22, 2026'
+
+export const REG_SYSTEMS = {
+  vancouver: { url: 'https://vanrec.ca', label: 'vanrec' },
+  burnaby: { url: 'https://www.burnaby.ca/WebReg', label: 'Burnaby WebReg' },
+  richmond: { url: 'https://www.richmond.ca/register', label: 'richmond.ca/register' },
+  surrey: { url: 'https://cityofsurrey.perfectmind.com', label: 'MySurrey (PerfectMind)' },
+  delta: { url: 'https://cityofdelta.perfectmind.com', label: 'DeltaReg (PerfectMind)' },
+  langleyCity: { url: 'https://www.langleycity.ca/parks-recreation', label: 'Langley City recreation' },
+  township: { url: 'https://www.tol.ca/recregister', label: 'tol.ca/recregister' },
+  coquitlam: { url: 'https://cityofcoquitlam.perfectmind.com', label: 'SignMeUp (PerfectMind)' },
+  portCoquitlam: {
+    url: 'https://anc.ca.apm.activecommunities.com/cityofportcoquitlam',
+    label: 'ActiveNet (PoCo)',
+  },
+  portMoody: { url: 'https://cityofportmoody.perfectmind.com', label: 'SignMeUp (Port Moody)' },
+  newWestminster: {
+    url: 'https://cityofnewwestminster.perfectmind.com',
+    label: 'PerfectMind (New West)',
+  },
+  northVancouver: { url: 'https://nvrc.perfectmind.com', label: 'NVRC (PerfectMind)' },
+  westVancouver: { url: 'https://activewestvanrec.ca', label: 'activewestvanrec.ca' },
+  mapleRidge: { url: 'https://cityofmapleridge.perfectmind.com', label: 'PerfectMind (Maple Ridge)' },
+  whiteRock: { url: 'https://www.whiterockcity.ca/register', label: 'WhiteRockREG' },
+}
+
+/** Every confirmed upcoming registration moment, chronological. */
+export const REG_CALENDAR = [
+  { when: 'Tue, Nov 24 · 8:00 am', what: 'Port Moody — residents: general programs (gymnastics, preschool)', sys: 'portMoody' },
+  { when: 'Tue, Nov 24 · 8:30 am', what: 'Coquitlam — residents: general programs (swim, skate, preschool, camps)', sys: 'coquitlam' },
+  { when: 'Wed, Nov 25 · 9:00 am', what: 'Delta — residents: aquatics (swim lessons, Bronze courses)', sys: 'delta' },
+  { when: 'Thu, Nov 26 · 8:00 / 10:00 am', what: 'West Vancouver — general programs (gymnastics, preschool): residents 8 am, others 10 am', sys: 'westVancouver' },
+  { when: 'Thu, Nov 26 · 8:30 am', what: 'Coquitlam — non-residents: general programs', sys: 'coquitlam' },
+  { when: 'Thu, Nov 26 · 9:00 am', what: 'Delta — residents: community recreation (preschool, camps & classes)', sys: 'delta' },
+  { when: 'Fri, Nov 27 · 12:00 pm', what: 'Township of Langley — residents: general programs & skating lessons', sys: 'township' },
+  { when: 'Sat, Nov 28 · 9:00 am', what: 'Vancouver — Thunderbird Community Centre winter programs (public registration; dates vary by centre)', sys: 'vancouver' },
+  { when: 'Sun, Nov 29 · 9:00 pm', what: 'Surrey — residents: most programs (skating lessons, preschool)', sys: 'surrey' },
+  { when: 'Mon, Nov 30 · 10:00 am', what: 'Burnaby — residents: recreation programs (gymnastics, preschool)', sys: 'burnaby' },
+  { when: 'Tue, Dec 1 · 6:00 am', what: 'Maple Ridge — online: non-aquatic programs (preschool, general)', sys: 'mapleRidge' },
+  { when: 'Tue, Dec 1 · evening (time TBC)', what: 'Richmond — Winter 2027 registration night (all programs; postponed from Nov 17)', sys: 'richmond' },
+  { when: 'Tue, Dec 1 · 10:00 am', what: 'New Westminster — residents: aquatic programs (swim, Bronze)', sys: 'newWestminster' },
+  { when: 'Wed, Dec 2 · 7:00 / 9:00 am', what: 'North Vancouver (NVRC) — swimming & Bronze courses: residents 7 am, others 9 am', sys: 'northVancouver' },
+  { when: 'Thu, Dec 3 · 7:00 am', what: 'North Vancouver (NVRC) — skating lessons & general programs (gymnastics, early years)', sys: 'northVancouver' },
+  { when: 'Thu, Dec 3 · 8:00 / 10:00 am', what: 'West Vancouver — swim & skate registration: residents 8 am, others 10 am', sys: 'westVancouver' },
+  { when: 'Thu, Dec 3 · 10:00 am', what: 'New Westminster — residents: all programs (gymnastics, preschool)', sys: 'newWestminster' },
+  { when: 'Fri, Dec 4 · 10:00 am', what: 'Burnaby — general public: recreation programs', sys: 'burnaby' },
+  { when: 'Fri, Dec 4 · 12:00 pm', what: 'Township of Langley — non-residents: general programs & skating', sys: 'township' },
+  { when: 'Fri, Dec 4', what: 'Langley City — winter recreation registration (general programs; time not posted)', sys: 'langleyCity' },
+  { when: 'Wed, Dec 9 · 9:00 am', what: 'Delta — non-residents: all programs', sys: 'delta' },
+  { when: 'Thu, Dec 10 · 10:00 am', what: 'New Westminster — everyone: all programs', sys: 'newWestminster' },
+  { when: 'Fri, Dec 11 · 12:00 pm', what: 'Township of Langley — residents: swimming & Bronze courses', sys: 'township' },
+  { when: 'Sun, Dec 13 · 9:00 pm', what: 'Surrey — residents: aquatic programs (swim lessons, Bronze courses)', sys: 'surrey' },
+  { when: 'Tue, Dec 15 · 8:00 am', what: 'Port Moody — residents: ice sports (skating lessons)', sys: 'portMoody' },
+  { when: 'Thu, Dec 17 · 8:00 am', what: 'Port Moody — non-residents: ice sports', sys: 'portMoody' },
+  { when: 'Fri, Dec 18 · 12:00 pm', what: 'Township of Langley — non-residents: swimming', sys: 'township' },
+  { when: 'Sun, Dec 20 · 9:00 pm', what: 'Surrey — non-residents: all programs', sys: 'surrey' },
+  { when: 'Tue, Dec 22 · 6:00 am', what: 'Maple Ridge — online: aquatic programs (swim, Bronze). Phone / in-person Dec 24, 8 am', sys: 'mapleRidge' },
+  { when: 'Wed, Apr 14, 2027 · 7:00 pm', what: 'Vancouver — Summer 2027 day camps (online & in-person; by phone Apr 15, 10 am)', sys: 'vancouver' },
+]
+
+export const REG_OPEN_NOW = [
+  'Port Coquitlam — all winter programs (residents Nov 17, public Nov 20) are open now.',
+  'White Rock — winter programs opened Nov 18 at 8:30 am.',
+  'Winter break camps — already open in Vancouver, Burnaby, Surrey, Coquitlam, New Westminster and West Vancouver (most registered in the fall; remaining spots and waitlists are in the systems now).',
+  'North Vancouver (NVRC) — licensed preschool enrolment for 2026/27 is open now and runs to May 2027 (call 604-987-7529).',
+  'Burnaby — swim and skating lessons register on a rolling basis all season (30 days ahead for residents).',
+]
+
+export const REG_SECTIONS = [
+  {
+    id: 'camps',
+    title: 'Holiday & day camps',
+    titleZh: '冬令营 / 假期营 / 夏令营',
+    blurb:
+      'Key thing to know: winter break camps (Dec 21–31) mostly registered back in the FALL guide in most cities — many are full with waitlists, but spots do open up, so check the system and join waitlists now. The late-November "Winter 2027" registration rounds below are for January–March programs, Pro-D and spring break camps. Only Vancouver has posted a Summer 2027 camp date so far.',
+    entries: [
+      { city: 'Vancouver', sys: 'vancouver', text: 'Winter break camps are open now (registered since August; at our check Mount Pleasant still had openings and Killarney was full — it changes daily). Summer 2027 day camps: Wed, Apr 14, 2027 at 7:00 pm online and in person; by phone Thu, Apr 15 at 10:00 am.', venue: 'Community centres across the city' },
+      { city: 'Burnaby', sys: 'burnaby', text: 'Winter break camps (Dec 21–24 & Dec 28–31) opened Aug 10 for residents — most are full with open waitlists (some 30–55 people deep). Summer 2027 dates not posted yet.', venue: 'Bonsor, Edmonds, Shadbolt Centre, Rosemary Brown' },
+      { city: 'Richmond', sys: 'richmond', text: 'Winter camp listings are live in the system. The city has moved its Winter registration night to Tue, Dec 1 (time to be confirmed) — the city page does not say whether that night covers camps specifically, so check the system for camp spots in the meantime.', venue: 'City Centre, Thompson, Hamilton, Sea Island and other community centres' },
+      { city: 'Surrey', sys: 'surrey', text: 'Winter break camps (Dec 21–31) are open now until filled — the city names Cloverdale Sport & Ice Complex for winter break camps. Summer 2027 dates not posted yet.', venue: 'Cloverdale Sport & Ice Complex and other recreation centres' },
+      { city: 'Delta', sys: 'delta', text: 'Winter break single-day camps (ages 5–12) run at North Delta and South Delta recreation centres. Delta has not posted a camp-only registration day; community recreation registration is Nov 26 (residents) / Dec 9 (non-residents) at 9:00 am.', venue: 'North Delta Recreation Centre, South Delta Recreation Centre, Ladner Leisure Centre, Sungod' },
+      { city: 'Langley City', sys: 'langleyCity', text: 'Winter break day camps were in the Fall guide (fall registration from Aug 12) and are being promoted now — check ActiveNet for remaining spots.', venue: 'Timms Community Centre, Douglas Recreation Centre' },
+      { city: 'Township of Langley', sys: 'township', text: 'Winter camps run at five venues. The camps page does not name its own registration day; winter general registration is Nov 27 (residents) / Dec 4 (non-residents) at 12:00 pm.', venue: 'Aldergrove CC, George Preston, salishan Place, Walnut Grove CC, W.C. Blair' },
+      { city: 'Coquitlam', sys: 'coquitlam', text: 'Winter break day camps (Dec 21–30) are open now — some days waitlisted, some still bookable. In the winter round, Pro-D day camps register Nov 17 (residents) / Nov 19 (non-residents).', venue: 'Maillardville, Pinetree, Town Centre Park Community Centre' },
+      { city: 'Port Coquitlam', sys: 'portCoquitlam', text: 'Winter break camps were in the Fall guide and are open now. The Winter 2027 round (Nov 17 residents / Nov 20 public) covers Pro-D and spring break camps.', venue: 'Port Coquitlam Community Centre, Hyde Creek' },
+      { city: 'Port Moody', sys: 'portMoody', text: 'The city has not posted a camp-only date; camps sit inside winter general registration — Nov 24 (residents) / Nov 26 (non-residents) at 8:00 am, with resident priority.', venue: 'Recreation Complex (300 Ioco Rd), Kyle Centre' },
+      { city: 'New Westminster', sys: 'newWestminster', text: 'Winter break camps (Dec 19–Jan 3) opened Nov 5 (residents) / Nov 12 (everyone) at 10:00 am — open now, check for spots.', venue: 'təməsew̓txʷ Aquatic and Community Centre, Queensborough Community Centre' },
+      { city: 'North Vancouver (NVRC)', sys: 'northVancouver', text: 'Winter break camps (from Dec 21) are listed at Harry Jerome, Lynn Creek and Delbrook. The camps page does not say which registration batch they belong to — general programs register Dec 3 at 7:00 am for everyone.', venue: 'Harry Jerome, Lynn Creek, Delbrook, Parkgate, Lions Gate' },
+      { city: 'West Vancouver', sys: 'westVancouver', text: 'Winter break camp registration is open now (per the district\'s Holiday Happenings page).', venue: 'West Vancouver Community Centre' },
+      { city: 'Maple Ridge', sys: 'mapleRidge', text: 'The city has not posted camp-specific dates; winter non-aquatic registration opens online Dec 1 at 6:00 am.', venue: 'Maple Ridge Leisure Centre, Albion Community Centre, The ACT Arts Centre' },
+      { city: 'White Rock', sys: 'whiteRock', text: 'Winter program registration opened Nov 18 at 8:30 am; the city page does not specify whether winter break camps are in this round — check WhiteRockREG.', venue: 'White Rock Community Centre, Centennial Park Leisure Centre, Kent Street Activity Centre' },
+    ],
+  },
+  {
+    id: 'skating',
+    title: 'Skating lessons',
+    titleZh: '滑冰课',
+    blurb:
+      'Winter is peak skating season. Some cities bundle skating with general programs, some give it its own day (Township of Langley, Port Moody ice sports, NVRC), and Burnaby runs it on the same rolling system as swimming.',
+    entries: [
+      { city: 'Vancouver', sys: 'vancouver', text: 'The Park Board has not posted a single Winter 2027 skating registration date we could verify (the fall set opened Nov 5). Lessons run at 8 rinks; check vanrec and your community centre.', venue: 'Britannia, Hillcrest, Kerrisdale (Cyclone Taylor), Killarney, Kitsilano, Sunset, Trout Lake, West End rinks' },
+      { city: 'Burnaby', sys: 'burnaby', text: 'Rolling registration, same as swimming: residents 30 days before the class start at 10:00 am, non-residents 27 days before at 10:00 am. One lesson set per child at a time.', venue: 'Bill Copeland Sports Centre, Kensington Complex, Rosemary Brown Recreation Centre' },
+      { city: 'Richmond', sys: 'richmond', text: 'Skating registers on the same Winter registration night as everything else: Tue, Dec 1 (start time to be confirmed on the city site). Queue-it virtual waiting room at peak; no resident priority.', venue: 'Minoru Arenas' },
+      { city: 'Surrey', sys: 'surrey', text: 'Skating is in "most programs": residents Sun, Nov 29 at 9:00 pm; non-residents Sun, Dec 20 at 9:00 pm. You need a free Recreation Passcard linked to your account.', venue: 'Cloverdale Sport & Ice Complex, Surrey Sport & Leisure – Arenas, Newton Arena, South Surrey Arena, North Surrey Sport & Ice Complex' },
+      { city: 'Delta', sys: 'delta', text: 'Delta\'s date table does not name skating separately (aquatics Nov 25 / community recreation Nov 26 for residents; non-residents Dec 9, all 9:00 am) — check DeltaReg for your class. Winter Learn to Skate is confirmed at South Delta Recreation Centre and Ladner Leisure Centre. Note: Delta accounts cannot be created online — call 604-952-3000 or visit a facility.', venue: 'South Delta Recreation Centre, Ladner Leisure Centre (also North Delta Rec, Sungod)' },
+      { city: 'Langley City', sys: 'langleyCity', text: 'No municipal skating lessons — Langley City has no arena. City residents usually register as non-residents with the Township of Langley (Dec 4, 12:00 pm).', venue: '—' },
+      { city: 'Township of Langley', sys: 'township', text: 'Skating has its own round, two weeks before swimming: residents Fri, Nov 27 at 12:00 pm; non-residents Fri, Dec 4 at 12:00 pm. New for Winter 2027: classes are grouped by skill level, not age — book a skill assessment if you are unsure of the level.', venue: 'Aldergrove Community Centre, George Preston Recreation Centre' },
+      { city: 'Coquitlam', sys: 'coquitlam', text: 'With general programs: residents Tue, Nov 24, non-residents Thu, Nov 26, both 8:30 am. One skating set per person at a time; waitlist offers go by email and expire in 24 hours.', venue: 'Poirier Sport & Leisure Complex' },
+      { city: 'Port Coquitlam', sys: 'portCoquitlam', text: 'Open now — residents from Nov 17, public from Nov 20 (both 8:00 am), same round as all winter programs.', venue: 'Port Coquitlam Community Centre (Arena 3)' },
+      { city: 'Port Moody', sys: 'portMoody', text: 'Ice sports have their own round: residents Tue, Dec 15 at 8:00 am; non-residents Thu, Dec 17 at 8:00 am. Ice sports registrations cannot be withdrawn online — phone or visit.', venue: 'Port Moody Recreation Complex (300 Ioco Rd)' },
+      { city: 'New Westminster', sys: 'newWestminster', text: 'Skating is in "all programs": residents Thu, Dec 3, everyone Thu, Dec 10, both 10:00 am. No previous level on file? The city offers free assessments during public skates.', venue: 'Moody Park Arena' },
+      { city: 'North Vancouver (NVRC)', sys: 'northVancouver', text: 'Skating registers Thu, Dec 3 — residents 7:00 am, non-residents 9:00 am (one day after swimming). Same virtual waiting room rules: arrive 6:45–6:59 for a random queue spot at 7:00. Waitlist offers must be completed by 1:00 pm the next day.', venue: 'Harry Jerome, Karen Magnussen, Canlan Sports – North Shore' },
+      { city: 'West Vancouver', sys: 'westVancouver', text: 'Same day as swimming: Thu, Dec 3 — residents 8:00 am, non-residents 10:00 am.', venue: 'West Vancouver Ice Arena (786 22nd St)' },
+      { city: 'Maple Ridge', sys: 'mapleRidge', text: 'Skating is a non-aquatic program: online Tue, Dec 1 at 6:00 am; phone / in-person Thu, Dec 3 at 8:00 am. No resident priority — online is simply two days earlier.', venue: 'Planet Ice – Maple Ridge (23588 105 Ave)' },
+      { city: 'White Rock', sys: 'whiteRock', text: 'Winter registration opened Nov 18 at 8:30 am (the city guide date; a city web page says Nov 19 — either way it is open now), same day and system for all programs, no resident priority.', venue: 'Centennial Park Leisure Centre & Arena (14600 North Bluff Rd)' },
+    ],
+  },
+  {
+    id: 'gymnastics',
+    title: 'Gymnastics',
+    titleZh: '体操',
+    blurb:
+      'Only about half the cities run their own gymnastics — in Richmond, Surrey, Delta, Langley City, Maple Ridge and White Rock it is run by clubs, not the city, so there is no municipal registration day. Where the city runs it, gymnastics follows the general-programs date.',
+    entries: [
+      { city: 'Vancouver', sys: 'vancouver', text: 'Run by community centre associations, so dates vary by centre — e.g., Thunderbird public registration Sat, Nov 28 at 9:00 am; the new Marpole-Oakridge centre opens winter registration Dec 7 at 7:00 pm.', venue: 'Britannia and other community centres' },
+      { city: 'Burnaby', sys: 'burnaby', text: 'City-run classes (incl. Kinder-gymnastics) register with recreation programs: residents Mon, Nov 30 at 10:00 am; general public Fri, Dec 4 at 10:00 am.', venue: 'Bonsor, Christine Sinclair, Cameron and other centres' },
+      { city: 'Richmond', sys: 'richmond', text: 'No city-run gymnastics — run by the Richmond Gymnastics Association (club registration, not the city system).', venue: '140-7400 River Road (club)' },
+      { city: 'Surrey', sys: 'surrey', text: 'No city-run gymnastics found in the city guide — local option is the Surrey Gymnastics Society (club).', venue: 'Club-run' },
+      { city: 'Delta', sys: 'delta', text: 'No city-run gymnastics — run by the Delta Gymnastics Society in Ladner (club registration).', venue: '4680 Clarence Taylor Cres, Ladner (club)' },
+      { city: 'Langley City', sys: 'langleyCity', text: 'No city-run gymnastics — the Langley Gymnastics Foundation is based at Langley Events Centre in the Township.', venue: 'Club-run (in Township of Langley)' },
+      { city: 'Township of Langley', sys: 'township', text: 'City-run gymnastics (from age 3–4) at W.C. Blair. General programs: residents Fri, Nov 27 at 12:00 pm; non-residents Fri, Dec 4 at 12:00 pm.', venue: 'W.C. Blair Recreation Centre' },
+      { city: 'Coquitlam', sys: 'coquitlam', text: 'City-run gymnastics at Pinetree Community Centre. General programs: Nov 24 (residents) / Nov 26 (non-residents), 8:30 am.', venue: 'Pinetree Community Centre' },
+      { city: 'Port Coquitlam', sys: 'portCoquitlam', text: 'No gymnastics listing found in the Winter 2027 Leisure Guide. Winter registration itself is open (Nov 17 residents / Nov 20 public).', venue: '—' },
+      { city: 'Port Moody', sys: 'portMoody', text: 'City-run Gymnastics Kids / Tots and drop-in gymnastics. General programs: Nov 24 (residents) / Nov 26 (non-residents), 8:00 am.', venue: 'Port Moody Recreation Complex' },
+      { city: 'New Westminster', sys: 'newWestminster', text: 'A local strength — full Gymnastics & Trampoline ladder at Queen\'s Park Sportsplex. All programs: Dec 3 (residents) / Dec 10 (everyone), 10:00 am.', venue: 'Queen\'s Park Sportsplex' },
+      { city: 'North Vancouver (NVRC)', sys: 'northVancouver', text: 'City-run gymnastics (Move & Play, parent participation, school age). General programs: Thu, Dec 3 at 7:00 am for everyone (no resident priority on general programs).', venue: 'Ron Andrews, Harry Jerome' },
+      { city: 'West Vancouver', sys: 'westVancouver', text: 'Dedicated Gymnastics Centre; winter classes (Jan 4–Mar) are already listed in the system. General programs: Thu, Nov 26 — residents 8:00 am, non-residents 10:00 am.', venue: 'Gymnastics Centre, West Vancouver Community Centre (2121 Marine Dr)' },
+      { city: 'Maple Ridge', sys: 'mapleRidge', text: 'No city-run gymnastics — club-run locally (e.g., Wayland Sports).', venue: 'Club-run' },
+      { city: 'White Rock', sys: 'whiteRock', text: 'No city-run gymnastics — White Rock Gymnastics Athletics Society (its gym is in Surrey). City winter registration opened Nov 18.', venue: 'Club-run (in Surrey)' },
+    ],
+  },
+  {
+    id: 'preschool',
+    title: 'Preschool & parent-and-tot',
+    titleZh: '学前项目',
+    blurb:
+      'Two different things share this shelf: licensed, school-year preschools (apply / enrol separately, often open now) and seasonal early-years classes (parent & tot, Busy Bees, Kinder prep) that register on the general-programs date for each city.',
+    entries: [
+      { city: 'Vancouver', sys: 'vancouver', text: 'Centre-by-centre — no single city date. Examples: Thunderbird public registration Nov 28 at 9:00 am; Roundhouse winter registration Dec 8 at 7:00 pm. Licensed preschools enrol through each centre.', venue: 'Community centres across the city' },
+      { city: 'Burnaby', sys: 'burnaby', text: 'Busy Bees, Kinder classes and more in the Winter guide (January starts): residents Nov 30 at 10:00 am; general public Dec 4 at 10:00 am, on WebReg.', venue: 'Community centres across Burnaby' },
+      { city: 'Richmond', sys: 'richmond', text: 'Large early-years offering (preschool classes, parent & tot sports and ballet) at Cambie, City Centre, Hamilton and more. Winter registration night is Tue, Dec 1 — check richmond.ca/register for the evening times for your centre.', venue: 'Cambie, City Centre, Hamilton and other community centres' },
+      { city: 'Surrey', sys: 'surrey', text: 'Seasonal early-years classes are in "most programs": Nov 29 at 9:00 pm (residents) / Dec 20 at 9:00 pm (non-residents). Licensed preschool for 2026/27 enrols separately and the city says it is open now.', venue: 'Newton, Fleetwood, Guildford and other recreation centres' },
+      { city: 'Delta', sys: 'delta', text: 'Playtime and preschool classes are community recreation: Nov 26 at 9:00 am (residents) / Dec 9 at 9:00 am (non-residents) — one day after aquatics.', venue: 'Ladner Leisure, Sungod, Winskill, North & South Delta Rec' },
+      { city: 'Langley City', sys: 'langleyCity', text: 'Cookie Monster Preschool (Douglas) and Parent & Tot classes (Timms). Winter recreation registration Fri, Dec 4 (time not posted); school-year preschool has its own application page on the city site.', venue: 'Douglas Recreation & Child Care Centre, Timms Community Centre' },
+      { city: 'Township of Langley', sys: 'township', text: 'Licensed preschool (school-year, e.g., Curiosity Grove) plus early-years classes on the general dates: Nov 27 (residents) / Dec 4 (non-residents), 12:00 pm.', venue: 'W.C. Blair, Walnut Grove, Aldergrove' },
+      { city: 'Coquitlam', sys: 'coquitlam', text: 'Early Years (0–5) is its own chapter in the guide: Nov 24 (residents) / Nov 26 (non-residents), 8:30 am.', venue: 'Poirier, Pinetree, Town Centre Park Community Centre' },
+      { city: 'Port Coquitlam', sys: 'portCoquitlam', text: 'City Preschool, Playschool and early-years sports — open now with the winter round (Nov 17 residents / Nov 20 public).', venue: 'Port Coquitlam Community Centre, Hyde Creek' },
+      { city: 'Port Moody', sys: 'portMoody', text: 'Early Years / Preschool category: Nov 24 (residents) / Nov 26 (non-residents), 8:00 am.', venue: 'Port Moody Recreation Complex' },
+      { city: 'New Westminster', sys: 'newWestminster', text: 'Discovery Playtime Preschool (ages 3–5) and early-years classes, in all programs: Dec 3 (residents) / Dec 10 (everyone), 10:00 am.', venue: 'Centres across New Westminster' },
+      { city: 'North Vancouver (NVRC)', sys: 'northVancouver', text: 'Licensed preschool (Delbrook, Lonsdale @ Harry Jerome, Lynn Valley): enrolment for 2026/27 is open now, running to May 2027 — call 604-987-7529. Seasonal early-years classes: Dec 3 at 7:00 am.', venue: 'Delbrook, Harry Jerome, Lynn Valley' },
+      { city: 'West Vancouver', sys: 'westVancouver', text: 'Early Years and preschool classes with general programs: Thu, Nov 26 — residents 8:00 am, non-residents 10:00 am.', venue: 'Children\'s Centre / Gymnastics Centre, West Vancouver Community Centre' },
+      { city: 'Maple Ridge', sys: 'mapleRidge', text: 'Preschool classes are non-aquatic: browse from Nov 24; online Dec 1 at 6:00 am; phone / in-person Dec 3 at 8:00 am.', venue: 'Maple Ridge Leisure Centre, Albion Community Centre' },
+      { city: 'White Rock', sys: 'whiteRock', text: 'Children\'s and preschool classes are in the Winter guide (Dec–Mar); registration opened Nov 18 at 8:30 am.', venue: 'White Rock Community Centre, Kent Street Activity Centre' },
+    ],
+  },
+  {
+    id: 'bronze',
+    title: 'Lifeguard ladder: Bronze Medallion, Bronze Cross & beyond',
+    titleZh: '青少年救生员阶梯课',
+    blurb:
+      'The path to a lifeguarding job runs Bronze Star → Bronze Medallion → Bronze Cross → National Lifeguard. These are aquatic programs, so in almost every city they register on the same day and system as swim lessons — the swim dates are repeated here so teens and parents see them in one place.',
+    entries: [
+      { city: 'Vancouver', sys: 'vancouver', text: 'Full ladder runs year-round at Park Board pools. A Winter 2027 registration date has not been posted that we could verify — watch vanrec.', venue: 'Hillcrest, Templeton, Killarney and other indoor pools' },
+      { city: 'Burnaby', sys: 'burnaby', text: 'Bronze Star and Bronze Medallion are in the Winter guide (classes from January). Swim and skating lessons register on the rolling system — check WebReg for each class\'s own registration opening.', venue: 'City pools (see guide)' },
+      { city: 'Richmond', sys: 'richmond', text: 'Aquatic Leadership registers with aquatics on Winter registration night, Tue, Dec 1 (online aquatics first in the evening; confirm times on the city site).', venue: 'Minoru Centre for Active Living, Watermania' },
+      { city: 'Surrey', sys: 'surrey', text: 'Full ladder incl. National Lifeguard (Pool) and Swim Instructor: aquatics dates — Dec 13 at 9:00 pm (residents) / Dec 20 at 9:00 pm (non-residents).', venue: 'Guildford, Fleetwood, Grandview Heights, Surrey Sport & Leisure, Newton' },
+      { city: 'Delta', sys: 'delta', text: 'Advanced Aquatics (Bronze Star / Medallion / Cross, NL, Lifesaving Instructor) registers with aquatics: Nov 25 at 9:00 am (residents) / Dec 9 at 9:00 am (non-residents).', venue: 'Ladner Leisure, Winskill, Sungod' },
+      { city: 'Langley City', sys: 'langleyCity', text: 'No winter courses — the outdoor pool runs Bronze Medallion in summer only.', venue: 'Al Anderson Memorial Pool (summer)' },
+      { city: 'Township of Langley', sys: 'township', text: 'Aquatic leadership registers with swimming: Dec 11 (residents) / Dec 18 (non-residents), 12:00 pm.', venue: 'Walnut Grove, W.C. Blair, Aldergrove' },
+      { city: 'Coquitlam', sys: 'coquitlam', text: 'Advanced Aquatics runs at both pools. Winter general registration is Nov 24 / Nov 26 at 8:30 am — check SignMeUp for whether your Bronze course sits in that batch.', venue: 'Poirier, City Centre Aquatic Complex' },
+      { city: 'Port Coquitlam', sys: 'portCoquitlam', text: 'Advanced Aquatics is listed with swimming lessons — open now (Nov 17 residents / Nov 20 public).', venue: 'Hyde Creek Recreation Centre' },
+      { city: 'Port Moody', sys: 'portMoody', text: 'No municipal Bronze courses — no indoor pool. Nearest city options are Coquitlam and New Westminster.', venue: '—' },
+      { city: 'New Westminster', sys: 'newWestminster', text: 'Aquatics: Dec 1 at 10:00 am (residents) / Dec 10 at 10:00 am (everyone).', venue: 'təməsew̓txʷ Aquatic and Community Centre' },
+      { city: 'North Vancouver (NVRC)', sys: 'northVancouver', text: 'Bronze Star / Medallion / Cross register with swimming: Dec 2 — residents 7:00 am, non-residents 9:00 am.', venue: 'Ron Andrews, Delbrook, Harry Jerome' },
+      { city: 'West Vancouver', sys: 'westVancouver', text: 'Bronze Medallion (Jan 10–17, plus Feb and Mar sessions), Bronze Cross and Bronze Star are in the winter list. Registers with swimming: Dec 3 — residents 8:00 am, non-residents 10:00 am.', venue: 'West Vancouver Aquatic Centre' },
+      { city: 'Maple Ridge', sys: 'mapleRidge', text: 'Bronze Medallion / Cross register with aquatics: online Dec 22 at 6:00 am; phone / in-person Dec 24 at 8:00 am.', venue: 'Maple Ridge Leisure Centre' },
+      { city: 'White Rock', sys: 'whiteRock', text: 'No municipal Bronze courses (no pool). White Rock teens usually use Surrey\'s Grandview Heights or South Surrey pools — Surrey non-resident aquatics opens Dec 20 at 9:00 pm.', venue: '—' },
+    ],
+  },
+]

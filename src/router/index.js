@@ -15,6 +15,16 @@ const router = createRouter({
       component: () => import('../views/WaitTimesView.vue'),
     },
     {
+      path: '/swim-lessons',
+      name: 'swimLessons',
+      component: () => import('../views/SwimLessonsView.vue'),
+    },
+    {
+      path: '/registration',
+      name: 'registration',
+      component: () => import('../views/RegistrationView.vue'),
+    },
+    {
       path: '/guides/fever',
       name: 'feverGuide',
       component: () => import('../views/FeverGuideView.vue'),
