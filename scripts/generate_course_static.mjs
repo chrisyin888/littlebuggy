@@ -66,7 +66,7 @@ const cityRows = SWIM_CITIES.map((c) => {
   const pools = (c.pools.length ? esc(c.pools.join(' · ')) : '—') +
     (c.poolsNote ? `<span class="sub">${esc(c.poolsNote)}</span>` : '')
   const tips = `<ul class="tips">${t.tips.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`
-  return `      <tr><td class="city">${esc(c.name)}<span class="sub">${esc(c.nameZh)}</span></td><td>${dates}${note}</td><td>${pools}</td><td>${SWIM_STATUS[c.status]}</td><td>${tips}</td><td><a href="${esc(c.registerUrl)}">Register</a></td></tr>`
+  return `      <tr><td class="city">${esc(c.name)}</td><td>${dates}${note}</td><td>${pools}</td><td>${SWIM_STATUS[c.status]}</td><td>${tips}</td><td><a href="${esc(c.registerUrl)}">Register</a></td></tr>`
 }).join('\n')
 
 const sourceItems = SWIM_CITIES.map(
@@ -147,7 +147,7 @@ const sectionHtml = REG_SECTIONS.map((sec) => {
     })
     .join('\n')
   return `
-  <h2>${esc(sec.title)} ${esc(sec.titleZh)}</h2>
+  <h2>${esc(sec.title)}</h2>
   <p>${esc(sec.blurb)}</p>
   <div class="wrap">
   <table>
@@ -186,7 +186,7 @@ ${openItems}
     </ul>
   </div>
 
-  <h2>Swim lessons 游泳课</h2>
+  <h2>Swim lessons</h2>
   <p>Swim lessons are the most competitive registration of all, so they get a dedicated page with every city's date, pools and rules in one table: <a href="https://littlebuggy.ca/swim-lessons">littlebuggy.ca/swim-lessons</a></p>
 ${sectionHtml}
 

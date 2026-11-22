@@ -38,17 +38,18 @@ const STATUS_LABELS = {
 
     <h1 class="swim-page__title">Swim Lessons Registration in Metro Vancouver</h1>
     <p class="swim-page__meta">
-      City-run （市政府） swim lesson sign-up dates, pools and official registration links for 15
+      City-run swim lesson sign-up dates, pools and official registration links for 15
       Metro Vancouver cities · Checked against city websites {{ SWIM_CHECKED_DATE }}
     </p>
     <p class="swim-page__intro">
       Municipal swim lessons are the cheapest lessons around — and the fastest to fill. Every
       city's next registration date, pools, status and key rules are in the table below: one row
-      per city, no clicking through. 所有日期均来自各市政府官网，官网没公布的我们如实标注，不猜。
+      per city, no clicking through. All dates come from official city websites; where a city has
+      not posted a date, we say so instead of guessing.
     </p>
 
     <section class="swim-page__card swim-page__card--next" aria-label="Next registrations">
-      <h2>⏰ Next registrations — in date order 最近要抢的几场</h2>
+      <h2>⏰ Next registrations — in date order</h2>
       <div class="tbl-wrap">
         <table class="tbl">
           <thead>
@@ -71,7 +72,7 @@ const STATUS_LABELS = {
       </p>
     </section>
 
-    <h2 class="swim-page__section-title">All 15 cities — one table 各市总表</h2>
+    <h2 class="swim-page__section-title">All 15 cities — one table</h2>
     <div class="tbl-wrap">
       <table class="tbl tbl--cities">
         <thead>
@@ -86,10 +87,7 @@ const STATUS_LABELS = {
         </thead>
         <tbody>
           <tr v-for="city in SWIM_CITIES" :id="city.id" :key="city.id">
-            <td class="tbl__city">
-              {{ city.name }}<br />
-              <span class="tbl__zh">{{ city.nameZh }}</span>
-            </td>
+            <td class="tbl__city">{{ city.name }}</td>
             <td>
               <span v-for="line in SWIM_TABLE[city.id].dates" :key="line" class="tbl__line">{{ line }}</span>
               <span v-if="SWIM_TABLE[city.id].note" class="tbl__note">{{ SWIM_TABLE[city.id].note }}</span>
@@ -290,12 +288,6 @@ const STATUS_LABELS = {
   font-weight: 800 !important;
   color: var(--color-ink) !important;
   white-space: nowrap;
-}
-
-.tbl__zh {
-  font-weight: 600;
-  font-size: 0.82rem;
-  color: var(--color-ink-soft);
 }
 
 .tbl__line {

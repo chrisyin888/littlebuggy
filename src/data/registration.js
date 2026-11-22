@@ -77,7 +77,6 @@ export const REG_SECTIONS = [
   {
     id: 'camps',
     title: 'Holiday & day camps',
-    titleZh: '冬令营 / 假期营 / 夏令营',
     blurb:
       'Key thing to know: winter break camps (Dec 21–31) mostly registered back in the FALL guide in most cities — many are full with waitlists, but spots do open up, so check the system and join waitlists now. The late-November "Winter 2027" registration rounds below are for January–March programs, Pro-D and spring break camps. Only Vancouver has posted a Summer 2027 camp date so far.',
     entries: [
@@ -101,7 +100,6 @@ export const REG_SECTIONS = [
   {
     id: 'skating',
     title: 'Skating lessons',
-    titleZh: '滑冰课',
     blurb:
       'Winter is peak skating season. Some cities bundle skating with general programs, some give it its own day (Township of Langley, Port Moody ice sports, NVRC), and Burnaby runs it on the same rolling system as swimming.',
     entries: [
@@ -125,7 +123,6 @@ export const REG_SECTIONS = [
   {
     id: 'gymnastics',
     title: 'Gymnastics',
-    titleZh: '体操',
     blurb:
       'Only about half the cities run their own gymnastics — in Richmond, Surrey, Delta, Langley City, Maple Ridge and White Rock it is run by clubs, not the city, so there is no municipal registration day. Where the city runs it, gymnastics follows the general-programs date.',
     entries: [
@@ -149,7 +146,6 @@ export const REG_SECTIONS = [
   {
     id: 'preschool',
     title: 'Preschool & parent-and-tot',
-    titleZh: '学前项目',
     blurb:
       'Two different things share this shelf: licensed, school-year preschools (apply / enrol separately, often open now) and seasonal early-years classes (parent & tot, Busy Bees, Kinder prep) that register on the general-programs date for each city.',
     entries: [
@@ -173,7 +169,6 @@ export const REG_SECTIONS = [
   {
     id: 'bronze',
     title: 'Lifeguard ladder: Bronze Medallion, Bronze Cross & beyond',
-    titleZh: '青少年救生员阶梯课',
     blurb:
       'The path to a lifeguarding job runs Bronze Star → Bronze Medallion → Bronze Cross → National Lifeguard. These are aquatic programs, so in almost every city they register on the same day and system as swim lessons — the swim dates are repeated here so teens and parents see them in one place.',
     entries: [

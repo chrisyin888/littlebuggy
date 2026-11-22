@@ -15,6 +15,7 @@ import HolidayRibbon from '../components/HolidayRibbon.vue'
 import ParentsBoard from '../components/ParentsBoard.vue'
 import SiteFeedback from '../components/SiteFeedback.vue'
 import UpccWaitTimesSection from '../components/UpccWaitTimesSection.vue'
+import CourseRegistrationGlance from '../components/CourseRegistrationGlance.vue'
 import CityPicker from '../components/CityPicker.vue'
 import { useHomepageSnapshot } from '../composables/useHomepageSnapshot.js'
 import { signalDisplayLine } from '../lib/homepageSummary.js'
@@ -931,21 +932,7 @@ function onEnvCardKeydown(e, row) {
       </div>
     </section>
 
-    <section class="swim-promo" aria-labelledby="swim-promo-title">
-      <div class="swim-promo__inner">
-        <h2 id="swim-promo-title" class="swim-promo__title">🏊 Swim lessons registration is coming up 游泳课报名季到了</h2>
-        <p class="swim-promo__text">
-          City swim lessons fill the night registration opens. Delta residents register
-          <strong>Nov 25 at 9:00 am</strong>, North Vancouver <strong>Dec 2 at 7:00 am</strong>,
-          Surrey swim lessons <strong>Dec 13 at 9:00 pm</strong> — see every city's date, pools
-          and official sign-up link, plus the account steps to finish before the day.
-        </p>
-        <p class="swim-promo__links">
-          <RouterLink to="/swim-lessons" class="swim-promo__cta">Swim lessons: dates &amp; links →</RouterLink>
-          <RouterLink to="/registration" class="swim-promo__secondary">Skating, camps &amp; more: full registration calendar →</RouterLink>
-        </p>
-      </div>
-    </section>
+    <CourseRegistrationGlance />
 
     <section
       id="weekly-snapshot"
@@ -2456,60 +2443,6 @@ function onEnvCardKeydown(e, row) {
     grid-template-columns: 1fr;
     gap: 0.35rem;
   }
-}
-
-.swim-promo {
-  padding: 1.1rem 1.25rem 0.2rem;
-}
-
-.swim-promo__inner {
-  max-width: min(1120px, 100%);
-  margin: 0 auto;
-  padding: clamp(1rem, 3vw, 1.5rem);
-  border-radius: var(--radius-lg, 16px);
-  background: linear-gradient(140deg, #eff6ff, #dbeafe);
-  border: 3px solid rgba(59, 130, 246, 0.4);
-  box-shadow: var(--shadow-soft);
-}
-
-.swim-promo__title {
-  margin: 0 0 0.5rem;
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--color-ink);
-}
-
-.swim-promo__text {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 600;
-  line-height: 1.6;
-  color: var(--color-ink-muted);
-}
-
-.swim-promo__links {
-  margin: 0.8rem 0 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem 1.4rem;
-  align-items: center;
-}
-
-.swim-promo__cta {
-  padding: 0.55rem 1.1rem;
-  border-radius: 999px;
-  background: #0284c7;
-  color: #fff;
-  font-weight: 800;
-  text-decoration: none;
-}
-
-.swim-promo__secondary {
-  font-weight: 700;
-  color: #0369a1;
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 
 .value-strip {

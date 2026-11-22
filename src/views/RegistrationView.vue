@@ -54,12 +54,12 @@ onMounted(() => {
     <p class="reg-page__intro">
       Each city opens registration on its own day, in its own system, and the popular classes go in
       minutes. This calendar pulls the verified dates for 15 Metro Vancouver cities into one list —
-      swim lessons have their own full page （游泳课单独一页）, and everything else is below. Dates come
+      swim lessons have their own full page, and everything else is below. Dates come
       from official city pages; where a city has not posted a date, we say so instead of guessing.
     </p>
 
     <section class="reg-page__card reg-page__card--cal" aria-label="Registration calendar">
-      <h2>📅 The calendar — every confirmed date, in order 各市报名日历</h2>
+      <h2>📅 The calendar — every confirmed date, in order</h2>
       <div class="reg-table-wrap">
         <table class="reg-table">
           <thead>
@@ -85,7 +85,7 @@ onMounted(() => {
     </section>
 
     <section class="reg-page__card reg-page__card--swim" aria-label="Swim lessons">
-      <h2>🏊 Swim lessons 游泳课 — the full guide is its own page</h2>
+      <h2>🏊 Swim lessons — the full guide is its own page</h2>
       <p>
         Swim lessons are the most competitive registration of all, so they get a dedicated page:
         every city's date and time (Delta residents Nov 25, 9:00 am · Surrey aquatics Dec 13,
@@ -98,7 +98,7 @@ onMounted(() => {
     </section>
 
     <template v-for="section in REG_SECTIONS" :key="section.id">
-      <h2 :id="section.id" class="reg-page__section-title">{{ section.title }} {{ section.titleZh }}</h2>
+      <h2 :id="section.id" class="reg-page__section-title">{{ section.title }}</h2>
       <p class="reg-page__blurb">{{ section.blurb }}</p>
       <div class="reg-table-wrap">
         <table class="reg-table reg-table--section">

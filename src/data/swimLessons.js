@@ -76,7 +76,6 @@ export const SWIM_CITIES = [
   {
     id: 'delta',
     name: 'Delta',
-    nameZh: '三角洲',
     status: 'dated',
     next:
       'Residents — aquatics: Wed, Nov 25, 2026 at 9:00 am. Residents — other programs: Thu, Nov 26 at 9:00 am. Non-residents: Wed, Dec 9 at 9:00 am.',
@@ -95,7 +94,6 @@ export const SWIM_CITIES = [
   {
     id: 'surrey',
     name: 'Surrey',
-    nameZh: '素里',
     status: 'dated',
     next:
       'Residents — most programs: Sun, Nov 29, 2026 at 9:00 pm. Residents — aquatic programs (swim lessons): Sun, Dec 13, 2026 at 9:00 pm. Non-residents — all programs: Sun, Dec 20, 2026 at 9:00 pm.',
@@ -122,7 +120,6 @@ export const SWIM_CITIES = [
   {
     id: 'coquitlam',
     name: 'Coquitlam',
-    nameZh: '高贵林',
     status: 'dated',
     next:
       'Residents: Tue, Nov 24, 2026 at 8:30 am. Non-residents: Thu, Nov 26, 2026 at 8:30 am. (City release lists these as the winter general program dates and describes a winter lineup "from swimming and skating to winter camps"; the city site does not list a separate swim-only date.)',
@@ -140,7 +137,6 @@ export const SWIM_CITIES = [
   {
     id: 'port-coquitlam',
     name: 'Port Coquitlam',
-    nameZh: '满地宝东 · 波高贵林',
     status: 'open',
     next:
       'Registration is already open: residents from Tue, Nov 17, 2026 (8:00 am), general public from Fri, Nov 20, 2026 (8:00 am). Swim lessons are part of this round; Winter 2027 classes start in January.',
@@ -159,7 +155,6 @@ export const SWIM_CITIES = [
   {
     id: 'richmond',
     name: 'Richmond',
-    nameZh: '列治文',
     status: 'dated',
     next:
       'Winter 2027 registration night: Tue, Dec 1, 2026 (postponed from Nov 17 because of a vendor security upgrade). The city has not posted the start time yet — check the registration page before the day.',
@@ -180,7 +175,6 @@ export const SWIM_CITIES = [
   {
     id: 'new-westminster',
     name: 'New Westminster',
-    nameZh: '新西敏',
     status: 'dated',
     next:
       'Residents — aquatic programs: Tue, Dec 1, 2026 at 10:00 am. Residents — all programs: Thu, Dec 3 at 10:00 am. Everyone (incl. non-residents): Thu, Dec 10 at 10:00 am.',
@@ -199,7 +193,6 @@ export const SWIM_CITIES = [
   {
     id: 'north-vancouver',
     name: 'North Vancouver (NVRC)',
-    nameZh: '北温',
     status: 'dated',
     next:
       'Swimming: Wed, Dec 2, 2026 — residents 7:00 am, non-residents 9:00 am. Winter courses run January–March 2027; registered lessons at the new Harry Jerome pool start the week of Jan 4.',
@@ -223,7 +216,6 @@ export const SWIM_CITIES = [
   {
     id: 'west-vancouver',
     name: 'West Vancouver',
-    nameZh: '西温',
     status: 'dated',
     next:
       'Winter swim & skate registration: Thu, Dec 3, 2026 — residents 8:00 am, non-residents 10:00 am.',
@@ -243,7 +235,6 @@ export const SWIM_CITIES = [
   {
     id: 'township-of-langley',
     name: 'Township of Langley',
-    nameZh: '兰里镇',
     status: 'dated',
     next:
       'Courses viewable: Tue, Dec 1, 2026 at 10:00 am. Township residents: Fri, Dec 11, 2026 at 12:00 pm (noon). Non-residents (including Langley City residents): Fri, Dec 18, 2026 at 12:00 pm.',
@@ -263,7 +254,6 @@ export const SWIM_CITIES = [
   {
     id: 'maple-ridge',
     name: 'Maple Ridge',
-    nameZh: '枫树岭',
     status: 'dated',
     next:
       'Aquatic programs: online registration Tue, Dec 22, 2026 at 6:00 am; phone and in-person registration Thu, Dec 24, 2026 at 8:00 am. Courses can be browsed from Dec 15. (Non-aquatic programs open earlier, Dec 1 — do not mix up the dates.)',
@@ -283,7 +273,6 @@ export const SWIM_CITIES = [
   {
     id: 'burnaby',
     name: 'Burnaby',
-    nameZh: '本拿比',
     status: 'rolling',
     next:
       'No single registration day for swim lessons — Burnaby runs rolling registration: residents can register 30 days before a class start date, from 10:00 am; non-residents 27 days before, from 10:00 am. Find your class start date and count back.',
@@ -308,7 +297,6 @@ export const SWIM_CITIES = [
   {
     id: 'vancouver',
     name: 'Vancouver',
-    nameZh: '温哥华',
     status: 'tba',
     next:
       'The Park Board has not posted a Winter 2027 swim registration date that we could verify on its website (checked Nov 22, 2026). Watch the official registration dates page and the vanrec system — and use the checklist below so you are ready the moment it appears.',
@@ -338,7 +326,6 @@ export const SWIM_CITIES = [
   {
     id: 'port-moody',
     name: 'Port Moody',
-    nameZh: '满地宝',
     status: 'none',
     next:
       'No municipal swim lessons in winter — Port Moody has no indoor pool; its two outdoor pools closed for the season on Sep 6, 2026. Summer 2027 lesson dates have not been posted yet. (The city\'s Nov 24 / Nov 26 winter registration dates are for general programs, not swimming.)',
@@ -355,7 +342,6 @@ export const SWIM_CITIES = [
   {
     id: 'langley-city',
     name: 'Langley City',
-    nameZh: '兰里市',
     status: 'none',
     next:
       'No winter swim lessons — the city\'s only pool is outdoors and reopens Apr 18, 2027. The city runs two swim registration rounds (spring and summer); the spring date has not been posted yet. (The Dec 4 winter recreation registration is for general programs, not swimming.)',
@@ -373,7 +359,6 @@ export const SWIM_CITIES = [
   {
     id: 'white-rock',
     name: 'White Rock',
-    nameZh: '白石',
     status: 'none',
     next:
       'No municipal swim lessons this winter — White Rock has no municipal pool, and its Winter 2027 guides list no swimming lessons. General winter program registration opened Wed, Nov 18, 2026 at 8:30 am (online, phone and in person, no resident priority).',
