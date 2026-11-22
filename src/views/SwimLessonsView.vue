@@ -2,12 +2,14 @@
 /**
  * Swim Lessons Registration — municipal (city-run) swim lesson sign-up
  * dates, pools and official registration links for Metro Vancouver.
- * All dates verified against city / recreation commission websites;
- * cities that have not posted a date say so instead of guessing.
- * Information only — LittleBuggy does not register anyone.
+ * One table, one row per city: date, pools, status and the key rules are
+ * all visible without clicking through. All dates verified against city
+ * / recreation commission websites; cities that have not posted a date
+ * say so instead of guessing. Information only — LittleBuggy does not
+ * register anyone.
  */
 import { onMounted } from 'vue'
-import { SWIM_CITIES, SWIM_UPCOMING, SWIM_CHECKED_DATE } from '../data/swimLessons'
+import { SWIM_CITIES, SWIM_UPCOMING, SWIM_TABLE, SWIM_CHECKED_DATE } from '../data/swimLessons'
 
 onMounted(() => {
   document.title =
@@ -22,10 +24,10 @@ onMounted(() => {
 })
 
 const STATUS_LABELS = {
-  dated: 'Next round dated',
+  dated: 'Date set',
   open: 'Open now',
-  rolling: 'Rolling registration',
-  tba: 'Date not posted yet',
+  rolling: 'Rolling',
+  tba: 'Not posted yet',
   none: 'No winter lessons',
 }
 </script>
@@ -40,28 +42,77 @@ const STATUS_LABELS = {
       Metro Vancouver cities · Checked against city websites {{ SWIM_CHECKED_DATE }}
     </p>
     <p class="swim-page__intro">
-      Municipal swim lessons are the cheapest lessons around — and the fastest to fill. In some
-      cities the whole season can sell out the night registration opens. This page puts every
-      city's next registration date, its pools, and the official sign-up link in one place, so you
-      can get your account ready before the rush. 所有日期均来自各市政府官网，官网没公布的我们如实标注，不猜。
+      Municipal swim lessons are the cheapest lessons around — and the fastest to fill. Every
+      city's next registration date, pools, status and key rules are in the table below: one row
+      per city, no clicking through. 所有日期均来自各市政府官网，官网没公布的我们如实标注，不猜。
     </p>
 
     <section class="swim-page__card swim-page__card--next" aria-label="Next registrations">
-      <h2>⏰ Next registrations — mark your calendar 最近要抢的几场</h2>
-      <ul class="swim-page__next-list">
-        <li v-for="item in SWIM_UPCOMING" :key="item.label">
-          <strong>{{ item.when }}</strong>
-          <span> — {{ item.label }} · </span>
-          <a :href="'#' + item.cityAnchor">details ↓</a>
-          <span> · </span>
-          <a :href="item.url" target="_blank" rel="noopener noreferrer">official registration site ↗</a>
-        </li>
-      </ul>
+      <h2>⏰ Next registrations — in date order 最近要抢的几场</h2>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th scope="col">When</th><th scope="col">What opens</th><th scope="col"></th></tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in SWIM_UPCOMING" :key="item.label">
+              <td class="tbl__when">{{ item.when }}</td>
+              <td>{{ item.label }}</td>
+              <td class="tbl__btn-cell">
+                <a class="tbl__btn" :href="item.url" target="_blank" rel="noopener noreferrer">Register ↗</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
       <p class="swim-page__note">
         Port Coquitlam registration is already open, and Burnaby swim lessons use rolling
-        registration (30 days before each class starts) — see their cards below.
+        registration (30 days before each class starts) — see the table below.
       </p>
     </section>
+
+    <h2 class="swim-page__section-title">All 15 cities — one table 各市总表</h2>
+    <div class="tbl-wrap">
+      <table class="tbl tbl--cities">
+        <thead>
+          <tr>
+            <th scope="col">City</th>
+            <th scope="col">Next registration</th>
+            <th scope="col">Pools</th>
+            <th scope="col">Status</th>
+            <th scope="col">Good to know</th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="city in SWIM_CITIES" :id="city.id" :key="city.id">
+            <td class="tbl__city">
+              {{ city.name }}<br />
+              <span class="tbl__zh">{{ city.nameZh }}</span>
+            </td>
+            <td>
+              <span v-for="line in SWIM_TABLE[city.id].dates" :key="line" class="tbl__line">{{ line }}</span>
+              <span v-if="SWIM_TABLE[city.id].note" class="tbl__note">{{ SWIM_TABLE[city.id].note }}</span>
+            </td>
+            <td>
+              {{ city.pools.length ? city.pools.join(' · ') : '—' }}
+              <span v-if="city.poolsNote" class="tbl__note">{{ city.poolsNote }}</span>
+            </td>
+            <td>
+              <span class="badge" :data-status="city.status">{{ STATUS_LABELS[city.status] }}</span>
+            </td>
+            <td>
+              <ul class="tbl__tips">
+                <li v-for="tip in SWIM_TABLE[city.id].tips" :key="tip">{{ tip }}</li>
+              </ul>
+            </td>
+            <td class="tbl__btn-cell">
+              <a class="tbl__btn" :href="city.registerUrl" target="_blank" rel="noopener noreferrer">Register ↗</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <section class="swim-page__card" aria-label="Before registration day">
       <h2>Before registration day — the checklist that actually helps</h2>
@@ -70,57 +121,28 @@ const STATUS_LABELS = {
         <li><strong>Add every child to the account, with birthdays.</strong> Age and level checks happen at checkout; fixing them mid-rush costs your spot.</li>
         <li><strong>Know your child's level.</strong> Most cities require the previous level on file. Report cards from another city can usually be dropped off or emailed in ahead of time.</li>
         <li><strong>Use the wish list / favourites feature</strong> where the system has one, so registration morning is just enrol → cart → pay.</li>
-        <li><strong>Residents usually go first</strong> — by hours (North & West Vancouver), days (Coquitlam, Township of Langley) or a full week (Surrey aquatics, Delta). Check your city's card for its gap.</li>
+        <li><strong>Residents usually go first</strong> — by hours (North & West Vancouver), days (Coquitlam, Township of Langley) or a full week (Surrey aquatics, Delta). Check your city's row for its gap.</li>
         <li><strong>If your class is full, join the waitlist immediately.</strong> In Surrey, Vancouver and the Township of Langley, an emailed waitlist offer expires in 24–36 hours — watch your inbox and spam folder.</li>
         <li><strong>One set per swimmer.</strong> Most cities withdraw duplicate registrations, so pick the set you actually want.</li>
       </ul>
     </section>
 
-    <h2 class="swim-page__section-title">Every city, in detail 各市详情</h2>
-
-    <section
-      v-for="city in SWIM_CITIES"
-      :id="city.id"
-      :key="city.id"
-      class="swim-page__card swim-city"
-      :aria-label="city.name"
-    >
-      <div class="swim-city__head">
-        <h3>{{ city.name }} <span class="swim-city__zh">{{ city.nameZh }}</span></h3>
-        <span class="swim-city__badge" :data-status="city.status">{{ STATUS_LABELS[city.status] }}</span>
-      </div>
-
-      <p class="swim-city__next"><strong>Next registration:</strong> {{ city.next }}</p>
-
-      <p v-if="city.pools.length" class="swim-city__pools">
-        <strong>Pools:</strong> {{ city.pools.join(' · ') }}
-      </p>
-      <p v-if="city.poolsNote" class="swim-city__note">{{ city.poolsNote }}</p>
-
-      <ul class="swim-city__tips">
-        <li v-for="tip in city.tips" :key="tip">{{ tip }}</li>
-      </ul>
-
-      <p class="swim-city__actions">
-        <a class="swim-city__cta" :href="city.registerUrl" target="_blank" rel="noopener noreferrer">
-          {{ city.registerLabel }} ↗
-        </a>
-        <span class="swim-city__source">
-          Source: <a :href="city.sourceUrl" target="_blank" rel="noopener noreferrer">{{ city.sourceName }}</a>
-        </span>
-      </p>
-    </section>
-
-    <section class="swim-page__sources" aria-label="About this page">
-      <h2>About this page</h2>
+    <section class="swim-page__sources" aria-label="Sources and about this page">
+      <h2>About this page &amp; sources</h2>
       <p>
         LittleBuggy is an information page for families — we do not run lessons and cannot register
-        your child or hold a spot. Dates and rules above come from the official city pages linked
-        on each card, checked {{ SWIM_CHECKED_DATE }}; cities change dates (Richmond's winter
+        your child or hold a spot. Dates and rules above come from the official city pages listed
+        below, checked {{ SWIM_CHECKED_DATE }}; cities change dates (Richmond's winter
         registration night was already postponed once), so confirm on the official site before
         registration day. Spots are never guaranteed — the checklist above is built only from the
         cities' own published rules.
       </p>
+      <ul class="swim-page__source-list">
+        <li v-for="city in SWIM_CITIES" :key="city.id">
+          {{ city.name }} —
+          <a :href="city.sourceUrl" target="_blank" rel="noopener noreferrer">{{ city.sourceName }}</a>
+        </li>
+      </ul>
       <p>
         Looking for a different program? See the
         <RouterLink to="/registration">recreation registration calendar</RouterLink> for skating
@@ -132,7 +154,7 @@ const STATUS_LABELS = {
 
 <style scoped>
 .swim-page {
-  max-width: 860px;
+  max-width: 1080px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -204,18 +226,6 @@ const STATUS_LABELS = {
   margin-bottom: 0.4rem;
 }
 
-.swim-page__card a,
-.swim-page__sources a {
-  color: #0369a1;
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.swim-page__next-list li {
-  margin-bottom: 0.55rem;
-}
-
 .swim-page__note {
   margin: 0.8rem 0 0;
   font-size: 0.9rem;
@@ -232,28 +242,100 @@ const STATUS_LABELS = {
   color: var(--color-ink);
 }
 
-.swim-city__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+/* ——— Tables ——— */
+.tbl-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
 }
 
-.swim-city__head h3 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  font-weight: 700;
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 0.9rem;
+}
+
+.tbl th,
+.tbl td {
+  text-align: left;
+  padding: 0.55rem 0.65rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+  vertical-align: top;
+  font-weight: 600;
+  color: var(--color-ink-muted);
+  line-height: 1.45;
+}
+
+.tbl th {
+  background: rgba(219, 234, 254, 0.85);
   color: var(--color-ink);
+  font-weight: 800;
+  white-space: nowrap;
 }
 
-.swim-city__zh {
-  font-size: 0.95rem;
+.tbl--cities {
+  min-width: 880px;
+  border: 3px solid rgba(186, 230, 253, 0.55);
+  border-radius: 12px;
+  box-shadow: var(--shadow-soft);
+}
+
+.tbl__when {
+  white-space: nowrap;
+  font-weight: 800 !important;
+  color: var(--color-ink) !important;
+}
+
+.tbl__city {
+  font-weight: 800 !important;
+  color: var(--color-ink) !important;
+  white-space: nowrap;
+}
+
+.tbl__zh {
+  font-weight: 600;
+  font-size: 0.82rem;
   color: var(--color-ink-soft);
 }
 
-.swim-city__badge {
+.tbl__line {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.tbl__note {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.82rem;
+  color: var(--color-ink-soft);
+}
+
+.tbl__tips {
+  margin: 0;
+  padding-left: 1.05rem;
+}
+
+.tbl__tips li {
+  margin-bottom: 0.25rem;
+}
+
+.tbl__btn-cell {
+  white-space: nowrap;
+}
+
+.tbl__btn {
+  display: inline-block;
+  padding: 0.38rem 0.8rem;
+  border-radius: 999px;
+  background: #0284c7;
+  color: #fff !important;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none !important;
+  white-space: nowrap;
+}
+
+.badge {
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.02em;
@@ -261,77 +343,18 @@ const STATUS_LABELS = {
   border-radius: 999px;
   background: #e0f2fe;
   color: #075985;
+  white-space: nowrap;
 }
 
-.swim-city__badge[data-status='open'] {
+.badge[data-status='open'] {
   background: #dcfce7;
   color: #166534;
 }
 
-.swim-city__badge[data-status='none'],
-.swim-city__badge[data-status='tba'] {
+.badge[data-status='none'],
+.badge[data-status='tba'] {
   background: #f1f5f9;
   color: #475569;
-}
-
-.swim-city__next {
-  margin: 0.7rem 0 0;
-  font-size: 0.97rem;
-  font-weight: 600;
-  line-height: 1.6;
-  color: var(--color-ink);
-}
-
-.swim-city__pools {
-  margin: 0.55rem 0 0;
-  font-size: 0.94rem;
-  font-weight: 600;
-  line-height: 1.6;
-  color: var(--color-ink-muted);
-}
-
-.swim-city__note {
-  margin: 0.35rem 0 0;
-  font-size: 0.88rem;
-  font-weight: 600;
-  line-height: 1.55;
-  color: var(--color-ink-soft);
-}
-
-.swim-city__tips {
-  margin: 0.7rem 0 0;
-  padding-left: 1.2rem;
-  font-size: 0.93rem;
-  font-weight: 600;
-  line-height: 1.6;
-  color: var(--color-ink-muted);
-}
-
-.swim-city__tips li {
-  margin-bottom: 0.35rem;
-}
-
-.swim-city__actions {
-  margin: 1rem 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-}
-
-.swim-city__cta {
-  align-self: flex-start;
-  padding: 0.55rem 1.1rem;
-  border-radius: 999px;
-  background: #0284c7;
-  color: #fff !important;
-  font-weight: 800;
-  text-decoration: none !important;
-}
-
-.swim-city__source {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--color-ink-soft);
 }
 
 .swim-page__sources h2 {
@@ -344,6 +367,22 @@ const STATUS_LABELS = {
 .swim-page__sources p {
   margin: 0 0 0.7rem;
   font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--color-ink-muted);
+}
+
+.swim-page__sources a {
+  color: #0369a1;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.swim-page__source-list {
+  margin: 0 0 0.7rem;
+  padding-left: 1.2rem;
+  font-size: 0.88rem;
   font-weight: 600;
   line-height: 1.6;
   color: var(--color-ink-muted);

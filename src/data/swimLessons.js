@@ -389,3 +389,169 @@ export const SWIM_CITIES = [
     sourceUrl: 'https://www.whiterockcity.ca/guide',
   },
 ]
+
+/**
+ * Compact table cells for the at-a-glance city table — compressed strictly
+ * from the verified `next` / `tips` text above (same dates, same facts,
+ * fewer words). Keyed by city id.
+ */
+export const SWIM_TABLE = {
+  delta: {
+    dates: [
+      'Residents · aquatics — Wed, Nov 25, 2026, 9:00 am',
+      'Residents · other programs — Thu, Nov 26, 9:00 am',
+      'Non-residents — Wed, Dec 9, 9:00 am',
+    ],
+    tips: [
+      'Account required before registering',
+      'Residents get a two-week head start on aquatics',
+      'Questions: 604-952-3000',
+    ],
+  },
+  surrey: {
+    dates: [
+      'Residents · swim lessons — Sun, Dec 13, 2026, 9:00 pm',
+      'Residents · most programs — Sun, Nov 29, 9:00 pm',
+      'Non-residents · all programs — Sun, Dec 20, 9:00 pm',
+    ],
+    tips: [
+      'Verify resident address in person (government ID); photo on file for each family member',
+      'Waiting room: log in 8:45–8:59 pm — spots assigned randomly at 9:00 pm',
+      'Waitlist offers by email expire in 24 hours',
+      'Residents ages 3–12: entry-level lessons $0',
+      'Phone: 604-501-5100',
+    ],
+  },
+  coquitlam: {
+    dates: [
+      'Residents — Tue, Nov 24, 2026, 8:30 am',
+      'Non-residents — Thu, Nov 26, 2026, 8:30 am',
+    ],
+    note: 'Winter general program dates — the city posts no separate swim-only date.',
+    tips: [
+      'Spell out "Coquitlam" in your account address — errors affect resident status',
+      'Online, phone (604-927-4386) and in-person all open at 8:30 am',
+    ],
+  },
+  'port-coquitlam': {
+    dates: ['Open now — residents from Tue, Nov 17, 2026, 8:00 am; public from Fri, Nov 20, 8:00 am'],
+    tips: [
+      'Build a wish list with the heart icon (courses viewable since Nov 10)',
+      'One lesson set per swimmer at a time',
+      'Out-of-city report cards: drop off, or email recreation@portcoquitlam.ca',
+      'Phone: 604-927-7529',
+    ],
+  },
+  richmond: {
+    dates: ['Winter 2027 registration night — Tue, Dec 1, 2026 (start time not posted yet; postponed from Nov 17)'],
+    tips: [
+      'MyRichmond account needed; city suggests a Passkey (email codes can arrive late)',
+      'Queue-it waiting room at peak — no need to log in early',
+      'Waitlists are managed by phone — keep your account phone number current',
+      'Phone: 604-276-4300',
+    ],
+  },
+  'new-westminster': {
+    dates: [
+      'Residents · aquatics — Tue, Dec 1, 2026, 10:00 am',
+      'Residents · all programs — Thu, Dec 3, 10:00 am',
+      'Everyone — Thu, Dec 10, 10:00 am',
+    ],
+    tips: [
+      'New accounts need approval — allow 3 business days',
+      'Adults 19+: two proofs of address within 14 days for resident priority',
+      'Phone: 604-777-5100',
+    ],
+  },
+  'north-vancouver': {
+    dates: [
+      'Residents — Wed, Dec 2, 2026, 7:00 am',
+      'Non-residents — Wed, Dec 2, 2026, 9:00 am',
+    ],
+    tips: [
+      'Waiting room opens 6:45 am; arrive 6:45–6:59 for a random queue spot at 7:00 — do not refresh',
+      'Spots are held only once paid — check out in one go',
+      'Note the 8-digit course IDs of your picks (browse from Nov 12)',
+      'Questions: 604-987-7529',
+    ],
+  },
+  'west-vancouver': {
+    dates: [
+      'Residents — Thu, Dec 3, 2026, 8:00 am',
+      'Non-residents — Thu, Dec 3, 2026, 10:00 am',
+    ],
+    note: 'Aquatic Centre closed Nov 27–Dec 20 for maintenance (reopens Dec 21) — online registration is not affected.',
+    tips: [
+      'Save classes with the heart icon ("Saved for Later") before the day',
+      'Swimming and gymnastics fill fastest',
+      'Full class? Join the waiting list in the system',
+      'Questions: 604-925-7270',
+    ],
+  },
+  'township-of-langley': {
+    dates: [
+      'Residents — Fri, Dec 11, 2026, 12:00 pm',
+      'Non-residents (incl. Langley City) — Fri, Dec 18, 2026, 12:00 pm',
+      'Courses viewable from Tue, Dec 1, 10:00 am',
+    ],
+    tips: [
+      'Resident priority needs one-time address verification (allow up to 5 business days)',
+      'Waitlist offers by email expire in 36 hours',
+      'One lesson set per swimmer at a time',
+    ],
+  },
+  'maple-ridge': {
+    dates: [
+      'Online — Tue, Dec 22, 2026, 6:00 am',
+      'Phone / in-person — Thu, Dec 24, 2026, 8:00 am',
+      'Courses viewable from Dec 15',
+    ],
+    tips: [
+      'Online opens two days before phone/in-person — that gap is the head start',
+      'Level prerequisites apply — check the report card first',
+      'Phone: 604-467-7422',
+    ],
+  },
+  burnaby: {
+    dates: [
+      'Rolling — residents: 30 days before the class start date, 10:00 am',
+      'Non-residents: 27 days before, 10:00 am',
+    ],
+    tips: [
+      'Activate your WebReg account and build a Wish List ahead',
+      'One set at a time — finish the current set before booking the next',
+      'General winter activities (not lessons) open Nov 30 / Dec 4',
+    ],
+  },
+  vancouver: {
+    dates: ['Winter 2027 date not posted yet (checked Nov 22, 2026)'],
+    tips: [
+      'Account holder must be 13+; add every child before registration day',
+      'Build a Wish List; on the day go Wish List → cart → pay',
+      'Waitlist offers by email expire in 24 hours',
+      'One lesson set per swimmer',
+    ],
+  },
+  'port-moody': {
+    dates: ['No winter swim lessons — no indoor pool (outdoor pools closed Sep 6, 2026)'],
+    note: 'Summer 2027 dates not posted yet. The Nov 24 / Nov 26 winter dates are for general programs, not swimming.',
+    tips: [
+      'Main contact on the account must be 19+; birthdays cannot be changed online afterwards',
+      'Resident priority follows the address on the account',
+    ],
+  },
+  'langley-city': {
+    dates: ['No winter swim lessons — outdoor pool reopens Apr 18, 2027; spring round not posted yet'],
+    note: 'The Dec 4 winter recreation registration is for general programs, not swimming.',
+    tips: [
+      'Completed level must be on file; other cities\' report cards: drop off or email swim@langleycity.ca',
+      'Can\'t log in? Call 604-514-2940 — do not create a second login',
+      'One lesson set per person at a time',
+    ],
+  },
+  'white-rock': {
+    dates: ['No municipal swim lessons this winter — no city pool'],
+    note: 'Nearest pools are in Surrey — see the Surrey row (non-residents Dec 20, 9:00 pm). General winter registration opened Nov 18, 8:30 am.',
+    tips: ['Add family members and a card to your account in advance', 'Phone: 604-541-2199'],
+  },
+}

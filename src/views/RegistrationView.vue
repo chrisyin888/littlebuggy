@@ -12,8 +12,22 @@ import {
   REG_OPEN_NOW,
   REG_SECTIONS,
   REG_SYSTEMS,
+  REG_TABLE,
   REG_CHECKED_DATE,
 } from '../data/registration'
+
+const REG_STATUS_LABELS = {
+  open: 'Open now',
+  dated: 'Date set',
+  rolling: 'Rolling',
+  tba: 'Not posted yet',
+  none: 'Not offered',
+  club: 'Club-run',
+}
+
+function regRow(section, entry) {
+  return REG_TABLE[`${section.id}|${entry.city}`] || { when: entry.text, status: 'dated', note: '' }
+}
 
 onMounted(() => {
   document.title =
@@ -86,23 +100,43 @@ onMounted(() => {
     <template v-for="section in REG_SECTIONS" :key="section.id">
       <h2 :id="section.id" class="reg-page__section-title">{{ section.title }} {{ section.titleZh }}</h2>
       <p class="reg-page__blurb">{{ section.blurb }}</p>
-      <section
-        v-for="entry in section.entries"
-        :key="section.id + entry.city"
-        class="reg-page__card reg-entry"
-        :aria-label="entry.city"
-      >
-        <h3>{{ entry.city }}</h3>
-        <p class="reg-entry__text">{{ entry.text }}</p>
-        <p v-if="entry.venue && entry.venue !== '—'" class="reg-entry__venue">
-          <strong>Where:</strong> {{ entry.venue }}
-        </p>
-        <p class="reg-entry__link">
-          <a :href="REG_SYSTEMS[entry.sys].url" target="_blank" rel="noopener noreferrer">
-            Register / check: {{ REG_SYSTEMS[entry.sys].label }} ↗
-          </a>
-        </p>
-      </section>
+      <div class="reg-table-wrap">
+        <table class="reg-table reg-table--section">
+          <thead>
+            <tr>
+              <th scope="col">City</th>
+              <th scope="col">Registration</th>
+              <th scope="col">Status</th>
+              <th scope="col">Where</th>
+              <th scope="col">Good to know</th>
+              <th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="entry in section.entries" :key="section.id + entry.city">
+              <td class="reg-table__city">{{ entry.city }}</td>
+              <td>{{ regRow(section, entry).when }}</td>
+              <td>
+                <span class="badge" :data-status="regRow(section, entry).status">
+                  {{ REG_STATUS_LABELS[regRow(section, entry).status] }}
+                </span>
+              </td>
+              <td>{{ entry.venue }}</td>
+              <td>{{ regRow(section, entry).note }}</td>
+              <td class="reg-table__btn-cell">
+                <a
+                  class="reg-table__btn"
+                  :href="REG_SYSTEMS[entry.sys].url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Register ↗
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </template>
 
     <section class="reg-page__sources" aria-label="About this page">
@@ -278,40 +312,55 @@ onMounted(() => {
   color: var(--color-ink);
 }
 
-.reg-entry h3 {
-  margin: 0 0 0.5rem;
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--color-ink);
+.reg-table--section {
+  min-width: 820px;
+  border: 3px solid rgba(186, 230, 253, 0.55);
+  box-shadow: var(--shadow-soft);
 }
 
-.reg-entry__text {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 600;
-  line-height: 1.6;
-  color: var(--color-ink-muted);
+.reg-table__city {
+  font-weight: 800 !important;
+  color: var(--color-ink) !important;
+  white-space: nowrap;
 }
 
-.reg-entry__venue {
-  margin: 0.45rem 0 0;
-  font-size: 0.9rem;
-  font-weight: 600;
-  line-height: 1.55;
-  color: var(--color-ink-muted);
+.reg-table__btn-cell {
+  white-space: nowrap;
 }
 
-.reg-entry__link {
-  margin: 0.6rem 0 0;
-  font-size: 0.92rem;
+.reg-table__btn {
+  display: inline-block;
+  padding: 0.38rem 0.8rem;
+  border-radius: 999px;
+  background: #0284c7;
+  color: #fff !important;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none !important;
+  white-space: nowrap;
 }
 
-.reg-entry__link a {
-  color: #0369a1;
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 0.22rem 0.6rem;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #075985;
+  white-space: nowrap;
+}
+
+.badge[data-status='open'] {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge[data-status='none'],
+.badge[data-status='tba'],
+.badge[data-status='club'] {
+  background: #f1f5f9;
+  color: #475569;
 }
 
 .reg-page__sources h2 {

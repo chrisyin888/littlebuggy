@@ -11,7 +11,6 @@ import LittleBuggyMascot from '../components/LittleBuggyMascot.vue'
 import ErWaitTimesSection from '../components/ErWaitTimesSection.vue'
 import EmergencyBanner from '../components/EmergencyBanner.vue'
 import WhereToGoCard from '../components/WhereToGoCard.vue'
-import CallJuneCard from '../components/CallJuneCard.vue'
 import HolidayRibbon from '../components/HolidayRibbon.vue'
 import ParentsBoard from '../components/ParentsBoard.vue'
 import SiteFeedback from '../components/SiteFeedback.vue'
@@ -700,8 +699,6 @@ function onEnvCardKeydown(e, row) {
 </script>
 <template>
   <div class="home">
-    <CallJuneCard />
-
     <EmergencyBanner />
 
     <WhereToGoCard />

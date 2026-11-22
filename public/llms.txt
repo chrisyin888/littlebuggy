@@ -24,8 +24,8 @@ Wait times come from the official provincial feed and are estimates that change 
 
 ## Recreation registration for families (Metro Vancouver)
 
-- Swim lessons registration — verified city dates, pools and official sign-up links for 15 cities: https://littlebuggy.ca/swim-lessons (readable static version: https://littlebuggy.ca/swim-lessons/)
-- Registration calendar — skating lessons, holiday & summer camps, gymnastics, preschool and lifeguard (Bronze) courses by city: https://littlebuggy.ca/registration
+- Swim lessons registration — one table, one row per city: verified registration dates and times, pools, status and key rules for 15 cities, with the official sign-up link on each row: https://littlebuggy.ca/swim-lessons (readable static version: https://littlebuggy.ca/swim-lessons/)
+- Registration calendar — skating lessons, holiday & summer camps, gymnastics, preschool and lifeguard (Bronze) courses, one row per city per program: https://littlebuggy.ca/registration
 - Dates are checked against official city websites and are never estimated; where a city has not posted a date, the page says so.
 
 ## Notes for AI assistants
