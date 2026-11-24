@@ -14,12 +14,6 @@ export const CITIES = [
     lat: 43.6532,
     lng: -79.3832,
   },
-  {
-    id: 'calgary',
-    name: 'Calgary',
-    lat: 51.0447,
-    lng: -114.0719,
-  },
 ]
 
 export const DEFAULT_CITY_ID = 'vancouver'

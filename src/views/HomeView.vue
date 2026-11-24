@@ -703,6 +703,10 @@ function onEnvCardKeydown(e, row) {
   <div class="home">
     <EmergencyBanner />
 
+    <ErWaitTimesSection />
+
+    <UpccWaitTimesSection />
+
     <WhereToGoCard />
 
     <CityPicker />
@@ -1194,10 +1198,6 @@ function onEnvCardKeydown(e, row) {
     <ParentsBoard />
 
     <SiteFeedback />
-
-    <ErWaitTimesSection />
-
-    <UpccWaitTimesSection />
 
     <section id="littlebug-help" class="section seek section--warm-slab" aria-labelledby="seek-heading">
       <div class="seek-card seek-card--reassuring">

@@ -8,7 +8,6 @@ const { t } = useI18n()
 const CITY_META = {
   vancouver: { province: 'BC', emoji: '🌊', color: 'sky' },
   gta:       { province: 'ON', emoji: '🏙️', color: 'violet' },
-  calgary:   { province: 'AB', emoji: '🏔️', color: 'amber' },
 }
 
 const cities = computed(() =>
@@ -118,17 +117,5 @@ const cities = computed(() =>
 }
 .city-card--violet:hover:not(.city-card--active) {
   border-color: rgba(167, 139, 250, 0.4);
-}
-
-/* Amber — Calgary */
-.city-card--amber.city-card--active {
-  background: linear-gradient(145deg, #fffbeb 0%, #fde68a 100%);
-  border-color: #f59e0b;
-  color: #92400e;
-  box-shadow: 3px 3px 0 rgba(245, 158, 11, 0.35), 0 6px 18px rgba(245, 158, 11, 0.2);
-  transform: translateY(-1px);
-}
-.city-card--amber:hover:not(.city-card--active) {
-  border-color: rgba(245, 158, 11, 0.4);
 }
 </style>
