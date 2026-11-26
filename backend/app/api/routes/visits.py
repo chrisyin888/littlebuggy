@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -27,6 +27,30 @@ def _normalize_category(raw: str | None) -> str:
         return "other"
     value = raw.strip().lower()
     return value if value in SOURCE_CATEGORIES else "other"
+
+
+# Bot / crawler UA markers (lowercase substrings). The beacon fires from
+# anything that renders the page, so without this filter the "visits" are
+# mostly crawlers, AI scrapers and uptime monitors. The UA is only inspected
+# transiently here — it is never stored. Same list as the family-board
+# counter (added 2026-11-26 at the owner's request).
+_BOT_UA_MARKERS = (
+    "bot", "spider", "crawler", "crawl", "headless", "phantomjs", "puppeteer",
+    "playwright", "selenium", "webdriver", "python-requests", "python-httpx",
+    "curl/", "wget", "go-http-client", "okhttp", "axios", "node-fetch",
+    "libwww", "lighthouse", "pagespeed", "gtmetrix", "pingdom", "uptimerobot",
+    "statuscake", "site24x7", "newrelic", "datadog", "ia_archiver",
+    "facebookexternalhit", "meta-externalagent", "bingpreview", "slackbot",
+    "telegrambot", "whatsapp", "skypeuripreview", "prerender", "preview",
+    "monitor",
+)
+
+
+def _is_bot_ua(user_agent: str | None) -> bool:
+    ua = (user_agent or "").strip().lower()
+    if not ua:
+        return True
+    return any(marker in ua for marker in _BOT_UA_MARKERS)
 
 
 class VisitCountResponse(BaseModel):
@@ -88,6 +112,7 @@ def _bump_source(db: Session, today: date, category: str) -> None:
 
 @router.post("/track-visit", status_code=204)
 def track_visit(
+    request: Request,
     payload: TrackVisitRequest | None = None,
     db: Session = Depends(get_db),
 ) -> None:
@@ -95,7 +120,12 @@ def track_visit(
 
     The JSON body is optional: older clients POST with no body and are counted
     under the ``other`` source category.
+
+    Bot/crawler user agents are acknowledged (204) but NOT counted, so the
+    totals approximate real people.
     """
+    if _is_bot_ua(request.headers.get("user-agent")):
+        return
     category = _normalize_category(payload.category if payload is not None else None)
     today = _today_utc()
     for _ in range(4):
