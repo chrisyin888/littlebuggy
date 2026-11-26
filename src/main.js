@@ -3,8 +3,14 @@ import './style.css'
 import App from './App.vue'
 import router from './router'
 import { i18n } from './i18n'
+import { initHumanBeacon } from './lib/humanBeacon.js'
 
 createApp(App).use(router).use(i18n).mount('#app')
+
+// Behavior-verified human visit counting (POST /api/track-human on a real
+// interaction signal; see src/lib/humanBeacon.js). Page-view signals are
+// wired in src/router/index.js.
+initHumanBeacon()
 
 // Deep-link rescue: the static host serves real files before the SPA rewrite,
 // so standalone landing pages under public/ (e.g. /guides/fever/) bounce here

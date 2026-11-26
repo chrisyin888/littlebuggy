@@ -20,6 +20,21 @@ class Visit(Base):
     count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
 
+class DailyHumanVisit(Base):
+    """One row per UTC calendar day; behavior-verified "real human" visits.
+
+    Incremented only by POST /track-human, which the frontend fires at most
+    once per session after a human-like behavior signal (scroll, interaction,
+    visible dwell, or a second page view) — and only for non-bot user agents.
+    """
+
+    __tablename__ = "daily_human_visits"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    visit_date: Mapped[date] = mapped_column(Date, nullable=False, unique=True)
+    count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
 class DailyVisitSource(Base):
     """One row per (UTC calendar day, referral-source category)."""
 

@@ -11,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.daily_visit import DailyVisitSource, Visit
+from app.models.daily_visit import DailyHumanVisit, DailyVisitSource, Visit
 
 router = APIRouter()
 
@@ -89,12 +89,34 @@ class VisitSourcesResponse(BaseModel):
     last_7_days: VisitSourcesTotals
 
 
+class HumanVisitsToday(BaseModel):
+    date: date
+    total: int = Field(ge=0, description="Behavior-verified human visits today (UTC).")
+
+
+class HumanVisitsTotals(BaseModel):
+    total: int = Field(ge=0, description="Behavior-verified human visits over the window.")
+
+
+class HumanVisitsResponse(BaseModel):
+    today: HumanVisitsToday
+    last_7_days: HumanVisitsTotals
+
+
 def _bump_visit(db: Session, today: date) -> None:
     row = db.scalar(select(Visit).where(Visit.visit_date == today))
     if row is not None:
         row.count += 1
     else:
         db.add(Visit(visit_date=today, count=1))
+
+
+def _bump_human_visit(db: Session, today: date) -> None:
+    row = db.scalar(select(DailyHumanVisit).where(DailyHumanVisit.visit_date == today))
+    if row is not None:
+        row.count += 1
+    else:
+        db.add(DailyHumanVisit(visit_date=today, count=1))
 
 
 def _bump_source(db: Session, today: date, category: str) -> None:
@@ -174,4 +196,50 @@ def visit_sources(db: Session = Depends(get_db)) -> VisitSourcesResponse:
             total=sum(window_counts.values()),
             sources=SourceCounts(**window_counts),
         ),
+    )
+
+
+@router.post("/track-human", status_code=204)
+def track_human(
+    request: Request,
+    db: Session = Depends(get_db),
+) -> None:
+    """Increment today's behavior-verified human visit count; creates the row if missing.
+
+    The frontend fires this at most once per session, only after a human-like
+    behavior signal (scroll depth, pointer/key interaction, visible dwell, or
+    a second page view). Bot/crawler user agents are acknowledged (204) but
+    NOT counted — the same filter as /track-visit.
+    """
+    if _is_bot_ua(request.headers.get("user-agent")):
+        return
+    today = _today_utc()
+    for _ in range(4):
+        _bump_human_visit(db, today)
+        try:
+            db.commit()
+            return
+        except IntegrityError:
+            db.rollback()
+
+
+@router.get("/human-visits", response_model=HumanVisitsResponse)
+def human_visits(db: Session = Depends(get_db)) -> HumanVisitsResponse:
+    """Behavior-verified human visits: today (UTC) and the last 7 UTC days combined."""
+    today = _today_utc()
+    window_start = today - timedelta(days=6)
+    rows = db.scalars(
+        select(DailyHumanVisit).where(DailyHumanVisit.visit_date >= window_start)
+    ).all()
+
+    today_total = 0
+    window_total = 0
+    for row in rows:
+        window_total += int(row.count)
+        if row.visit_date == today:
+            today_total += int(row.count)
+
+    return HumanVisitsResponse(
+        today=HumanVisitsToday(date=today, total=today_total),
+        last_7_days=HumanVisitsTotals(total=window_total),
     )
