@@ -1,30 +1,30 @@
 LittleBuggy — ER & UPCC wait times for Metro Vancouver
 
-Snapshot generated: 2026-11-26 15:49 Pacific Time (America/Vancouver)
-Source data last updated: 2026-11-26 15:48 Pacific Time
+Snapshot generated: 2026-11-27 15:48 Pacific Time (America/Vancouver)
+Source data last updated: 2026-11-27 15:47 Pacific Time
 Source: official provincial wait-times feed, fetched live by LittleBuggy.
 Wait times are estimates and change through the day. In an emergency, call 911. For health advice, call HealthLink BC at 8-1-1.
 For the newest numbers, use the live feed: https://littlebuggy-api.onrender.com/wait-times.txt
 
 EMERGENCY DEPARTMENTS (23)
 - Delta Hospital (Delta): Not currently published
-- Richmond Hospital (Richmond): 2h 45m
+- Richmond Hospital (Richmond): 4h 15m
 - Burnaby Hospital (Burnaby): Not currently published
-- Vancouver General Hospital (Vancouver): 2h 15m
-- BC Children's Hospital (Vancouver): 7h 00m
+- Vancouver General Hospital (Vancouver): 3h 15m
+- BC Children's Hospital (Vancouver): 4h 00m
 - Royal Columbian Hospital (New Westminster): Not currently published
-- St. Paul's Hospital (Vancouver): 1h 15m
-- Lions Gate Hospital (North Vancouver): 2h 15m
-- Mount Saint Joseph Hospital (Vancouver): 1h 15m
+- St. Paul's Hospital (Vancouver): 1h 45m
+- Lions Gate Hospital (North Vancouver): 3h 15m
+- Mount Saint Joseph Hospital (Vancouver): 1h 00m
 - UBC Hospital (Vancouver): 1h 30m
-- Squamish General Hospital (Squamish): 3h 30m
+- Squamish General Hospital (Squamish): 2h 00m
 - Whistler Health Care Centre (Whistler): 0h 30m
 - Pemberton Health Centre (Pemberton): 1h 15m
 - Eagle Ridge Hospital (Port Moody): Not currently published
 - Peace Arch Hospital (White Rock): Not currently published
 - Ridge Meadows Hospital (Maple Ridge): Not currently published
-- Sechelt Hospital (Sechelt): 3h 00m
-- qathet General Hospital (Powell River): 3h 45m
+- Sechelt Hospital (Sechelt): 5h 00m
+- qathet General Hospital (Powell River): 1h 45m
 - Abbotsford Regional Hospital (Abbotsford): Not currently published
 - Chilliwack General Hospital (Chilliwack): Not currently published
 - Langley Memorial Hospital (Langley): Not currently published
